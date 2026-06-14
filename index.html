@@ -72,6 +72,22 @@
        earlier height:100% override was the source of the stretching. */
   }
 
+  /* Landscape phones: cap stage by available height so touch bar + HUD fit.
+     ~130px reserves room for touch bar (~96), gap, and safe-area insets. */
+  @media (orientation: landscape) and (max-height: 600px){
+    body{
+      padding:
+        max(env(safe-area-inset-top), 6px)
+        max(env(safe-area-inset-right), 0px)
+        max(env(safe-area-inset-bottom), 6px)
+        max(env(safe-area-inset-left), 0px);
+    }
+    #wrap{ gap:10px; }
+    #stage{
+      width: min(96vw, calc((100dvh - 130px) * 16 / 9));
+    }
+  }
+
   /* ---------- HUD ---------- */
   #hud{
     position:absolute;top:0;left:0;right:0;
