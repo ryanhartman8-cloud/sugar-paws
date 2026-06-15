@@ -359,8 +359,9 @@
 
   // ---------- Themes ----------
   const THEMES = {
-    candy:  { name:"Confection Kingdom" },
-    castle: { name:"Castle Confectiana" }
+    candy:     { name:"Confection Kingdom" },
+    castle:    { name:"Castle Confectiana" },
+    underwater:{ name:"Sugar Reef" }
   };
 
   // ======================================================================
@@ -448,6 +449,54 @@
         {x:2300,y:GROUND_Y+22, w:120, h:220},
       ],
       boss: { x:2950, w:92, h:80, hp:3, vx:1.7, min:2520, max:3230, name:"Gummy King" }
+    },
+
+    // -------- WORLD 3: underwater coral reef --------
+    {
+      name: "Sugar Reef", theme: "underwater",
+      goalX: 4050, worldW: 4200,
+      platforms: [
+        {x:0,    y:430, w:580, h:170, t:"reefrock"},
+        {x:710,  y:430, w:480, h:170, t:"reefrock"},
+        {x:1320, y:430, w:510, h:170, t:"reefrock"},
+        {x:1960, y:430, w:520, h:170, t:"reefrock"},
+        {x:2610, y:430, w:540, h:170, t:"reefrock"},
+        {x:3280, y:430, w:920, h:170, t:"reefrock"},
+        {x:300,  y:340, w:110, h:26, t:"coral"},
+        {x:770,  y:350, w:110, h:26, t:"shell"},
+        {x:990,  y:330, w:110, h:26, t:"chest"},
+        {x:1390, y:345, w:120, h:26, t:"coral"},
+        {x:1610, y:330, w:110, h:26, t:"shell"},
+        {x:2050, y:350, w:120, h:26, t:"chest"},
+        {x:2270, y:335, w:110, h:26, t:"coral"},
+        {x:2720, y:345, w:110, h:26, t:"shell"},
+        {x:2920, y:330, w:120, h:26, t:"chest"},
+        {x:3360, y:345, w:120, h:26, t:"coral"},
+        {x:3580, y:335, w:120, h:26, t:"shell"},
+      ],
+      collectibles: [
+        {x:355,y:316,t:"fish"}, {x:605,y:398,t:"mouse"},{x:825,y:326,t:"mouse"},
+        {x:1045,y:306,t:"mouse"},{x:1250,y:398,t:"mouse"},{x:1445,y:321,t:"fish"},
+        {x:1665,y:306,t:"mouse"},{x:1900,y:398,t:"mouse"},{x:2105,y:326,t:"mouse"},
+        {x:2325,y:311,t:"mouse"},{x:2555,y:398,t:"mouse"},{x:2775,y:321,t:"fish"},
+        {x:2975,y:306,t:"mouse"},{x:3215,y:398,t:"mouse"},{x:3415,y:321,t:"mouse"},
+        {x:3635,y:311,t:"fish"}, {x:3850,y:398,t:"mouse"},{x:3980,y:398,t:"mouse"},
+      ],
+      enemies: [
+        {x:850, min:710,  max:1180, vx:1.4},
+        {x:1500,min:1320, max:1820, vx:1.4},
+        {x:2150,min:1970, max:2470, vx:1.5},
+        {x:2800,min:2620, max:3140, vx:1.5},
+        {x:3500,min:3290, max:3760, vx:1.5},
+      ],
+      hazards: [
+        {x:580, y:GROUND_Y+22, w:130, h:220},
+        {x:1190,y:GROUND_Y+22, w:130, h:220},
+        {x:1830,y:GROUND_Y+22, w:130, h:220},
+        {x:2480,y:GROUND_Y+22, w:130, h:220},
+        {x:3150,y:GROUND_Y+22, w:130, h:220},
+      ],
+      boss: null
     }
   ];
   worldTot.textContent = LEVELS.length;
@@ -677,6 +726,46 @@
   }
 
   function drawBackground(){
+    if(theme==="underwater"){
+      const g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,"#0e3b66"); g.addColorStop(0.55,"#1f7aa3"); g.addColorStop(1,"#5fb9c8");
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      // caustic light shafts from the surface
+      const t = Date.now()/1400;
+      ctx.globalAlpha=0.10; ctx.fillStyle="#fff";
+      for(let i=0;i<7;i++){
+        const sx = (i*180 - (cam.x*0.4)%180) - 60 + Math.sin(t+i)*10;
+        ctx.beginPath();
+        ctx.moveTo(sx, 0); ctx.lineTo(sx+58, 0);
+        ctx.lineTo(sx+30, H); ctx.lineTo(sx-30, H);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.globalAlpha=1;
+      // distant kelp silhouettes
+      const px = cam.x*0.5;
+      ctx.fillStyle = "rgba(12,46,66,.55)";
+      for(let i=0;i<14;i++){
+        const tx = i*220 - (px % 220) - 120;
+        const th = 160 + (i%3)*36;
+        ctx.beginPath();
+        ctx.moveTo(tx-4, H);
+        ctx.quadraticCurveTo(tx+6, H-th*0.6, tx, H-th);
+        ctx.quadraticCurveTo(tx-6, H-th*0.6, tx-12, H);
+        ctx.closePath(); ctx.fill();
+      }
+      // rising bubbles (reuse stars array)
+      const ep = cam.x*0.3;
+      for(const s of stars){
+        const sx = s.x - ep; if(sx<-10||sx>W+10) continue;
+        s.tw += 0.05;
+        const by = (s.y + 240 + Math.sin(s.tw)*40) % H;
+        ctx.globalAlpha = 0.45 + Math.sin(s.tw)*0.25;
+        ctx.strokeStyle = "rgba(255,255,255,.9)"; ctx.lineWidth=1.2;
+        ctx.beginPath(); ctx.arc(sx, H - by*0.7, s.r+1, 0, 7); ctx.stroke();
+      }
+      ctx.globalAlpha=1;
+      return;
+    }
     if(theme==="castle"){
       const g = ctx.createLinearGradient(0,0,0,H);
       g.addColorStop(0,"#241634"); g.addColorStop(0.55,"#46213f"); g.addColorStop(1,"#7d2b27");
@@ -813,12 +902,73 @@
         for(let i=20;i<pl.w;i+=24){ ctx.beginPath(); ctx.moveTo(x+i,y+3); ctx.lineTo(x+i,y+pl.h-3); ctx.stroke(); }
         break;
       }
+      case "reefrock": {    // sandy seafloor with coral trim
+        ctx.fillStyle="#caa06a"; rr(x,y,pl.w,pl.h,10); ctx.fill();
+        ctx.fillStyle="#e0bf85"; rr(x,y,pl.w,16,10); ctx.fill();
+        const cols=["#ff7aa8","#ff9a4d","#ff6f6f","#ffd23f"];
+        for(let i=8;i<pl.w-8;i+=22){
+          ctx.fillStyle=cols[(i/22|0)%cols.length];
+          ctx.beginPath(); ctx.arc(x+i, y+6, 4+((i*3)%3), 0, 7); ctx.fill();
+        }
+        ctx.fillStyle="rgba(80,60,30,.35)";
+        for(let i=12;i<pl.w;i+=18){ ctx.beginPath(); ctx.arc(x+i, y+34+((i*3)%18), 1.4, 0, 7); ctx.fill(); }
+        break;
+      }
+      case "coral": {        // pink/orange branching coral
+        ctx.fillStyle="#ff8aa6"; rr(x,y,pl.w,pl.h,10); ctx.fill();
+        ctx.fillStyle="#ffb0c4"; rr(x,y,pl.w,9,10); ctx.fill();
+        ctx.fillStyle="#ff6f9c";
+        for(let i=10;i<pl.w-6;i+=14){ ctx.beginPath(); ctx.arc(x+i, y+6, 3, 0, 7); ctx.fill(); }
+        ctx.fillStyle="#e84d9c";
+        ctx.fillRect(x+4, y+pl.h-4, pl.w-8, 4);
+        break;
+      }
+      case "shell": {        // pink clamshell fan
+        ctx.fillStyle="#ffd9e6"; rr(x,y,pl.w,pl.h,12); ctx.fill();
+        ctx.fillStyle="#ffaecd"; rr(x,y,pl.w,8,12); ctx.fill();
+        ctx.strokeStyle="#e26ea0"; ctx.lineWidth=2;
+        for(let i=0;i<=6;i++){
+          const fx = x + (pl.w/6)*i;
+          ctx.beginPath(); ctx.moveTo(fx, y+pl.h-2);
+          ctx.quadraticCurveTo(fx, y+10, x+pl.w/2, y+2); ctx.stroke();
+        }
+        break;
+      }
+      case "chest": {        // wooden treasure chest with gold trim
+        ctx.fillStyle="#7a4a22"; rr(x,y,pl.w,pl.h,5); ctx.fill();
+        ctx.fillStyle="#9a6233"; rr(x,y,pl.w,10,5); ctx.fill();
+        ctx.fillStyle="#ffd23f"; ctx.fillRect(x+6, y, 4, pl.h);
+        ctx.fillRect(x+pl.w-10, y, 4, pl.h);
+        ctx.fillStyle="#e0a52c"; ctx.fillRect(x, y+pl.h/2-2, pl.w, 4);
+        ctx.fillStyle="#ffd23f"; rr(x+pl.w/2-5, y+pl.h/2-3, 10, 7, 2); ctx.fill();
+        break;
+      }
     }
   }
 
   function drawLava(hz){
     const x = hz.x - cam.x;
     if(x+hz.w<-20 || x>W+20) return;
+    if(theme==="underwater"){
+      // urchin trench — deep abyss with spike teeth along the rim
+      const gU = ctx.createLinearGradient(0,hz.y,0,hz.y+hz.h);
+      gU.addColorStop(0,"#0e2742"); gU.addColorStop(1,"#03101e");
+      ctx.fillStyle=gU; ctx.fillRect(x,hz.y,hz.w,hz.h);
+      ctx.fillStyle="#2a1a3a";
+      for(let i=2;i<hz.w-2;i+=10){
+        ctx.beginPath();
+        ctx.moveTo(x+i, hz.y+10);
+        ctx.lineTo(x+i+5, hz.y-7);
+        ctx.lineTo(x+i+10, hz.y+10);
+        ctx.closePath(); ctx.fill();
+      }
+      const tU = Date.now()/500;
+      for(let i=20;i<hz.w;i+=40){
+        ctx.fillStyle="rgba(140,255,210,"+(0.4+Math.sin(tU+i)*0.3)+")";
+        ctx.beginPath(); ctx.arc(x+i, hz.y+80+Math.sin(tU+i*0.1)*8, 2, 0, 7); ctx.fill();
+      }
+      return;
+    }
     const t = Date.now()/300;
     const g = ctx.createLinearGradient(0,hz.y,0,hz.y+hz.h);
     g.addColorStop(0,"#ffd23f"); g.addColorStop(0.22,"#ff7a1a"); g.addColorStop(1,"#7a1500");
@@ -867,7 +1017,32 @@
     ctx.save(); ctx.translate(x+e.w/2, y+e.h);
     if(!e.alive){
       ctx.globalAlpha = Math.max(0, e.squish/18);
-      ctx.fillStyle="#ff8fc8"; ctx.beginPath(); ctx.ellipse(0,-4,e.w/2+4,6,0,0,7); ctx.fill();
+      ctx.fillStyle = theme==="underwater" ? "#7ad1d8" : "#ff8fc8";
+      ctx.beginPath(); ctx.ellipse(0,-4,e.w/2+4,6,0,0,7); ctx.fill();
+      ctx.restore(); return;
+    }
+    if(theme==="underwater"){
+      const wobU = Math.sin(e.x*0.1)*2;
+      ctx.fillStyle="#5fbecf";
+      ctx.beginPath(); ctx.arc(0, -e.h*0.55+wobU, e.w*0.5, 0, 7); ctx.fill();
+      ctx.fillStyle="#3a8a99";
+      for(let a=0;a<6.2;a+=Math.PI/6){
+        const cx2 = Math.cos(a)*e.w*0.52;
+        const cy2 = -e.h*0.55 + wobU + Math.sin(a)*e.w*0.52;
+        ctx.beginPath();
+        ctx.moveTo(cx2, cy2);
+        ctx.lineTo(cx2 + Math.cos(a)*8, cy2 + Math.sin(a)*8);
+        ctx.lineTo(cx2 + Math.cos(a+0.25)*3, cy2 + Math.sin(a+0.25)*3);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.fillStyle="#cdebef";
+      ctx.beginPath(); ctx.ellipse(0, -e.h*0.4 + wobU, e.w*0.34, e.h*0.22, 0, 0, 7); ctx.fill();
+      ctx.fillStyle="#fff";
+      ctx.beginPath(); ctx.arc(-e.w*0.16, -e.h*0.65+wobU, 4, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.16, -e.h*0.65+wobU, 4, 0, 7); ctx.fill();
+      ctx.fillStyle="#1a1a2a";
+      ctx.beginPath(); ctx.arc(-e.w*0.14, -e.h*0.65+wobU, 2, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.18, -e.h*0.65+wobU, 2, 0, 7); ctx.fill();
       ctx.restore(); return;
     }
     const wob = Math.sin(e.x*0.1)*2;
@@ -942,6 +1117,23 @@
         ctx.beginPath(); ctx.moveTo(x-30,baseY-95); ctx.lineTo(x+30,baseY-70); ctx.stroke();
         ctx.fillStyle="#ffce4d"; rr(x-12,baseY-92,24,22,5); ctx.fill();
       }
+    } else if(theme==="underwater"){
+      const tG = Date.now()/400;
+      const glow = ctx.createRadialGradient(x, baseY-50, 5, x, baseY-50, 110);
+      glow.addColorStop(0,"rgba(255,220,90,.55)"); glow.addColorStop(1,"rgba(255,220,90,0)");
+      ctx.fillStyle=glow; ctx.fillRect(x-110, baseY-160, 220, 210);
+      ctx.fillStyle="#7a4a22"; rr(x-42, baseY-70, 84, 70, 6); ctx.fill();
+      ctx.save(); ctx.translate(x, baseY-70); ctx.rotate(-0.55);
+      ctx.fillStyle="#9a6233"; rr(-42, -16, 84, 24, 6); ctx.fill();
+      ctx.restore();
+      ctx.fillStyle="#ffd23f"; ctx.fillRect(x-42, baseY-40, 84, 6);
+      ctx.fillStyle="#ffd23f";
+      ctx.beginPath(); ctx.arc(x-12, baseY-56, 5, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(x+10, baseY-50 + Math.sin(tG)*2, 5, 0, 7); ctx.fill();
+      ctx.fillStyle="#5fc8e6";
+      ctx.beginPath(); ctx.arc(x-2, baseY-62 + Math.cos(tG)*2, 4, 0, 7); ctx.fill();
+      ctx.fillStyle="#ff6f9c";
+      ctx.beginPath(); ctx.arc(x+22, baseY-58 + Math.sin(tG+1)*2, 4, 0, 7); ctx.fill();
     } else {
       ctx.strokeStyle="#fff"; ctx.lineWidth=10; ctx.lineCap="round";
       ctx.beginPath(); ctx.moveTo(x, baseY); ctx.lineTo(x, baseY-150); ctx.stroke();
@@ -952,10 +1144,12 @@
       for(let a=0;a<8.5;a+=0.1){ const r2=a*5.4; const px=Math.cos(a)*r2, py=Math.sin(a)*r2; if(a===0)ctx.moveTo(px,py); else ctx.lineTo(px,py); }
       ctx.stroke(); ctx.restore();
     }
-    ctx.fillStyle = theme==="castle" ? "#ffe1c0" : "#5B3A6E";
+    ctx.fillStyle = (theme==="castle"||theme==="underwater") ? "#ffe1c0" : "#5B3A6E";
     ctx.font="700 16px 'Baloo 2', sans-serif"; ctx.textAlign="center";
-    ctx.fillText(goalActive ? (theme==="castle"?"🚪 ESCAPE":"🍭 GOAL")
-                            : "🔒 Defeat the Gummy King!", x, baseY+24);
+    const goalLabel = theme==="castle" ? "🚪 ESCAPE"
+                    : theme==="underwater" ? "💎 TREASURE"
+                    : "🍭 GOAL";
+    ctx.fillText(goalActive ? goalLabel : "🔒 Defeat the Gummy King!", x, baseY+24);
   }
 
   function drawCat(){
@@ -1014,6 +1208,31 @@
       ctx.lineTo(cx, cyy-10); ctx.lineTo(cx+5, cyy-3); ctx.lineTo(cx+10, cyy-8);
       ctx.lineTo(cx+10, cyy); ctx.closePath(); ctx.fill();
     }
+    if(theme==="underwater"){
+      // air tank on the back (opposite the face)
+      ctx.fillStyle="#9aa0a8"; rr(-bw*0.50, -bh*0.78 + bodyBob, 9, bh*0.55, 3); ctx.fill();
+      ctx.fillStyle="#e84855"; ctx.fillRect(-bw*0.50, -bh*0.78 + bodyBob, 9, 5);
+      ctx.fillStyle="#fff"; ctx.fillRect(-bw*0.50+2, -bh*0.78 + bodyBob + 8, 5, 2);
+      // hose from tank to mouth
+      ctx.strokeStyle="#2a2a3a"; ctx.lineWidth=2; ctx.lineCap="round";
+      ctx.beginPath();
+      ctx.moveTo(-bw*0.41, -bh*0.55 + bodyBob);
+      ctx.quadraticCurveTo(-bw*0.1, -bh*0.88 + bodyBob, bw*0.05, hy+5);
+      ctx.stroke();
+      // mask (glass dome over the face)
+      ctx.fillStyle="rgba(180,230,255,.55)";
+      ctx.beginPath(); ctx.ellipse(bw*0.07, hy-2, bw*0.32, bw*0.24, 0, 0, 7); ctx.fill();
+      ctx.strokeStyle="#2a2a3a"; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.ellipse(bw*0.07, hy-2, bw*0.32, bw*0.24, 0, 0, 7); ctx.stroke();
+      // mask strap
+      ctx.beginPath();
+      ctx.moveTo(-bw*0.26, hy-bw*0.04);
+      ctx.lineTo(bw*0.40, hy-bw*0.08);
+      ctx.stroke();
+      // tiny highlight on the glass
+      ctx.fillStyle="rgba(255,255,255,.7)";
+      ctx.beginPath(); ctx.ellipse(bw*0.18, hy-7, 3, 1.6, -0.4, 0, 7); ctx.fill();
+    }
     ctx.restore();
   }
 
@@ -1069,13 +1288,13 @@
   function win(){
     state="won"; sfx.win();
     document.getElementById("winStats").textContent =
-      "You toppled the Gummy King with " + score + " points — " + fishCount + " fish and " + miceCount + " mice gobbled!";
+      "You sweetened the kingdom with " + score + " points — " + fishCount + " fish and " + miceCount + " mice gobbled!";
     show(winScreen);
   }
   function lose(){
     state="lost";
     document.getElementById("loseStats").textContent =
-      "You scored " + score + " points across " + (currentLevel+1) + " world(s). Castle Confectiana awaits another try!";
+      "You scored " + score + " points across " + (currentLevel+1) + " world(s). The kingdom awaits another try!";
     show(loseScreen);
   }
 
