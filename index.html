@@ -60,8 +60,8 @@
       width:100%;
       height:100dvh;
       justify-content:center;
-      gap:18px;
-      padding: max(env(safe-area-inset-top), 10px) 0 max(env(safe-area-inset-bottom), 10px);
+      gap:22px;
+      padding: max(env(safe-area-inset-top), 10px) 0 calc(max(env(safe-area-inset-bottom), 10px) + 28px);
     }
     #stage{
       width:100vw;
@@ -73,7 +73,7 @@
   }
 
   /* Landscape phones: cap stage by available height so touch bar + HUD fit.
-     ~130px reserves room for touch bar (~96), gap, and safe-area insets. */
+     ~160px reserves room for touch bar (~116), gap, and safe-area insets. */
   @media (orientation: landscape) and (max-height: 600px){
     body{
       padding:
@@ -84,7 +84,7 @@
     }
     #wrap{ gap:10px; }
     #stage{
-      width: min(96vw, calc((100dvh - 130px) * 16 / 9));
+      width: min(96vw, calc((100dvh - 160px) * 16 / 9));
     }
   }
 
@@ -161,16 +161,16 @@
     display:none;
     width:min(96vw, 168vh);
     align-items:center; justify-content:space-between;
-    gap:14px; padding:0 4px;
+    gap:18px; padding:0 6px;
   }
   #touch.on{ display:flex; }
-  .dpad{ display:flex; gap:14px; }
+  .dpad{ display:flex; gap:18px; }
   .tbtn{
-    width:clamp(66px,16vw,96px); height:clamp(66px,16vw,96px);
+    width:clamp(88px,21vw,116px); height:clamp(88px,21vw,116px);
     border-radius:50%; background:rgba(255,255,255,.92);
     border:3px solid var(--bubblegum);
     display:flex; align-items:center; justify-content:center;
-    font-size:clamp(28px,6.5vw,40px); color:var(--bubblegum-deep);
+    font-size:clamp(36px,8.5vw,48px); color:var(--bubblegum-deep);
     user-select:none; font-family:var(--display); font-weight:800;
     box-shadow:0 5px 0 rgba(91,58,110,.2);
     touch-action:manipulation;
