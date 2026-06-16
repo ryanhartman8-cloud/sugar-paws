@@ -361,7 +361,8 @@
   const THEMES = {
     candy:     { name:"Confection Kingdom" },
     castle:    { name:"Castle Confectiana" },
-    underwater:{ name:"Sugar Reef" }
+    underwater:{ name:"Sugar Reef" },
+    space:     { name:"Galactic Frontier" }
   };
 
   // ======================================================================
@@ -483,11 +484,11 @@
         {x:3635,y:311,t:"fish"}, {x:3850,y:398,t:"mouse"},{x:3980,y:398,t:"mouse"},
       ],
       enemies: [
-        {x:850, min:710,  max:1180, vx:1.4},
-        {x:1500,min:1320, max:1820, vx:1.4},
-        {x:2150,min:1970, max:2470, vx:1.5},
-        {x:2800,min:2620, max:3140, vx:1.5},
-        {x:3500,min:3290, max:3760, vx:1.5},
+        {x:850, min:710,  max:1180, vx:1.5},
+        {x:1500,min:1320, max:1820, vx:1.5},
+        {x:2150,min:1970, max:2470, vx:1.6},
+        {x:2800,min:2620, max:3140, vx:1.6},
+        {x:3500,min:3290, max:3760, vx:1.6},
       ],
       hazards: [
         {x:580, y:GROUND_Y+22, w:130, h:220},
@@ -495,6 +496,59 @@
         {x:1830,y:GROUND_Y+22, w:130, h:220},
         {x:2480,y:GROUND_Y+22, w:130, h:220},
         {x:3150,y:GROUND_Y+22, w:130, h:220},
+      ],
+      boss: null
+    },
+
+    // -------- WORLD 4: outer space --------
+    {
+      name: "Galactic Frontier", theme: "space",
+      goalX: 4250, worldW: 4400,
+      platforms: [
+        {x:0,    y:430, w:540, h:170, t:"moonrock"},
+        {x:670,  y:430, w:460, h:170, t:"moonrock"},
+        {x:1260, y:430, w:480, h:170, t:"moonrock"},
+        {x:1870, y:430, w:520, h:170, t:"moonrock"},
+        {x:2520, y:430, w:500, h:170, t:"moonrock"},
+        {x:3150, y:430, w:480, h:170, t:"moonrock"},
+        {x:3760, y:430, w:560, h:170, t:"moonrock"},
+        {x:280,  y:340, w:100, h:24, t:"asteroid"},
+        {x:780,  y:350, w:100, h:24, t:"satellite"},
+        {x:1000, y:330, w:100, h:24, t:"asteroid"},
+        {x:1340, y:345, w:110, h:24, t:"satellite"},
+        {x:1560, y:330, w:100, h:24, t:"asteroid"},
+        {x:1980, y:350, w:110, h:24, t:"satellite"},
+        {x:2200, y:335, w:100, h:24, t:"asteroid"},
+        {x:2620, y:345, w:100, h:24, t:"satellite"},
+        {x:2820, y:330, w:110, h:24, t:"asteroid"},
+        {x:3220, y:345, w:110, h:24, t:"satellite"},
+        {x:3420, y:335, w:100, h:24, t:"asteroid"},
+        {x:3900, y:340, w:110, h:24, t:"satellite"},
+      ],
+      collectibles: [
+        {x:330,y:316,t:"fish"}, {x:605,y:398,t:"mouse"},{x:830,y:326,t:"mouse"},
+        {x:1050,y:306,t:"mouse"},{x:1190,y:398,t:"mouse"},{x:1395,y:321,t:"fish"},
+        {x:1610,y:306,t:"mouse"},{x:1840,y:398,t:"mouse"},{x:2030,y:326,t:"mouse"},
+        {x:2250,y:311,t:"mouse"},{x:2470,y:398,t:"mouse"},{x:2670,y:321,t:"fish"},
+        {x:2870,y:306,t:"mouse"},{x:3105,y:398,t:"mouse"},{x:3275,y:321,t:"mouse"},
+        {x:3475,y:311,t:"mouse"},{x:3690,y:398,t:"mouse"},{x:3950,y:316,t:"fish"},
+        {x:4150,y:398,t:"mouse"},
+      ],
+      enemies: [
+        {x:850, min:680,  max:1100, vx:1.7},
+        {x:1450,min:1280, max:1700, vx:1.7},
+        {x:2100,min:1900, max:2350, vx:1.8},
+        {x:2700,min:2540, max:2980, vx:1.8},
+        {x:3300,min:3170, max:3590, vx:1.9},
+        {x:3950,min:3780, max:4280, vx:1.8},
+      ],
+      hazards: [
+        {x:545, y:GROUND_Y+22, w:120, h:220},
+        {x:1135,y:GROUND_Y+22, w:120, h:220},
+        {x:1745,y:GROUND_Y+22, w:120, h:220},
+        {x:2395,y:GROUND_Y+22, w:120, h:220},
+        {x:3025,y:GROUND_Y+22, w:120, h:220},
+        {x:3635,y:GROUND_Y+22, w:120, h:220},
       ],
       boss: null
     }
@@ -766,6 +820,58 @@
       ctx.globalAlpha=1;
       return;
     }
+    if(theme==="space"){
+      const g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,"#03030f"); g.addColorStop(0.55,"#180a30"); g.addColorStop(1,"#2a1450");
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      // twinkling stars
+      const sp = cam.x*0.3;
+      for(const s of stars){
+        const sx = s.x - sp; if(sx<-10||sx>W+10) continue;
+        s.tw += 0.04;
+        ctx.globalAlpha = 0.45 + Math.sin(s.tw)*0.4;
+        ctx.fillStyle = "#fff";
+        ctx.beginPath(); ctx.arc(sx, s.y, s.r, 0, 7); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      // distant nebula clouds
+      const np = cam.x*0.35;
+      for(let i=0;i<6;i++){
+        const nx = i*420 - (np % 420);
+        ctx.fillStyle = i%2 ? "rgba(180,80,210,.22)" : "rgba(80,130,220,.22)";
+        ctx.beginPath();
+        ctx.arc(nx, 190 + (i%3)*22, 90, 0, 7); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(nx+60, 170 + (i%2)*18, 64, 0, 7); ctx.fill();
+      }
+      // distant planets
+      const pp = cam.x*0.45;
+      // ringed planet
+      let planetX = 260 - ((pp + 0) % 1300);
+      if(planetX < -120) planetX += 1300;
+      ctx.fillStyle = "#ff8a5b";
+      ctx.beginPath(); ctx.arc(planetX, 110, 38, 0, 7); ctx.fill();
+      ctx.fillStyle = "#c45a36";
+      ctx.beginPath(); ctx.arc(planetX - 8, 100, 22, 0, 7); ctx.fill();
+      ctx.strokeStyle = "rgba(255,210,150,.65)"; ctx.lineWidth = 3;
+      ctx.save(); ctx.translate(planetX, 110); ctx.rotate(-0.32); ctx.scale(1, 0.32);
+      ctx.beginPath(); ctx.arc(0, 0, 62, 0, 7); ctx.stroke();
+      ctx.restore();
+      // blue planet
+      let planetX2 = 880 - ((pp + 0) % 1300);
+      if(planetX2 < -120) planetX2 += 1300;
+      ctx.fillStyle = "#74a8e0";
+      ctx.beginPath(); ctx.arc(planetX2, 84, 26, 0, 7); ctx.fill();
+      ctx.fillStyle = "#4a78b8";
+      ctx.beginPath(); ctx.arc(planetX2 + 6, 82, 13, 0, 7); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.35)";
+      ctx.beginPath(); ctx.arc(planetX2 - 7, 78, 4, 0, 7); ctx.fill();
+      // ground glow
+      const glow = ctx.createLinearGradient(0,H-80,0,H);
+      glow.addColorStop(0,"rgba(140,90,220,0)"); glow.addColorStop(1,"rgba(140,90,220,.28)");
+      ctx.fillStyle=glow; ctx.fillRect(0,H-80,W,80);
+      return;
+    }
     if(theme==="castle"){
       const g = ctx.createLinearGradient(0,0,0,H);
       g.addColorStop(0,"#241634"); g.addColorStop(0.55,"#46213f"); g.addColorStop(1,"#7d2b27");
@@ -943,12 +1049,89 @@
         ctx.fillStyle="#ffd23f"; rr(x+pl.w/2-5, y+pl.h/2-3, 10, 7, 2); ctx.fill();
         break;
       }
+      case "moonrock": {     // grey lunar surface with craters + crystal edge
+        ctx.fillStyle="#6a6a82"; rr(x,y,pl.w,pl.h,8); ctx.fill();
+        ctx.fillStyle="#8c8ca6"; rr(x,y,pl.w,18,8); ctx.fill();
+        ctx.fillStyle="#4a4a60";
+        for(let i=22;i<pl.w-12;i+=46){
+          const cy = 8 + ((i*7)%6);
+          ctx.beginPath(); ctx.arc(x+i, y+cy, 4, 0, 7); ctx.fill();
+        }
+        ctx.fillStyle="rgba(255,255,255,.18)";
+        for(let i=24;i<pl.w-12;i+=46){
+          const cy = 7 + ((i*7)%6);
+          ctx.beginPath(); ctx.arc(x+i-1, y+cy, 2, 0, 7); ctx.fill();
+        }
+        // glowing crystal trim along the top
+        const t = Date.now()/600;
+        ctx.fillStyle = "rgba(154,166,255,"+(0.7+Math.sin(t)*0.2)+")";
+        ctx.fillRect(x, y, pl.w, 3);
+        ctx.fillStyle="#c0caff";
+        for(let i=14;i<pl.w;i+=32){
+          ctx.beginPath();
+          ctx.moveTo(x+i, y+3); ctx.lineTo(x+i+4, y-4); ctx.lineTo(x+i+8, y+3);
+          ctx.closePath(); ctx.fill();
+        }
+        break;
+      }
+      case "asteroid": {     // rocky chunk
+        ctx.fillStyle="#6a5a48"; rr(x,y,pl.w,pl.h,12); ctx.fill();
+        ctx.fillStyle="#8a7458"; rr(x,y,pl.w,10,12); ctx.fill();
+        ctx.fillStyle="#3e3024";
+        ctx.beginPath(); ctx.arc(x+pl.w*0.22, y+pl.h*0.65, 3, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+pl.w*0.55, y+pl.h*0.55, 2.4, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+pl.w*0.82, y+pl.h*0.7, 2, 0, 7); ctx.fill();
+        ctx.fillStyle="rgba(255,255,255,.15)";
+        ctx.beginPath(); ctx.ellipse(x+pl.w*0.3, y+3, pl.w*0.18, 1.5, 0, 0, 7); ctx.fill();
+        break;
+      }
+      case "satellite": {    // metallic platform with solar panels
+        ctx.fillStyle="#c0c4cc"; rr(x,y,pl.w,pl.h,4); ctx.fill();
+        ctx.fillStyle="#9aa0a8"; rr(x,y,pl.w,8,4); ctx.fill();
+        ctx.fillStyle="#1a3a8a";
+        for(let i=4;i<pl.w-4;i+=14){
+          ctx.fillRect(x+i, y+11, 10, pl.h-15);
+        }
+        ctx.strokeStyle="rgba(160,200,255,.55)"; ctx.lineWidth=1;
+        for(let i=4;i<pl.w-4;i+=14){
+          ctx.beginPath(); ctx.moveTo(x+i+5, y+12); ctx.lineTo(x+i+5, y+pl.h-3); ctx.stroke();
+        }
+        // blinking warning light
+        const tw = Date.now()/300;
+        ctx.fillStyle = Math.sin(tw) > 0 ? "#ff4a4a" : "#5a1a1a";
+        ctx.beginPath(); ctx.arc(x+pl.w-8, y+4, 2.4, 0, 7); ctx.fill();
+        break;
+      }
     }
   }
 
   function drawLava(hz){
     const x = hz.x - cam.x;
     if(x+hz.w<-20 || x>W+20) return;
+    if(theme==="space"){
+      // black hole void with swirling event horizon
+      const gV = ctx.createRadialGradient(x+hz.w/2, hz.y+24, 2, x+hz.w/2, hz.y+24, hz.w);
+      gV.addColorStop(0, "#6a1aa0");
+      gV.addColorStop(0.45, "#1a0830");
+      gV.addColorStop(1, "#000");
+      ctx.fillStyle = gV; ctx.fillRect(x, hz.y, hz.w, hz.h);
+      // event horizon rim glow
+      ctx.strokeStyle = "rgba(180,120,255,.85)"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.ellipse(x+hz.w/2, hz.y+4, hz.w/2 - 4, 6, 0, 0, 7); ctx.stroke();
+      ctx.strokeStyle = "rgba(255,180,255,.45)"; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.ellipse(x+hz.w/2, hz.y+6, hz.w/2 + 2, 10, 0, 0, 7); ctx.stroke();
+      // swirling particles
+      const tV = Date.now()/300;
+      for(let i=0;i<8;i++){
+        const a = tV + i*0.78;
+        const r = hz.w*0.35 - (i%3)*4;
+        const px = x + hz.w/2 + Math.cos(a)*r;
+        const py = hz.y + 28 + Math.sin(a)*9;
+        ctx.fillStyle = "rgba(220,180,255,.75)";
+        ctx.beginPath(); ctx.arc(px, py, 2, 0, 7); ctx.fill();
+      }
+      return;
+    }
     if(theme==="underwater"){
       // urchin trench — deep abyss with spike teeth along the rim
       const gU = ctx.createLinearGradient(0,hz.y,0,hz.y+hz.h);
@@ -1017,8 +1200,71 @@
     ctx.save(); ctx.translate(x+e.w/2, y+e.h);
     if(!e.alive){
       ctx.globalAlpha = Math.max(0, e.squish/18);
-      ctx.fillStyle = theme==="underwater" ? "#7ad1d8" : "#ff8fc8";
+      ctx.fillStyle = theme==="underwater" ? "#7ad1d8"
+                    : theme==="space" ? "#ff8585"
+                    : "#ff8fc8";
       ctx.beginPath(); ctx.ellipse(0,-4,e.w/2+4,6,0,0,7); ctx.fill();
+      ctx.restore(); return;
+    }
+    if(theme==="space"){
+      // gummy bear in a spacesuit
+      const wob = Math.sin(e.x*0.1)*2;
+      const colors = ["#ff5a78","#ffb84d","#74e08a","#9a7aff","#5fc8e0"];
+      const col = colors[Math.abs(e.x|0) % colors.length];
+      const colD = "rgba(0,0,0,.22)";
+      // body (round bear belly)
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.ellipse(0, -e.h*0.5+wob, e.w*0.44, e.h*0.5, 0, 0, 7); ctx.fill();
+      // arms
+      ctx.beginPath(); ctx.ellipse(-e.w*0.45, -e.h*0.5+wob, 6, 8, 0, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse( e.w*0.45, -e.h*0.5+wob, 6, 8, 0, 0, 7); ctx.fill();
+      // belly highlight
+      ctx.fillStyle = "rgba(255,255,255,.32)";
+      ctx.beginPath(); ctx.ellipse(0, -e.h*0.42+wob, e.w*0.22, e.h*0.26, 0, 0, 7); ctx.fill();
+      // head
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(0, -e.h*0.95+wob, e.w*0.34, 0, 7); ctx.fill();
+      // ears
+      ctx.beginPath(); ctx.arc(-e.w*0.26, -e.h*1.08+wob, 5, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.26, -e.h*1.08+wob, 5, 0, 7); ctx.fill();
+      ctx.fillStyle = colD;
+      ctx.beginPath(); ctx.arc(-e.w*0.26, -e.h*1.08+wob, 2.5, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.26, -e.h*1.08+wob, 2.5, 0, 7); ctx.fill();
+      // snout
+      ctx.fillStyle = "rgba(255,255,255,.42)";
+      ctx.beginPath(); ctx.ellipse(0, -e.h*0.86+wob, e.w*0.18, e.h*0.13, 0, 0, 7); ctx.fill();
+      // eyes
+      ctx.fillStyle = "#1a1a2a";
+      ctx.beginPath(); ctx.arc(-e.w*0.11, -e.h*0.99+wob, 2, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.11, -e.h*0.99+wob, 2, 0, 7); ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(-e.w*0.10, -e.h*1.00+wob, 0.7, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.12, -e.h*1.00+wob, 0.7, 0, 7); ctx.fill();
+      // tiny mouth
+      ctx.strokeStyle = "#1a1a2a"; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.arc(0, -e.h*0.86+wob, 2.6, 0.2, Math.PI-0.2); ctx.stroke();
+      // life-support pack on the back
+      ctx.fillStyle = "#a8b0bc";
+      rr(-e.w*0.50, -e.h*0.78+wob, 7, e.h*0.55, 2); ctx.fill();
+      ctx.fillStyle = "#ff4a4a";
+      ctx.fillRect(-e.w*0.50, -e.h*0.78+wob, 7, 3);
+      // helmet (glass dome over head)
+      ctx.fillStyle = "rgba(190,230,255,.42)";
+      ctx.beginPath(); ctx.arc(0, -e.h*0.95+wob, e.w*0.46, 0, 7); ctx.fill();
+      ctx.strokeStyle = "#c5cdda"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0, -e.h*0.95+wob, e.w*0.46, 0, 7); ctx.stroke();
+      // collar ring
+      ctx.fillStyle = "#a8b0bc";
+      rr(-e.w*0.34, -e.h*0.58+wob, e.w*0.68, 5, 2); ctx.fill();
+      // antenna
+      ctx.strokeStyle = "#dde2ea"; ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(e.w*0.22, -e.h*1.32+wob); ctx.lineTo(e.w*0.30, -e.h*1.5+wob); ctx.stroke();
+      ctx.fillStyle = "#ff5a5a";
+      ctx.beginPath(); ctx.arc(e.w*0.30, -e.h*1.52+wob, 1.8, 0, 7); ctx.fill();
+      // helmet highlight
+      ctx.fillStyle = "rgba(255,255,255,.7)";
+      ctx.beginPath(); ctx.ellipse(-e.w*0.18, -e.h*1.10+wob, 4, 1.8, -0.4, 0, 7); ctx.fill();
       ctx.restore(); return;
     }
     if(theme==="underwater"){
@@ -1117,6 +1363,74 @@
         ctx.beginPath(); ctx.moveTo(x-30,baseY-95); ctx.lineTo(x+30,baseY-70); ctx.stroke();
         ctx.fillStyle="#ffce4d"; rr(x-12,baseY-92,24,22,5); ctx.fill();
       }
+    } else if(theme==="space"){
+      const tG = Date.now()/400;
+      // launchpad
+      ctx.fillStyle="#3a3a4a"; ctx.fillRect(x-46, baseY-10, 92, 10);
+      ctx.fillStyle="#ffd23f";
+      for(let i=-40;i<=32;i+=12) ctx.fillRect(x+i, baseY-3, 6, 3);
+      // gantry tower
+      ctx.fillStyle="#5a5a6a";
+      ctx.fillRect(x+36, baseY-150, 4, 140);
+      ctx.fillRect(x+58, baseY-150, 4, 140);
+      ctx.fillStyle="#7a7a8a";
+      for(let yy=baseY-140; yy<baseY-20; yy+=14) ctx.fillRect(x+36, yy, 26, 2);
+      // rocket body
+      ctx.fillStyle="#e8e8f0";
+      ctx.beginPath();
+      ctx.moveTo(x, baseY-170);
+      ctx.lineTo(x+22, baseY-140);
+      ctx.lineTo(x+22, baseY-30);
+      ctx.lineTo(x-22, baseY-30);
+      ctx.lineTo(x-22, baseY-140);
+      ctx.closePath(); ctx.fill();
+      // nose cone
+      ctx.fillStyle="#e84855";
+      ctx.beginPath();
+      ctx.moveTo(x, baseY-170);
+      ctx.lineTo(x+22, baseY-140);
+      ctx.lineTo(x-22, baseY-140);
+      ctx.closePath(); ctx.fill();
+      // body stripes
+      ctx.fillStyle="#ffd23f";
+      ctx.fillRect(x-22, baseY-128, 44, 5);
+      ctx.fillStyle="#74e0c2";
+      ctx.fillRect(x-22, baseY-50, 44, 4);
+      // fins
+      ctx.fillStyle="#e84855";
+      ctx.beginPath();
+      ctx.moveTo(x-22, baseY-58); ctx.lineTo(x-40, baseY-30); ctx.lineTo(x-22, baseY-30);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x+22, baseY-58); ctx.lineTo(x+40, baseY-30); ctx.lineTo(x+22, baseY-30);
+      ctx.closePath(); ctx.fill();
+      // window
+      ctx.fillStyle="#1a4a8a";
+      ctx.beginPath(); ctx.arc(x, baseY-105, 10, 0, 7); ctx.fill();
+      ctx.fillStyle="#5fc8ff";
+      ctx.beginPath(); ctx.arc(x, baseY-105, 7, 0, 7); ctx.fill();
+      ctx.fillStyle="rgba(255,255,255,.7)";
+      ctx.beginPath(); ctx.arc(x-3, baseY-108, 3, 0, 7); ctx.fill();
+      // exhaust / flame (only when goal is active)
+      if(goalActive){
+        const fl = 26 + Math.sin(tG*5)*9;
+        ctx.fillStyle="#ffd23f";
+        ctx.beginPath();
+        ctx.moveTo(x-14, baseY-30); ctx.lineTo(x, baseY-30+fl); ctx.lineTo(x+14, baseY-30);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle="#ff7a1a";
+        ctx.beginPath();
+        ctx.moveTo(x-8, baseY-30); ctx.lineTo(x, baseY-30+fl*0.62); ctx.lineTo(x+8, baseY-30);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle="#fff";
+        ctx.beginPath();
+        ctx.moveTo(x-3, baseY-30); ctx.lineTo(x, baseY-30+fl*0.32); ctx.lineTo(x+3, baseY-30);
+        ctx.closePath(); ctx.fill();
+        // launch glow
+        const lg = ctx.createRadialGradient(x, baseY-100, 6, x, baseY-100, 130);
+        lg.addColorStop(0,"rgba(255,210,90,.4)"); lg.addColorStop(1,"rgba(255,210,90,0)");
+        ctx.fillStyle=lg; ctx.fillRect(x-130, baseY-220, 260, 240);
+      }
     } else if(theme==="underwater"){
       const tG = Date.now()/400;
       const glow = ctx.createRadialGradient(x, baseY-50, 5, x, baseY-50, 110);
@@ -1144,10 +1458,11 @@
       for(let a=0;a<8.5;a+=0.1){ const r2=a*5.4; const px=Math.cos(a)*r2, py=Math.sin(a)*r2; if(a===0)ctx.moveTo(px,py); else ctx.lineTo(px,py); }
       ctx.stroke(); ctx.restore();
     }
-    ctx.fillStyle = (theme==="castle"||theme==="underwater") ? "#ffe1c0" : "#5B3A6E";
+    ctx.fillStyle = (theme==="castle"||theme==="underwater"||theme==="space") ? "#ffe1c0" : "#5B3A6E";
     ctx.font="700 16px 'Baloo 2', sans-serif"; ctx.textAlign="center";
     const goalLabel = theme==="castle" ? "🚪 ESCAPE"
                     : theme==="underwater" ? "💎 TREASURE"
+                    : theme==="space" ? "🚀 LAUNCH"
                     : "🍭 GOAL";
     ctx.fillText(goalActive ? goalLabel : "🔒 Defeat the Gummy King!", x, baseY+24);
   }
@@ -1207,6 +1522,35 @@
       ctx.moveTo(cx-10, cyy); ctx.lineTo(cx-10, cyy-8); ctx.lineTo(cx-5, cyy-3);
       ctx.lineTo(cx, cyy-10); ctx.lineTo(cx+5, cyy-3); ctx.lineTo(cx+10, cyy-8);
       ctx.lineTo(cx+10, cyy); ctx.closePath(); ctx.fill();
+    }
+    if(theme==="space"){
+      // life-support backpack
+      ctx.fillStyle="#bcc2cc"; rr(-bw*0.52, -bh*0.82 + bodyBob, 11, bh*0.62, 3); ctx.fill();
+      ctx.fillStyle="#7a808a"; ctx.fillRect(-bw*0.52, -bh*0.82 + bodyBob + 6, 11, 3);
+      ctx.fillStyle="#ff4a4a"; ctx.fillRect(-bw*0.52, -bh*0.82 + bodyBob, 11, 4);
+      ctx.fillStyle="#fff"; ctx.fillRect(-bw*0.52+3, -bh*0.82 + bodyBob + 14, 5, 2);
+      // antenna jutting up from the helmet
+      ctx.strokeStyle="#dde2ea"; ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(bw*0.05, hy-bw*0.5);
+      ctx.lineTo(bw*0.16, hy-bw*0.78);
+      ctx.stroke();
+      ctx.fillStyle="#ff5a5a";
+      ctx.beginPath(); ctx.arc(bw*0.18, hy-bw*0.80, 2.4, 0, 7); ctx.fill();
+      // glass dome covering the whole head
+      ctx.fillStyle="rgba(200,235,255,.4)";
+      ctx.beginPath(); ctx.arc(bw*0.05, hy-2, bw*0.55, 0, 7); ctx.fill();
+      ctx.strokeStyle="#cfd6e0"; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.arc(bw*0.05, hy-2, bw*0.55, 0, 7); ctx.stroke();
+      // collar ring
+      ctx.fillStyle="#a8b0bc";
+      rr(-bw*0.32, hy+bw*0.40, bw*0.74, 7, 3); ctx.fill();
+      ctx.fillStyle="#7a808a";
+      ctx.fillRect(-bw*0.32, hy+bw*0.40+5, bw*0.74, 2);
+      // dome highlight
+      ctx.fillStyle="rgba(255,255,255,.75)";
+      ctx.beginPath(); ctx.ellipse(bw*0.30, hy-12, 4, 2.4, -0.4, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(bw*0.32, hy-6, 2, 1.2, -0.4, 0, 7); ctx.fill();
     }
     if(theme==="underwater"){
       // air tank on the back (opposite the face)
