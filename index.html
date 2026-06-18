@@ -551,6 +551,59 @@
         {x:3635,y:GROUND_Y+22, w:120, h:220},
       ],
       boss: null
+    },
+
+    // -------- WORLD 5: haunted halloween hollow --------
+    {
+      name: "Pumpkin Hollow", theme: "haunted",
+      goalX: 4250, worldW: 4400,
+      platforms: [
+        {x:0,    y:430, w:560, h:170, t:"graveground"},
+        {x:680,  y:430, w:440, h:170, t:"graveground"},
+        {x:1240, y:430, w:480, h:170, t:"graveground"},
+        {x:1840, y:430, w:480, h:170, t:"graveground"},
+        {x:2450, y:430, w:500, h:170, t:"graveground"},
+        {x:3080, y:430, w:480, h:170, t:"graveground"},
+        {x:3690, y:430, w:710, h:170, t:"graveground"},
+        {x:300,  y:340, w:110, h:26, t:"tombstone"},
+        {x:760,  y:350, w:110, h:26, t:"pumpkin"},
+        {x:980,  y:330, w:110, h:26, t:"coffin"},
+        {x:1340, y:345, w:120, h:26, t:"tombstone"},
+        {x:1570, y:330, w:110, h:26, t:"pumpkin"},
+        {x:1940, y:350, w:120, h:26, t:"coffin"},
+        {x:2170, y:335, w:110, h:26, t:"tombstone"},
+        {x:2540, y:345, w:110, h:26, t:"pumpkin"},
+        {x:2760, y:330, w:120, h:26, t:"coffin"},
+        {x:3180, y:345, w:120, h:26, t:"tombstone"},
+        {x:3400, y:335, w:110, h:26, t:"pumpkin"},
+        {x:3800, y:340, w:110, h:26, t:"coffin"},
+      ],
+      collectibles: [
+        {x:355,y:316,t:"fish"}, {x:605,y:398,t:"mouse"},{x:815,y:326,t:"mouse"},
+        {x:1035,y:306,t:"mouse"},{x:1180,y:398,t:"mouse"},{x:1395,y:321,t:"fish"},
+        {x:1625,y:306,t:"mouse"},{x:1860,y:398,t:"mouse"},{x:1995,y:326,t:"mouse"},
+        {x:2225,y:311,t:"mouse"},{x:2470,y:398,t:"mouse"},{x:2595,y:321,t:"fish"},
+        {x:2815,y:306,t:"mouse"},{x:3105,y:398,t:"mouse"},{x:3235,y:321,t:"mouse"},
+        {x:3455,y:311,t:"fish"}, {x:3720,y:398,t:"mouse"},{x:3855,y:316,t:"fish"},
+        {x:4100,y:398,t:"mouse"},
+      ],
+      enemies: [
+        {x:850, min:680,  max:1100, vx:1.8},
+        {x:1450,min:1240, max:1700, vx:1.8},
+        {x:2050,min:1840, max:2300, vx:1.9},
+        {x:2700,min:2470, max:2920, vx:1.9},
+        {x:3300,min:3100, max:3540, vx:2.0},
+        {x:3950,min:3720, max:4200, vx:1.9},
+      ],
+      hazards: [
+        {x:585, y:GROUND_Y+22, w:90,  h:220},
+        {x:1145,y:GROUND_Y+22, w:90,  h:220},
+        {x:1725,y:GROUND_Y+22, w:115, h:220},
+        {x:2325,y:GROUND_Y+22, w:125, h:220},
+        {x:2955,y:GROUND_Y+22, w:125, h:220},
+        {x:3565,y:GROUND_Y+22, w:125, h:220},
+      ],
+      boss: null
     }
   ];
   worldTot.textContent = LEVELS.length;
@@ -872,6 +925,73 @@
       ctx.fillStyle=glow; ctx.fillRect(0,H-80,W,80);
       return;
     }
+    if(theme==="haunted"){
+      const g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,"#0a0820"); g.addColorStop(0.55,"#251336"); g.addColorStop(1,"#3a1a2e");
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      // full moon w/ craters + glow
+      const mx = W*0.78, my = 90;
+      const moonGlow = ctx.createRadialGradient(mx,my,8,mx,my,80);
+      moonGlow.addColorStop(0,"rgba(255,238,180,.55)"); moonGlow.addColorStop(1,"rgba(255,238,180,0)");
+      ctx.fillStyle=moonGlow; ctx.fillRect(mx-90,my-90,180,180);
+      ctx.fillStyle="#f4ecc4"; ctx.beginPath(); ctx.arc(mx,my,36,0,7); ctx.fill();
+      ctx.fillStyle="rgba(180,160,120,.45)";
+      ctx.beginPath(); ctx.arc(mx-10,my-6,5,0,7); ctx.fill();
+      ctx.beginPath(); ctx.arc(mx+8,my+10,7,0,7); ctx.fill();
+      ctx.beginPath(); ctx.arc(mx+14,my-12,3,0,7); ctx.fill();
+      // distant gnarled trees + graveyard fence
+      const px = cam.x*0.5;
+      for(let i=0;i<14;i++){
+        const tx = i*280 - (px % 280) - 140;
+        const th = 130 + (i%3)*32;
+        // tree trunk
+        ctx.fillStyle = "#0c0612";
+        ctx.fillRect(tx, H-th, 12, th);
+        // crooked branches
+        ctx.strokeStyle = "#0c0612"; ctx.lineWidth=4;
+        ctx.beginPath();
+        ctx.moveTo(tx+6, H-th+24); ctx.lineTo(tx-18, H-th+6);
+        ctx.moveTo(tx+12, H-th+34); ctx.lineTo(tx+34, H-th+10);
+        ctx.moveTo(tx+6, H-th+50); ctx.lineTo(tx-12, H-th+44);
+        ctx.stroke();
+        // tombstone silhouettes between trees
+        ctx.fillStyle="#1a1424";
+        const sx = tx + 90;
+        rr(sx, H-46, 20, 46, 4); ctx.fill();
+        ctx.fillRect(sx+30, H-32, 14, 32);
+      }
+      // flying bats (animated)
+      const bt = Date.now()/500;
+      for(let i=0;i<6;i++){
+        const bx = ((i*230 - cam.x*0.6) % (W+200) + W+200) % (W+200) - 100;
+        const by = 130 + Math.sin(bt + i*1.7)*30 + i*8;
+        const flap = Math.sin(bt*4 + i)*5;
+        ctx.fillStyle="#100818";
+        ctx.beginPath();
+        ctx.moveTo(bx, by);
+        ctx.quadraticCurveTo(bx-10, by-flap, bx-18, by+2);
+        ctx.quadraticCurveTo(bx-10, by+4, bx, by+5);
+        ctx.quadraticCurveTo(bx+10, by+4, bx+18, by+2);
+        ctx.quadraticCurveTo(bx+10, by-flap, bx, by);
+        ctx.closePath(); ctx.fill();
+      }
+      // drifting ember/dust motes (reuse stars array)
+      const ep = cam.x*0.3;
+      for(const s of stars){
+        const sx = s.x - ep; if(sx<-10||sx>W+10) continue;
+        s.tw += 0.03;
+        const ey = (s.y + 180 + Math.sin(s.tw)*30) % H;
+        ctx.globalAlpha = 0.4 + Math.sin(s.tw)*0.3;
+        ctx.fillStyle = "#b58aff";
+        ctx.beginPath(); ctx.arc(sx, H - ey*0.5, s.r, 0, 7); ctx.fill();
+      }
+      ctx.globalAlpha=1;
+      // creeping fog along the bottom
+      const fog = ctx.createLinearGradient(0,H-90,0,H);
+      fog.addColorStop(0,"rgba(160,120,180,0)"); fog.addColorStop(1,"rgba(180,140,200,.32)");
+      ctx.fillStyle=fog; ctx.fillRect(0,H-90,W,90);
+      return;
+    }
     if(theme==="castle"){
       const g = ctx.createLinearGradient(0,0,0,H);
       g.addColorStop(0,"#241634"); g.addColorStop(0.55,"#46213f"); g.addColorStop(1,"#7d2b27");
@@ -1102,6 +1222,95 @@
         ctx.beginPath(); ctx.arc(x+pl.w-8, y+4, 2.4, 0, 7); ctx.fill();
         break;
       }
+      case "graveground": { // haunted ground: dark dirt + grass tufts + bones
+        ctx.fillStyle="#1f1428"; rr(x,y,pl.w,pl.h,8); ctx.fill();
+        ctx.fillStyle="#2c1d36"; rr(x,y,pl.w,16,8); ctx.fill();
+        // pumpkin-orange grass tufts along the top
+        ctx.fillStyle="#ff7a1a";
+        for(let i=8;i<pl.w-4;i+=16){
+          ctx.beginPath();
+          ctx.moveTo(x+i, y+4); ctx.lineTo(x+i+3, y-3); ctx.lineTo(x+i+6, y+4);
+          ctx.closePath(); ctx.fill();
+        }
+        // scattered bones/skulls
+        ctx.fillStyle="#e8e0d0";
+        for(let i=24;i<pl.w-12;i+=70){
+          const by = y + 28 + ((i*7)%14);
+          ctx.beginPath(); ctx.arc(x+i, by, 3.2, 0, 7); ctx.fill();
+          ctx.fillRect(x+i+5, by-1, 8, 2.4);
+          ctx.beginPath(); ctx.arc(x+i+15, by, 3.2, 0, 7); ctx.fill();
+        }
+        // cracks
+        ctx.strokeStyle="rgba(0,0,0,.35)"; ctx.lineWidth=1.5;
+        for(let i=20;i<pl.w;i+=46){
+          ctx.beginPath(); ctx.moveTo(x+i, y+22); ctx.lineTo(x+i+10, y+44); ctx.lineTo(x+i+4, y+70); ctx.stroke();
+        }
+        break;
+      }
+      case "tombstone": {   // arched grey headstone with R.I.P.
+        ctx.fillStyle="#9aa0ac"; rr(x,y+6,pl.w,pl.h-6,3); ctx.fill();
+        // arched top
+        ctx.fillStyle="#9aa0ac";
+        ctx.beginPath(); ctx.arc(x+pl.w/2, y+9, pl.w/2-2, Math.PI, 0); ctx.fill();
+        ctx.fillRect(x+1, y+9, pl.w-2, 4);
+        // top highlight
+        ctx.fillStyle="rgba(255,255,255,.22)";
+        ctx.beginPath(); ctx.arc(x+pl.w/2, y+9, pl.w/2-2, Math.PI, Math.PI+0.5); ctx.fill();
+        // R.I.P. engraving
+        ctx.fillStyle="#3a3a48";
+        ctx.font="700 9px 'Baloo 2',sans-serif"; ctx.textAlign="center";
+        ctx.fillText("R.I.P.", x+pl.w/2, y+pl.h-7);
+        ctx.textAlign="start";
+        // moss
+        ctx.fillStyle="#4a7a3a";
+        ctx.beginPath(); ctx.arc(x+4, y+pl.h-2, 4, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+pl.w-6, y+pl.h-2, 3, 0, 7); ctx.fill();
+        break;
+      }
+      case "pumpkin": {     // jack-o-lantern row
+        ctx.fillStyle="#ff7a1a"; rr(x,y+4,pl.w,pl.h-4,12); ctx.fill();
+        // ridges
+        ctx.strokeStyle="#c45a10"; ctx.lineWidth=1.6;
+        for(let i=14;i<pl.w;i+=20){
+          ctx.beginPath();
+          ctx.moveTo(x+i, y+6); ctx.quadraticCurveTo(x+i+2, y+pl.h/2+2, x+i, y+pl.h-3);
+          ctx.stroke();
+        }
+        // stem on the left end
+        ctx.fillStyle="#3a5a26"; rr(x+4, y, 8, 8, 2); ctx.fill();
+        // carved faces
+        ctx.fillStyle="#fff3a8";
+        for(let i=12;i<pl.w-8;i+=36){
+          ctx.beginPath();
+          ctx.moveTo(x+i, y+12); ctx.lineTo(x+i+5, y+8); ctx.lineTo(x+i+10, y+12);
+          ctx.closePath(); ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(x+i+13, y+12); ctx.lineTo(x+i+18, y+8); ctx.lineTo(x+i+23, y+12);
+          ctx.closePath(); ctx.fill();
+          ctx.fillRect(x+i+3, y+pl.h-10, 18, 3);
+        }
+        break;
+      }
+      case "coffin": {      // wooden coffin with cross
+        // outer wood
+        ctx.fillStyle="#5a3a22"; rr(x,y,pl.w,pl.h,4); ctx.fill();
+        ctx.fillStyle="#7a4e2e"; rr(x,y,pl.w,9,4); ctx.fill();
+        // planks
+        ctx.strokeStyle="rgba(0,0,0,.4)"; ctx.lineWidth=1;
+        for(let i=18;i<pl.w;i+=22){
+          ctx.beginPath(); ctx.moveTo(x+i, y+3); ctx.lineTo(x+i, y+pl.h-3); ctx.stroke();
+        }
+        // iron corners
+        ctx.fillStyle="#2a2530";
+        ctx.fillRect(x+2, y+2, 4, 4);
+        ctx.fillRect(x+pl.w-6, y+2, 4, 4);
+        // pale cross
+        ctx.fillStyle="#e8e0d0";
+        const cxC = x+pl.w/2;
+        ctx.fillRect(cxC-2, y+5, 4, 14);
+        ctx.fillRect(cxC-7, y+9, 14, 4);
+        break;
+      }
     }
   }
 
@@ -1130,6 +1339,43 @@
         ctx.fillStyle = "rgba(220,180,255,.75)";
         ctx.beginPath(); ctx.arc(px, py, 2, 0, 7); ctx.fill();
       }
+      return;
+    }
+    if(theme==="haunted"){
+      // witch's cauldron — bubbling green brew set in a black iron pot
+      // iron rim
+      ctx.fillStyle="#0a0610";
+      rr(x-4, hz.y-2, hz.w+8, 10, 3); ctx.fill();
+      // brew gradient
+      const gH = ctx.createLinearGradient(0,hz.y,0,hz.y+hz.h);
+      gH.addColorStop(0,"#7afc6a"); gH.addColorStop(0.3,"#1a8a3a"); gH.addColorStop(1,"#0a1a0a");
+      ctx.fillStyle=gH; ctx.fillRect(x,hz.y+4,hz.w,hz.h-4);
+      // wobbling surface
+      const tH = Date.now()/280;
+      ctx.fillStyle="#c8ff9a";
+      ctx.beginPath(); ctx.moveTo(x,hz.y+6);
+      for(let i=0;i<=hz.w;i+=8){ ctx.lineTo(x+i, hz.y + 6 + Math.sin(i*0.4+tH)*2.6); }
+      ctx.lineTo(x+hz.w,hz.y+10); ctx.lineTo(x,hz.y+10); ctx.closePath(); ctx.fill();
+      // bubbles popping
+      for(let i=8;i<hz.w;i+=22){
+        const phase = tH + i*0.13;
+        const by = hz.y + 22 + Math.sin(phase)*6;
+        ctx.globalAlpha = 0.6 + Math.sin(phase*1.4)*0.3;
+        ctx.fillStyle="#e0ffb8";
+        ctx.beginPath(); ctx.arc(x+i, by, 2.4+Math.abs(Math.sin(phase))*1.6, 0, 7); ctx.fill();
+      }
+      ctx.globalAlpha=1;
+      // sickly green glow rising
+      const glowH = ctx.createLinearGradient(0,hz.y-30,0,hz.y+10);
+      glowH.addColorStop(0,"rgba(120,255,140,0)"); glowH.addColorStop(1,"rgba(120,255,140,.35)");
+      ctx.fillStyle=glowH; ctx.fillRect(x-6, hz.y-30, hz.w+12, 40);
+      // tiny floating skull
+      ctx.fillStyle="#e8e0d0";
+      const skY = hz.y + 38 + Math.sin(tH*0.7)*3;
+      ctx.beginPath(); ctx.arc(x+hz.w/2, skY, 4, 0, 7); ctx.fill();
+      ctx.fillStyle="#0a1a0a";
+      ctx.fillRect(x+hz.w/2-2.4, skY-1, 1.4, 1.6);
+      ctx.fillRect(x+hz.w/2+1, skY-1, 1.4, 1.6);
       return;
     }
     if(theme==="underwater"){
@@ -1202,6 +1448,7 @@
       ctx.globalAlpha = Math.max(0, e.squish/18);
       ctx.fillStyle = theme==="underwater" ? "#7ad1d8"
                     : theme==="space" ? "#ff8585"
+                    : theme==="haunted" ? "#d8c8ff"
                     : "#ff8fc8";
       ctx.beginPath(); ctx.ellipse(0,-4,e.w/2+4,6,0,0,7); ctx.fill();
       ctx.restore(); return;
@@ -1265,6 +1512,40 @@
       // helmet highlight
       ctx.fillStyle = "rgba(255,255,255,.7)";
       ctx.beginPath(); ctx.ellipse(-e.w*0.18, -e.h*1.10+wob, 4, 1.8, -0.4, 0, 7); ctx.fill();
+      ctx.restore(); return;
+    }
+    if(theme==="haunted"){
+      // floating ghost — wavy sheet body with hollow eyes
+      const tG = Date.now()/360;
+      const float = Math.sin(tG + e.x*0.02)*5;
+      // eerie aura
+      const aura = ctx.createRadialGradient(0, -e.h*0.55+float, 4, 0, -e.h*0.55+float, e.w*0.9);
+      aura.addColorStop(0, "rgba(220,200,255,.45)"); aura.addColorStop(1, "rgba(220,200,255,0)");
+      ctx.fillStyle = aura;
+      ctx.fillRect(-e.w*0.9, -e.h*1.4+float, e.w*1.8, e.h*1.8);
+      // body
+      ctx.fillStyle="#f4f0ff";
+      ctx.beginPath();
+      ctx.moveTo(-e.w*0.5, -e.h*0.2 + float);
+      ctx.quadraticCurveTo(-e.w*0.55, -e.h*1.1 + float, 0, -e.h*1.05 + float);
+      ctx.quadraticCurveTo(e.w*0.55, -e.h*1.1 + float, e.w*0.5, -e.h*0.2 + float);
+      // wavy bottom
+      const segs = 5;
+      for(let i=segs;i>=0;i--){
+        const sx = -e.w*0.5 + (e.w/segs)*i;
+        const sy = -e.h*0.2 + float + (i%2 ? 8 : 0) + Math.sin(tG*2 + i)*1.4;
+        ctx.lineTo(sx, sy);
+      }
+      ctx.closePath(); ctx.fill();
+      // shadow under body
+      ctx.fillStyle="rgba(150,130,200,.18)";
+      ctx.beginPath(); ctx.ellipse(0, -e.h*0.55+float, e.w*0.42, e.h*0.42, 0, 0, 7); ctx.fill();
+      // hollow black eyes
+      ctx.fillStyle="#1a1024";
+      ctx.beginPath(); ctx.ellipse(-e.w*0.16, -e.h*0.75+float, 3.2, 5, 0, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse( e.w*0.16, -e.h*0.75+float, 3.2, 5, 0, 0, 7); ctx.fill();
+      // mouth O
+      ctx.beginPath(); ctx.ellipse(0, -e.h*0.55+float, 3, 4, 0, 0, 7); ctx.fill();
       ctx.restore(); return;
     }
     if(theme==="underwater"){
@@ -1431,6 +1712,65 @@
         lg.addColorStop(0,"rgba(255,210,90,.4)"); lg.addColorStop(1,"rgba(255,210,90,0)");
         ctx.fillStyle=lg; ctx.fillRect(x-130, baseY-220, 260, 240);
       }
+    } else if(theme==="haunted"){
+      const tH = Date.now()/420;
+      // wobbling candle glow
+      const glow = ctx.createRadialGradient(x, baseY-90, 6, x, baseY-90, 130);
+      const flick = 0.55 + Math.sin(tH*4)*0.12;
+      glow.addColorStop(0,"rgba(255,170,60,"+flick+")"); glow.addColorStop(1,"rgba(255,170,60,0)");
+      ctx.fillStyle=glow; ctx.fillRect(x-130, baseY-220, 260, 240);
+      // stone pedestal
+      ctx.fillStyle="#2a2030"; rr(x-30, baseY-30, 60, 30, 4); ctx.fill();
+      ctx.fillStyle="#3a2a3e"; rr(x-30, baseY-30, 60, 8, 4); ctx.fill();
+      // giant pumpkin
+      const pcy = baseY - 78;
+      ctx.fillStyle="#ff7a1a";
+      ctx.beginPath(); ctx.ellipse(x, pcy, 52, 46, 0, 0, 7); ctx.fill();
+      // side lobes
+      ctx.fillStyle="#e86a10";
+      ctx.beginPath(); ctx.ellipse(x-28, pcy, 24, 44, 0, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(x+28, pcy, 24, 44, 0, 0, 7); ctx.fill();
+      // ridge highlights
+      ctx.strokeStyle="rgba(255,200,140,.55)"; ctx.lineWidth=1.6;
+      ctx.beginPath(); ctx.moveTo(x-14, pcy-40); ctx.quadraticCurveTo(x-18, pcy, x-14, pcy+40); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x+14, pcy-40); ctx.quadraticCurveTo(x+18, pcy, x+14, pcy+40); ctx.stroke();
+      // stem
+      ctx.fillStyle="#3a5a26"; rr(x-7, pcy-50, 14, 14, 3); ctx.fill();
+      ctx.strokeStyle="#264018"; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(x+6, pcy-50); ctx.quadraticCurveTo(x+18, pcy-58, x+14, pcy-44); ctx.stroke();
+      // carved face (always glowing once active; dark when locked but this level has no boss so it's always active)
+      const faceCol = goalActive ? "#ffe78a" : "#3a2a2a";
+      ctx.fillStyle = faceCol;
+      // triangle eyes
+      ctx.beginPath();
+      ctx.moveTo(x-22, pcy-6); ctx.lineTo(x-10, pcy-16); ctx.lineTo(x-6, pcy-2);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x+22, pcy-6); ctx.lineTo(x+10, pcy-16); ctx.lineTo(x+6, pcy-2);
+      ctx.closePath(); ctx.fill();
+      // nose
+      ctx.beginPath();
+      ctx.moveTo(x-4, pcy+6); ctx.lineTo(x+4, pcy+6); ctx.lineTo(x, pcy-2);
+      ctx.closePath(); ctx.fill();
+      // jagged grin
+      ctx.beginPath();
+      ctx.moveTo(x-26, pcy+14);
+      const teeth = [[-18,22],[-12,14],[-4,22],[4,14],[12,22],[18,14],[26,22]];
+      for(const t of teeth){ ctx.lineTo(x+t[0], pcy+t[1]); }
+      ctx.lineTo(x-26, pcy+22);
+      ctx.closePath(); ctx.fill();
+      // tiny candle flame poking out the stem
+      if(goalActive){
+        const fl = 6 + Math.sin(tH*6)*2;
+        ctx.fillStyle="#ffd23f";
+        ctx.beginPath();
+        ctx.moveTo(x-4, pcy-52); ctx.quadraticCurveTo(x, pcy-52-fl, x+4, pcy-52);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle="#ff7a1a";
+        ctx.beginPath();
+        ctx.moveTo(x-2, pcy-52); ctx.quadraticCurveTo(x, pcy-52-fl*0.65, x+2, pcy-52);
+        ctx.closePath(); ctx.fill();
+      }
     } else if(theme==="underwater"){
       const tG = Date.now()/400;
       const glow = ctx.createRadialGradient(x, baseY-50, 5, x, baseY-50, 110);
@@ -1458,11 +1798,12 @@
       for(let a=0;a<8.5;a+=0.1){ const r2=a*5.4; const px=Math.cos(a)*r2, py=Math.sin(a)*r2; if(a===0)ctx.moveTo(px,py); else ctx.lineTo(px,py); }
       ctx.stroke(); ctx.restore();
     }
-    ctx.fillStyle = (theme==="castle"||theme==="underwater"||theme==="space") ? "#ffe1c0" : "#5B3A6E";
+    ctx.fillStyle = (theme==="castle"||theme==="underwater"||theme==="space"||theme==="haunted") ? "#ffe1c0" : "#5B3A6E";
     ctx.font="700 16px 'Baloo 2', sans-serif"; ctx.textAlign="center";
     const goalLabel = theme==="castle" ? "🚪 ESCAPE"
                     : theme==="underwater" ? "💎 TREASURE"
                     : theme==="space" ? "🚀 LAUNCH"
+                    : theme==="haunted" ? "🎃 HAUNT"
                     : "🍭 GOAL";
     ctx.fillText(goalActive ? goalLabel : "🔒 Defeat the Gummy King!", x, baseY+24);
   }
@@ -1576,6 +1917,48 @@
       // tiny highlight on the glass
       ctx.fillStyle="rgba(255,255,255,.7)";
       ctx.beginPath(); ctx.ellipse(bw*0.18, hy-7, 3, 1.6, -0.4, 0, 7); ctx.fill();
+    }
+    if(theme==="haunted"){
+      // witch hat with orange band + little star buckle
+      const hx = bw*0.05;
+      const brimY = hy - bw*0.30;
+      // brim
+      ctx.fillStyle = "#1a1024";
+      ctx.beginPath(); ctx.ellipse(hx, brimY, bw*0.44, 5, 0, 0, 7); ctx.fill();
+      // cone (tilted slightly)
+      ctx.beginPath();
+      ctx.moveTo(hx - bw*0.22, brimY - 1);
+      ctx.lineTo(hx + bw*0.22, brimY - 1);
+      ctx.lineTo(hx + bw*0.05, brimY - bw*0.62);
+      ctx.closePath(); ctx.fill();
+      // bent tip
+      ctx.fillStyle = "#1a1024";
+      ctx.beginPath();
+      ctx.moveTo(hx + bw*0.05, brimY - bw*0.58);
+      ctx.lineTo(hx + bw*0.10, brimY - bw*0.66);
+      ctx.lineTo(hx + bw*0.18, brimY - bw*0.74);
+      ctx.lineTo(hx + bw*0.04, brimY - bw*0.62);
+      ctx.closePath(); ctx.fill();
+      // orange band
+      ctx.fillStyle = "#ff7a1a";
+      ctx.beginPath();
+      ctx.moveTo(hx - bw*0.20, brimY - 3);
+      ctx.lineTo(hx + bw*0.20, brimY - 3);
+      ctx.lineTo(hx + bw*0.16, brimY - 9);
+      ctx.lineTo(hx - bw*0.16, brimY - 9);
+      ctx.closePath(); ctx.fill();
+      // little star buckle
+      ctx.fillStyle = "#ffd23f";
+      const sxC = hx - bw*0.02, syC = brimY - 6;
+      ctx.beginPath();
+      for(let i=0;i<10;i++){
+        const ang = -Math.PI/2 + i*Math.PI/5;
+        const r = i%2 ? 1.2 : 3;
+        const px = sxC + Math.cos(ang)*r;
+        const py = syC + Math.sin(ang)*r;
+        if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      }
+      ctx.closePath(); ctx.fill();
     }
     ctx.restore();
   }
