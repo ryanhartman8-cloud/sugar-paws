@@ -388,7 +388,8 @@
     christmas: { name:"North Pole Frosting" },
     toy:       { name:"Andy's Playroom" },
     dino:      { name:"Jurassic Crunch" },
-    monsoon:   { name:"Mount Ararat Monsoon" }
+    monsoon:   { name:"Mount Ararat Monsoon" },
+    moria:     { name:"The Mines of Moria" }
   };
 
   // ======================================================================
@@ -841,6 +842,69 @@
         {x:2860,y:GROUND_Y+22, w:140, h:220},
       ],
       boss: null
+    },
+    // -------- WORLD 10: Mines of Moria + Balrog boss --------
+    {
+      name: "The Mines of Moria", theme: "moria",
+      goalX: 4180, worldW: 4400,
+      platforms: [
+        // dwarven stone floors interrupted by molten cracks
+        {x:0,    y:430, w:540, h:170, t:"dwarvenstone"},
+        {x:680,  y:430, w:420, h:170, t:"dwarvenstone"},
+        {x:1240, y:430, w:430, h:170, t:"dwarvenstone"},
+        {x:1810, y:430, w:480, h:170, t:"dwarvenstone"},
+        {x:2430, y:430, w:460, h:170, t:"dwarvenstone"},
+        // Bridge of Khazad-dûm — the long boss arena
+        {x:3030, y:430, w:1370,h:170, t:"bridge"},
+        // broken column tops + rubble piles strewn between the floors
+        {x:280,  y:330, w:110, h:24, t:"pillar"},
+        {x:560,  y:320, w:100, h:24, t:"rubble"},
+        {x:790,  y:340, w:110, h:24, t:"pillar"},
+        {x:990,  y:330, w:110, h:24, t:"rubble"},
+        {x:1320, y:325, w:120, h:24, t:"pillar"},
+        {x:1530, y:315, w:100, h:24, t:"rubble"},
+        {x:1880, y:330, w:110, h:24, t:"pillar"},
+        {x:2080, y:315, w:100, h:24, t:"rubble"},
+        {x:2210, y:345, w:100, h:24, t:"pillar"},
+        {x:2580, y:340, w:110, h:24, t:"rubble"},
+        {x:2790, y:320, w:110, h:24, t:"pillar"},
+        {x:2950, y:340, w:100, h:24, t:"rubble"},   // bridges the last pit before the boss arena
+      ],
+      collectibles: [
+        // rings — golden rings strewn through Balin's tomb
+        {x:160, y:398, t:"ring"},
+        {x:340, y:398, t:"ring"},
+        {x:760, y:398, t:"ring"},
+        {x:1015,y:316, t:"ring"},
+        {x:1380,y:301, t:"ring"},
+        {x:1900,y:398, t:"ring"},
+        {x:2135,y:291, t:"ring"},
+        {x:2380,y:398, t:"ring"},
+        {x:2630,y:316, t:"ring"},
+        {x:2840,y:296, t:"ring"},
+        // a few mice (so candy-power drops still randomize in)
+        {x:580, y:398, t:"mouse"},
+        {x:1500,y:398, t:"mouse"},
+        {x:3300,y:398, t:"mouse"},
+        // fish (lembas-bread stand-ins) for grow-ups
+        {x:1160,y:398, t:"fish"},
+        {x:2440,y:398, t:"fish"},
+        {x:3700,y:398, t:"fish"},
+      ],
+      enemies: [
+        {x:850, min:680,  max:1080, vx:2.0},
+        {x:1450,min:1260, max:1660, vx:2.0},
+        {x:2000,min:1840, max:2280, vx:2.1},
+        {x:2650,min:2470, max:2880, vx:2.1},
+      ],
+      hazards: [
+        {x:540, y:GROUND_Y+22, w:140, h:220},
+        {x:1100,y:GROUND_Y+22, w:140, h:220},
+        {x:1670,y:GROUND_Y+22, w:140, h:220},
+        {x:2290,y:GROUND_Y+22, w:140, h:220},
+        {x:2890,y:GROUND_Y+22, w:140, h:220},
+      ],
+      boss: { x:3700, w:120, h:104, hp:3, vx:1.9, min:3180, max:4180, name:"Balrog" }
     }
   ];
   worldTot.textContent = LEVELS.length;
@@ -1071,6 +1135,10 @@
       if(aabb(p, cb)){
         c.got=true;
         if(c.t==="mouse"){ miceCount++; score+=200; sfx.coin(); burst(c.x,c.y,"#9aa0ff",10); }
+        else if(c.t==="ring"){
+          miceCount++; score+=250; sfx.coin();
+          burst(c.x, c.y, "#ffd23f", 14);
+        }
         else if(c.t==="pair"){
           miceCount++; score+=200; sfx.coin();
           const animalColor = c.kind==="giraffe" ? "#f4c84a"
@@ -1234,6 +1302,95 @@
   }
 
   function drawBackground(){
+    if(theme==="moria"){
+      // pitch-dark cavern with a warm red glow growing toward the boss arena
+      const g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,"#05050a"); g.addColorStop(0.55,"#0e0810"); g.addColorStop(1,"#180a0c");
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      // hint of the Balrog's red glow seeping from the far right of the level
+      const balrogDist = Math.max(0, 1 - (cam.x / 2600));   // brighter as you near the bridge
+      const balrogGlow = ctx.createRadialGradient(W*0.92, H*0.55, 20, W*0.92, H*0.55, W*0.8);
+      balrogGlow.addColorStop(0, "rgba(255,90,40,"+(0.18 + (1-balrogDist)*0.45)+")");
+      balrogGlow.addColorStop(1, "rgba(255,90,40,0)");
+      ctx.fillStyle = balrogGlow; ctx.fillRect(0,0,W,H);
+      // cavern roof — jagged stalactites hanging from the top
+      ctx.fillStyle = "#0a0610";
+      const rp = cam.x*0.3;
+      for(let i=0;i<24;i++){
+        const tx = i*200 - (rp % 200) - 80;
+        const th = 26 + (i%4)*14;
+        ctx.beginPath();
+        ctx.moveTo(tx, 0); ctx.lineTo(tx + 18, 0); ctx.lineTo(tx + 9, th);
+        ctx.closePath(); ctx.fill();
+      }
+      // distant stone pillars (parallax depth)
+      const pp = cam.x*0.4;
+      ctx.fillStyle = "#1a141a";
+      for(let i=0;i<10;i++){
+        const tx = i*340 - (pp % 340) - 100;
+        const th = 240 + (i%3)*30;
+        // pillar shaft
+        ctx.fillRect(tx, H - 90 - th, 36, th);
+        // base block
+        ctx.fillStyle = "#231a1f";
+        ctx.fillRect(tx - 6, H - 90, 48, 16);
+        // capital block
+        ctx.fillRect(tx - 4, H - 90 - th, 44, 14);
+        // glowing rune ring on each pillar
+        ctx.fillStyle = "rgba(120,200,255,.55)";
+        ctx.fillRect(tx + 2, H - 90 - th + 36, 32, 2);
+        ctx.fillStyle = "rgba(140,220,255,.85)";
+        for(let r=0;r<3;r++){
+          ctx.fillRect(tx + 6 + r*10, H - 90 - th + 30, 4, 4);
+        }
+        // mounted torch sconce halfway up — flickers
+        const flk = 0.7 + Math.sin(Date.now()/120 + i)*0.3;
+        ctx.fillStyle = "rgba(255,150,40,"+(0.65*flk)+")";
+        ctx.beginPath();
+        ctx.arc(tx + 18, H - 90 - th*0.45, 8 + flk*1.5, 0, 7); ctx.fill();
+        ctx.fillStyle = "rgba(255,220,120,"+(0.85*flk)+")";
+        ctx.beginPath();
+        ctx.arc(tx + 18, H - 90 - th*0.45, 3.6, 0, 7); ctx.fill();
+        // sconce bracket
+        ctx.fillStyle = "#3a2a18";
+        ctx.fillRect(tx + 14, H - 90 - th*0.45 + 3, 8, 4);
+        ctx.fillStyle = "#1a141a";   // reset for next pillar
+      }
+      // glowing elvish runes etched into the back walls
+      const runeP = cam.x*0.55;
+      ctx.font = "14px monospace";
+      for(let i=0;i<16;i++){
+        const rx = i*250 - (runeP % 250) - 40;
+        const ry = 130 + (i%3)*22;
+        const pulse = 0.4 + Math.sin(Date.now()/700 + i*0.7)*0.25;
+        ctx.fillStyle = "rgba(150,220,255,"+pulse+")";
+        const glyph = "ᚱᚷᚦᚹᚾᛁ"[i % 6];
+        ctx.fillText(glyph, rx, ry);
+        ctx.fillText("ᛇᛋᛏᛒ"[(i+2) % 4], rx + 30, ry + 18);
+      }
+      // dark pool of water along the bottom — reflects torchlight
+      const pool = ctx.createLinearGradient(0, H-90, 0, H);
+      pool.addColorStop(0, "rgba(20,16,20,0)");
+      pool.addColorStop(0.4, "rgba(40,18,12,.35)");
+      pool.addColorStop(1, "rgba(80,30,12,.6)");
+      ctx.fillStyle = pool; ctx.fillRect(0, H-90, W, 90);
+      // a couple of glowing ember motes drifting through (reuse stars array)
+      const ep = cam.x*0.3;
+      for(const s of stars){
+        const sx = s.x - ep; if(sx<-10||sx>W+10) continue;
+        s.tw += 0.04;
+        const ey = (s.y + 220 + Math.sin(s.tw)*30) % H;
+        ctx.globalAlpha = 0.35 + Math.sin(s.tw)*0.3;
+        ctx.fillStyle = "#ffb04a";
+        ctx.beginPath(); ctx.arc(sx, H - ey*0.5, s.r, 0, 7); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      // foreground darkness vignette along the bottom
+      const vg = ctx.createLinearGradient(0,H-90,0,H);
+      vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,"rgba(0,0,0,.55)");
+      ctx.fillStyle=vg; ctx.fillRect(0,H-90,W,90);
+      return;
+    }
     if(theme==="monsoon"){
       // base stormy sky — bruised purple/grey, lighter where rain catches light
       const g = ctx.createLinearGradient(0,0,0,H);
@@ -2538,6 +2695,160 @@
         ctx.fillRect(x+pl.w-10, y+pl.h-5, 2, 2);
         break;
       }
+      case "dwarvenstone": {  // dark mossy dwarven block work with carved runes
+        // base stone (cool grey-blue, very dark)
+        ctx.fillStyle = "#2a2a35";
+        ctx.fillRect(x, y+10, pl.w, pl.h-10);
+        // brick course lines
+        ctx.strokeStyle = "rgba(0,0,0,.45)"; ctx.lineWidth = 1;
+        for(let row=0; row<3; row++){
+          const ry = y + 30 + row*40;
+          ctx.beginPath(); ctx.moveTo(x, ry); ctx.lineTo(x+pl.w, ry); ctx.stroke();
+          const off = (row%2) ? 30 : 0;
+          for(let bx = off; bx < pl.w; bx += 60){
+            ctx.beginPath(); ctx.moveTo(x+bx, ry); ctx.lineTo(x+bx, ry+40); ctx.stroke();
+          }
+        }
+        // top stone cap
+        ctx.fillStyle = "#3a3a48";
+        rr(x, y, pl.w, 14, 3); ctx.fill();
+        // engraved dwarven rune line along the top cap (faint cyan)
+        ctx.fillStyle = "rgba(140,220,255,.45)";
+        for(let i=14;i<pl.w-14;i+=22){
+          ctx.fillRect(x+i, y+5, 8, 1.4);
+          ctx.fillRect(x+i+2, y+8, 4, 1.4);
+        }
+        // patches of dark moss on a few stones
+        ctx.fillStyle = "rgba(50,80,40,.55)";
+        for(let i=18;i<pl.w;i+=70){
+          ctx.beginPath(); ctx.arc(x+i, y+pl.h-22, 8, 0, 7); ctx.fill();
+          ctx.beginPath(); ctx.arc(x+i+12, y+pl.h-30, 6, 0, 7); ctx.fill();
+        }
+        // a couple of glowing cracks where lava seeps through
+        ctx.strokeStyle = "rgba(255,120,40,.55)"; ctx.lineWidth = 1.4;
+        for(let i=40;i<pl.w;i+=110){
+          ctx.beginPath();
+          ctx.moveTo(x+i, y+pl.h-6);
+          ctx.lineTo(x+i+6, y+pl.h-22); ctx.lineTo(x+i+3, y+pl.h-40);
+          ctx.stroke();
+        }
+        break;
+      }
+      case "bridge": {  // narrow Khazad-dûm stone bridge — span with side rails
+        // dark void underneath — drawn first
+        ctx.fillStyle = "#08060c";
+        ctx.fillRect(x, y+pl.h-6, pl.w, 6);
+        // bridge body (lighter than ground stone to read as a span)
+        ctx.fillStyle = "#3a3540";
+        rr(x, y, pl.w, pl.h-6, 2); ctx.fill();
+        // top walking surface
+        ctx.fillStyle = "#4a4555";
+        rr(x, y, pl.w, 10, 2); ctx.fill();
+        // diagonal arch supports along the underside
+        ctx.fillStyle = "#1a1620";
+        for(let i=0;i<pl.w;i+=60){
+          ctx.beginPath();
+          ctx.moveTo(x+i, y+pl.h-6);
+          ctx.lineTo(x+i+30, y+pl.h-40);
+          ctx.lineTo(x+i+60, y+pl.h-6);
+          ctx.closePath(); ctx.fill();
+        }
+        // re-cap the top so arches don't poke through
+        ctx.fillStyle = "#3a3540";
+        rr(x, y, pl.w, pl.h-30, 2); ctx.fill();
+        ctx.fillStyle = "#4a4555";
+        rr(x, y, pl.w, 10, 2); ctx.fill();
+        // runic carving running the length
+        ctx.fillStyle = "rgba(140,220,255,.35)";
+        for(let i=18; i<pl.w-18; i+=28){
+          ctx.fillRect(x+i, y+4, 10, 1.4);
+          ctx.fillRect(x+i+3, y+7, 4, 1.4);
+        }
+        // hot orange glow underlining where lava reflects up
+        ctx.fillStyle = "rgba(255,120,40,.22)";
+        ctx.fillRect(x, y+pl.h-8, pl.w, 6);
+        // patches of moss
+        ctx.fillStyle = "rgba(50,80,40,.45)";
+        for(let i=40;i<pl.w;i+=160){
+          ctx.beginPath(); ctx.arc(x+i, y+12, 5, 0, 7); ctx.fill();
+        }
+        break;
+      }
+      case "pillar": {  // broken stone column cap — round drum
+        // shadow ring on the ground beneath
+        ctx.fillStyle = "rgba(0,0,0,.4)";
+        ctx.beginPath(); ctx.ellipse(x+pl.w/2, y+pl.h+3, pl.w*0.45, 4, 0, 0, 7); ctx.fill();
+        // round column drum body
+        ctx.fillStyle = "#3a3540";
+        rr(x, y+4, pl.w, pl.h-4, 6); ctx.fill();
+        // top capital ring (lighter)
+        ctx.fillStyle = "#5a5260";
+        rr(x-2, y, pl.w+4, 8, 4); ctx.fill();
+        // shaded underside curve
+        ctx.fillStyle = "#1f1a26";
+        rr(x, y+pl.h-6, pl.w, 4, 2); ctx.fill();
+        // carved dwarven star/glyph on the front
+        if(pl.w >= 80){
+          ctx.fillStyle = "rgba(140,220,255,.55)";
+          const sxC = x + pl.w/2, syC = y + 12;
+          ctx.beginPath();
+          for(let i=0;i<10;i++){
+            const ang = -Math.PI/2 + i*Math.PI/5;
+            const r = i%2 ? 1.6 : 3.6;
+            const px = sxC + Math.cos(ang)*r;
+            const py = syC + Math.sin(ang)*r;
+            if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+          }
+          ctx.closePath(); ctx.fill();
+        }
+        // chips and cracks
+        ctx.strokeStyle = "rgba(0,0,0,.55)"; ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x+6, y+8); ctx.lineTo(x+10, y+pl.h-4); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x+pl.w-8, y+10); ctx.lineTo(x+pl.w-12, y+pl.h-6); ctx.stroke();
+        break;
+      }
+      case "rubble": {  // pile of broken stones — irregular silhouette
+        // dark base shadow
+        ctx.fillStyle = "rgba(0,0,0,.4)";
+        ctx.beginPath(); ctx.ellipse(x+pl.w/2, y+pl.h+3, pl.w*0.5, 4, 0, 0, 7); ctx.fill();
+        // base pile body
+        ctx.fillStyle = "#2a242f";
+        rr(x, y+6, pl.w, pl.h-6, 4); ctx.fill();
+        // stacked stones on top (varied shapes)
+        ctx.fillStyle = "#3a3540";
+        const stones = [
+          {dx: 6,  dy: 0,  w: 18, h: 14},
+          {dx: 26, dy: 2,  w: 22, h: 12},
+          {dx: 52, dy: 0,  w: 16, h: 14},
+          {dx: 70, dy: 3,  w: 20, h: 11},
+        ];
+        for(const s of stones){
+          if(s.dx + s.w > pl.w - 4) continue;
+          rr(x + s.dx, y + s.dy, s.w, s.h, 2); ctx.fill();
+        }
+        // highlights on top edges
+        ctx.fillStyle = "#5a5260";
+        for(const s of stones){
+          if(s.dx + s.w > pl.w - 4) continue;
+          ctx.fillRect(x + s.dx + 2, y + s.dy + 1, s.w - 4, 1.6);
+        }
+        // crack lines
+        ctx.strokeStyle = "rgba(0,0,0,.5)"; ctx.lineWidth = 1;
+        for(let i=10;i<pl.w-6;i+=14){
+          ctx.beginPath();
+          ctx.moveTo(x+i, y+pl.h-10); ctx.lineTo(x+i+3, y+pl.h-2);
+          ctx.stroke();
+        }
+        // a faintly glowing ember caught in the rubble
+        if(pl.w >= 80){
+          const tEmber = Math.sin(Date.now()/300)*0.3 + 0.7;
+          ctx.fillStyle = "rgba(255,120,40,"+(0.6*tEmber)+")";
+          ctx.beginPath(); ctx.arc(x + pl.w*0.4, y + pl.h - 10, 2.6, 0, 7); ctx.fill();
+        }
+        break;
+      }
       case "hilltop": {  // mossy mountain peak poking above the floodwaters
         // dark stone base
         ctx.fillStyle = "#3a3548";
@@ -2999,6 +3310,35 @@
       ctx.beginPath(); ctx.arc(-3, -4, 2.8, 0, 7); ctx.fill();
       ctx.restore(); return;
     }
+    if(c.t==="ring"){
+      // a single precious gold ring with engraved elvish glow
+      const tR = Date.now()/220;
+      ctx.rotate(Math.sin(c.phase*0.6) * 0.18);
+      // warm pulsing halo
+      const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, 22);
+      const ga = 0.55 + Math.sin(tR)*0.18;
+      glow.addColorStop(0, "rgba(255,210,90,"+ga+")");
+      glow.addColorStop(1, "rgba(255,210,90,0)");
+      ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(0, 0, 22, 0, 7); ctx.fill();
+      // gold band — outer ring with darker hollow
+      ctx.fillStyle = "#ffd23f";
+      ctx.beginPath(); ctx.ellipse(0, 0, 10, 8, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "#1a1208";
+      ctx.beginPath(); ctx.ellipse(0, 0, 6, 4.4, 0, 0, 7); ctx.fill();
+      // engraved elvish glyphs as faint cyan ticks around the band
+      ctx.strokeStyle = "rgba(255,255,200,.8)"; ctx.lineWidth = 0.8;
+      for(let i=0;i<8;i++){
+        const a = i*Math.PI/4 + Math.sin(tR)*0.05;
+        const rx = Math.cos(a)*8, ry = Math.sin(a)*6.4;
+        ctx.beginPath();
+        ctx.moveTo(rx*0.78, ry*0.78); ctx.lineTo(rx*1.05, ry*1.05);
+        ctx.stroke();
+      }
+      // glossy highlight on the upper-left of the band
+      ctx.fillStyle = "rgba(255,255,200,.85)";
+      ctx.beginPath(); ctx.ellipse(-4, -4, 2.4, 1.2, -0.4, 0, 7); ctx.fill();
+      ctx.restore(); return;
+    }
     if(c.t==="pair"){
       // soft halo so the animal reads against the stormy sky
       ctx.globalAlpha=0.30; ctx.fillStyle="#fff"; ctx.beginPath(); ctx.arc(0,0,19,0,7); ctx.fill(); ctx.globalAlpha=1;
@@ -3104,6 +3444,7 @@
                     : theme==="toy" ? "#c8c8d6"
                     : theme==="dino" ? "#a8d4a0"
                     : theme==="monsoon" ? "#cfd6e0"
+                    : theme==="moria" ? "#9aaa82"
                     : "#ff8fc8";
       ctx.beginPath(); ctx.ellipse(0,-4,e.w/2+4,6,0,0,7); ctx.fill();
       ctx.restore(); return;
@@ -3167,6 +3508,103 @@
       // helmet highlight
       ctx.fillStyle = "rgba(255,255,255,.7)";
       ctx.beginPath(); ctx.ellipse(-e.w*0.18, -e.h*1.10+wob, 4, 1.8, -0.4, 0, 7); ctx.fill();
+      ctx.restore(); return;
+    }
+    if(theme==="moria"){
+      // cave goblin — grey-green skinny brute with a crude scimitar and yellow eyes
+      const wob = Math.sin(e.x*0.18)*1.6;
+      const stride = Math.sin(e.x*0.4)*3;
+      // tattered cloak/loincloth behind
+      ctx.fillStyle = "#3a2a30";
+      ctx.beginPath();
+      ctx.moveTo(-e.w*0.30, -e.h*0.55+wob);
+      ctx.lineTo(-e.w*0.50, -e.h*0.10+wob);
+      ctx.lineTo(-e.w*0.20, -e.h*0.20+wob);
+      ctx.closePath(); ctx.fill();
+      // skinny legs
+      ctx.fillStyle = "#5a6a4a";
+      rr(-e.w*0.18, -14+stride, 7, 14, 2); ctx.fill();
+      rr( e.w*0.10, -14-stride, 7, 14, 2); ctx.fill();
+      // gnarled feet with claws
+      ctx.fillStyle = "#3a4a30";
+      rr(-e.w*0.20, -3+stride, 11, 3, 1); ctx.fill();
+      rr( e.w*0.08, -3-stride, 11, 3, 1); ctx.fill();
+      ctx.fillStyle = "#fff0d0";
+      for(let i=0;i<3;i++){
+        ctx.beginPath();
+        ctx.arc(-e.w*0.20 + i*4, -1+stride, 0.9, 0, 7); ctx.fill();
+        ctx.beginPath();
+        ctx.arc( e.w*0.08 + i*4, -1-stride, 0.9, 0, 7); ctx.fill();
+      }
+      // hunched body
+      ctx.fillStyle = "#6a7a52";
+      ctx.beginPath();
+      ctx.ellipse(0, -e.h*0.50+wob, e.w*0.36, e.h*0.36, 0, 0, 7); ctx.fill();
+      // ribs/sinew showing
+      ctx.strokeStyle = "#3a4a30"; ctx.lineWidth = 1;
+      for(let i=-1;i<=1;i++){
+        ctx.beginPath();
+        ctx.moveTo(i*5-1, -e.h*0.62+wob);
+        ctx.lineTo(i*5+1, -e.h*0.42+wob);
+        ctx.stroke();
+      }
+      // arm holding a crude scimitar in front
+      ctx.fillStyle = "#5a6a4a";
+      rr(e.w*0.10, -e.h*0.62+wob, 6, e.h*0.40, 2); ctx.fill();
+      // scimitar (rusty curved blade)
+      ctx.fillStyle = "#3a2a18";   // hilt
+      rr(e.w*0.16, -e.h*0.30+wob, 4, 8, 1); ctx.fill();
+      ctx.fillStyle = "#aab0bc";   // blade
+      ctx.beginPath();
+      ctx.moveTo(e.w*0.18, -e.h*0.32+wob);
+      ctx.quadraticCurveTo(e.w*0.45, -e.h*0.55+wob, e.w*0.55, -e.h*0.30+wob);
+      ctx.lineTo(e.w*0.50, -e.h*0.24+wob);
+      ctx.quadraticCurveTo(e.w*0.36, -e.h*0.32+wob, e.w*0.18, -e.h*0.22+wob);
+      ctx.closePath(); ctx.fill();
+      // edge shine on the blade
+      ctx.fillStyle = "rgba(255,255,255,.45)";
+      ctx.beginPath();
+      ctx.moveTo(e.w*0.22, -e.h*0.34+wob);
+      ctx.quadraticCurveTo(e.w*0.42, -e.h*0.50+wob, e.w*0.50, -e.h*0.32+wob);
+      ctx.stroke();
+      // hunched head with big ears
+      ctx.fillStyle = "#6a7a52";
+      ctx.beginPath();
+      ctx.arc(e.w*0.05, -e.h*0.90+wob, e.w*0.26, 0, 7); ctx.fill();
+      // long pointed ears
+      ctx.beginPath();
+      ctx.moveTo(-e.w*0.20, -e.h*0.92+wob);
+      ctx.lineTo(-e.w*0.36, -e.h*1.05+wob);
+      ctx.lineTo(-e.w*0.16, -e.h*0.82+wob);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(e.w*0.26, -e.h*0.92+wob);
+      ctx.lineTo(e.w*0.42, -e.h*1.05+wob);
+      ctx.lineTo(e.w*0.22, -e.h*0.82+wob);
+      ctx.closePath(); ctx.fill();
+      // grimy snout
+      ctx.fillStyle = "#5a6a44";
+      ctx.beginPath(); ctx.ellipse(e.w*0.20, -e.h*0.84+wob, 5, 3, 0, 0, 7); ctx.fill();
+      // glowing yellow eyes
+      ctx.fillStyle = "#ffe09a";
+      ctx.beginPath(); ctx.arc(-e.w*0.04, -e.h*0.93+wob, 2.2, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.10, -e.h*0.93+wob, 2.2, 0, 7); ctx.fill();
+      ctx.fillStyle = "#1a1a24";
+      ctx.beginPath(); ctx.arc(-e.w*0.03, -e.h*0.93+wob, 1, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.11, -e.h*0.93+wob, 1, 0, 7); ctx.fill();
+      // grimacing mouth showing fangs
+      ctx.strokeStyle = "#1a1a24"; ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-e.w*0.04, -e.h*0.82+wob);
+      ctx.lineTo(e.w*0.16, -e.h*0.82+wob); ctx.stroke();
+      ctx.fillStyle = "#fff";
+      for(let i=0;i<3;i++){
+        ctx.beginPath();
+        ctx.moveTo(-e.w*0.04 + i*4, -e.h*0.82+wob);
+        ctx.lineTo(-e.w*0.02 + i*4, -e.h*0.78+wob);
+        ctx.lineTo(0      + i*4, -e.h*0.82+wob);
+        ctx.closePath(); ctx.fill();
+      }
       ctx.restore(); return;
     }
     if(theme==="monsoon"){
@@ -3587,6 +4025,201 @@
     const b = boss; const x = b.x - cam.x, y = b.y;
     if(x<-150||x>W+150) return;
     const flash = b.alive && b.hitCd>0 && Math.floor(b.hitCd/4)%2===0;
+    if(theme==="moria"){
+      // --- The Balrog of Morgoth ---
+      // hulking shadow demon, smouldering body, wreathed in flame, horns, fiery whip
+      const tB = Date.now()/180;
+      const body  = flash ? "#a85a3a" : "#1a0a08";
+      const body2 = flash ? "#7a3520" : "#080406";
+      const ember = flash ? "#ffd23f" : "#ff7a1a";
+      // huge fiery aura behind the boss
+      const auraR = b.w*1.3 + Math.sin(tB)*4;
+      const aura = ctx.createRadialGradient(x+b.w/2, y+b.h*0.4, b.w*0.2, x+b.w/2, y+b.h*0.4, auraR);
+      aura.addColorStop(0, "rgba(255,150,40,.55)");
+      aura.addColorStop(0.5, "rgba(255,70,20,.25)");
+      aura.addColorStop(1, "rgba(255,70,20,0)");
+      ctx.fillStyle = aura;
+      ctx.fillRect(x - b.w*0.5, y - b.h*0.6, b.w*2, b.h*2);
+      ctx.save(); ctx.translate(x+b.w/2, y+b.h); ctx.scale(b.face,1);
+      const bob = Math.sin(b.animT*0.13)*3;
+      // tail dragging behind, glowing tip
+      ctx.strokeStyle = body; ctx.lineWidth = 12; ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-b.w*0.30, -b.h*0.30+bob);
+      ctx.quadraticCurveTo(-b.w*0.70, -b.h*0.05+bob, -b.w*0.90, -b.h*0.30+bob + Math.sin(tB*0.7)*4);
+      ctx.stroke();
+      ctx.fillStyle = ember;
+      ctx.beginPath();
+      ctx.arc(-b.w*0.90, -b.h*0.30+bob + Math.sin(tB*0.7)*4, 5, 0, 7); ctx.fill();
+      // huge bat-like wings folded behind, partially extended
+      ctx.fillStyle = body2;
+      ctx.beginPath();
+      ctx.moveTo(-b.w*0.18, -b.h*0.85+bob);
+      ctx.quadraticCurveTo(-b.w*0.70, -b.h*1.25+bob, -b.w*0.95, -b.h*0.55+bob);
+      ctx.quadraticCurveTo(-b.w*0.50, -b.h*0.75+bob, -b.w*0.20, -b.h*0.55+bob);
+      ctx.closePath(); ctx.fill();
+      // wing membrane veins (ember-lit)
+      ctx.strokeStyle = "rgba(255,120,40,.55)"; ctx.lineWidth = 1.4;
+      for(let i=0;i<3;i++){
+        ctx.beginPath();
+        ctx.moveTo(-b.w*0.20, -b.h*0.80+bob);
+        ctx.lineTo(-b.w*0.55 - i*0.08*b.w, -b.h*(0.85 - i*0.12)+bob);
+        ctx.stroke();
+      }
+      // right wing mirrored
+      ctx.fillStyle = body2;
+      ctx.beginPath();
+      ctx.moveTo(b.w*0.10, -b.h*0.85+bob);
+      ctx.quadraticCurveTo(b.w*0.55, -b.h*1.15+bob, b.w*0.80, -b.h*0.50+bob);
+      ctx.quadraticCurveTo(b.w*0.40, -b.h*0.72+bob, b.w*0.12, -b.h*0.55+bob);
+      ctx.closePath(); ctx.fill();
+      // smoldering legs (massive, hooved)
+      ctx.fillStyle = body;
+      rr(-b.w*0.22, -b.h*0.30+bob, 22, b.h*0.30, 5); ctx.fill();
+      rr( b.w*0.06, -b.h*0.30+bob, 22, b.h*0.30, 5); ctx.fill();
+      // cloven hooves
+      ctx.fillStyle = body2;
+      rr(-b.w*0.26, -16, 30, 16, 4); ctx.fill();
+      rr( b.w*0.02, -16, 30, 16, 4); ctx.fill();
+      ctx.fillStyle = ember;
+      ctx.fillRect(-b.w*0.18, -3, 4, 3);
+      ctx.fillRect( b.w*0.08, -3, 4, 3);
+      // hulking torso — wreathed in dark smoke + glowing magma cracks
+      ctx.fillStyle = body;
+      rr(-b.w*0.42, -b.h*0.85+bob, b.w*0.84, b.h*0.65, 16); ctx.fill();
+      // chest magma cracks (the iconic glowing veins)
+      ctx.strokeStyle = "rgba(255,120,40,.85)"; ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(-b.w*0.30, -b.h*0.70+bob);
+      ctx.lineTo(-b.w*0.10, -b.h*0.45+bob);
+      ctx.lineTo( b.w*0.18, -b.h*0.60+bob);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-b.w*0.20, -b.h*0.40+bob);
+      ctx.lineTo( b.w*0.05, -b.h*0.30+bob);
+      ctx.lineTo( b.w*0.28, -b.h*0.45+bob);
+      ctx.stroke();
+      // hot orange highlights along the cracks
+      ctx.strokeStyle = "rgba(255,210,90,.7)"; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-b.w*0.28, -b.h*0.70+bob);
+      ctx.lineTo(-b.w*0.10, -b.h*0.46+bob); ctx.stroke();
+      // smoke rising from shoulders
+      ctx.fillStyle = "rgba(30,20,18,.45)";
+      for(let i=0;i<3;i++){
+        const sx = -b.w*0.30 + i*b.w*0.30;
+        const sy = -b.h*0.95 + Math.sin(tB + i)*2;
+        ctx.beginPath();
+        ctx.arc(sx, sy - 14 - i*6, 9 + i*2, 0, 7); ctx.fill();
+      }
+      // arm holding the flaming whip (front arm)
+      ctx.fillStyle = body;
+      rr(b.w*0.16, -b.h*0.78+bob, 12, b.h*0.40, 4); ctx.fill();
+      // wrist
+      ctx.beginPath(); ctx.arc(b.w*0.22, -b.h*0.40+bob, 9, 0, 7); ctx.fill();
+      // whip — long curling fire cord trailing out in front
+      const whipAng = Math.sin(b.animT*0.10)*0.55;
+      ctx.save();
+      ctx.translate(b.w*0.28, -b.h*0.40+bob);
+      ctx.rotate(whipAng);
+      const whipColors = ["#ff3a18", "#ff7a1a", "#ffce4d", "#fff2a8"];
+      for(let layer=0; layer<whipColors.length; layer++){
+        ctx.strokeStyle = whipColors[layer];
+        ctx.lineWidth = 8 - layer*1.6;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        for(let i=1; i<=6; i++){
+          const wave = Math.sin(tB + i*0.6 + layer*0.4) * (6 - layer*1.2);
+          ctx.lineTo(i*14, -wave - i*1.5);
+        }
+        ctx.stroke();
+      }
+      // whip cracker — bright ember at the tip
+      ctx.fillStyle = "#fff2a8";
+      ctx.beginPath(); ctx.arc(6*14, -6*1.5, 3, 0, 7); ctx.fill();
+      ctx.fillStyle = "#ffd23f";
+      ctx.beginPath(); ctx.arc(6*14, -6*1.5, 5, 0, 7); ctx.fill();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = "rgba(255,210,90,.5)";
+      ctx.beginPath(); ctx.arc(6*14, -6*1.5, 9, 0, 7); ctx.fill();
+      ctx.globalCompositeOperation = "source-over";
+      ctx.restore();
+      // huge horned head
+      const hy = -b.h*1.02 + bob;
+      ctx.fillStyle = body;
+      ctx.beginPath();
+      ctx.ellipse(b.w*0.05, hy, b.w*0.30, b.h*0.22, 0, 0, 7); ctx.fill();
+      // horns (curving back from the brow)
+      ctx.fillStyle = body2;
+      ctx.beginPath();
+      ctx.moveTo(-b.w*0.20, hy - b.h*0.08);
+      ctx.quadraticCurveTo(-b.w*0.45, hy - b.h*0.30, -b.w*0.32, hy - b.h*0.46);
+      ctx.lineTo(-b.w*0.22, hy - b.h*0.26);
+      ctx.quadraticCurveTo(-b.w*0.15, hy - b.h*0.20, -b.w*0.10, hy - b.h*0.10);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(b.w*0.20, hy - b.h*0.08);
+      ctx.quadraticCurveTo(b.w*0.45, hy - b.h*0.30, b.w*0.34, hy - b.h*0.46);
+      ctx.lineTo(b.w*0.22, hy - b.h*0.26);
+      ctx.quadraticCurveTo(b.w*0.15, hy - b.h*0.20, b.w*0.10, hy - b.h*0.10);
+      ctx.closePath(); ctx.fill();
+      // horn ember tips
+      ctx.fillStyle = ember;
+      ctx.beginPath(); ctx.arc(-b.w*0.34, hy - b.h*0.44, 2.6, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( b.w*0.36, hy - b.h*0.44, 2.6, 0, 7); ctx.fill();
+      // glowing eyes — two pits of fire
+      ctx.fillStyle = "rgba(255,180,40,.6)";
+      ctx.beginPath(); ctx.arc(-b.w*0.06, hy - b.h*0.02, 6, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( b.w*0.14, hy - b.h*0.02, 6, 0, 7); ctx.fill();
+      ctx.fillStyle = "#ffd23f";
+      ctx.beginPath(); ctx.arc(-b.w*0.06, hy - b.h*0.02, 2.6, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( b.w*0.14, hy - b.h*0.02, 2.6, 0, 7); ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(-b.w*0.05, hy - b.h*0.03, 1.1, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( b.w*0.15, hy - b.h*0.03, 1.1, 0, 7); ctx.fill();
+      // furious brow lines
+      ctx.strokeStyle = "rgba(20,10,5,.8)"; ctx.lineWidth = 2.4; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(-b.w*0.16, hy - b.h*0.10); ctx.lineTo(-b.w*0.02, hy - b.h*0.04); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo( b.w*0.20, hy - b.h*0.10); ctx.lineTo( b.w*0.06, hy - b.h*0.04); ctx.stroke();
+      // gaping fanged mouth — glows from inside
+      ctx.fillStyle = "rgba(255,90,20,.85)";
+      ctx.beginPath();
+      ctx.ellipse(b.w*0.04, hy + b.h*0.12, b.w*0.18, b.h*0.07, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "#ffd23f";
+      ctx.beginPath();
+      ctx.ellipse(b.w*0.04, hy + b.h*0.12, b.w*0.12, b.h*0.04, 0, 0, 7); ctx.fill();
+      // fangs
+      ctx.fillStyle = "#fff0d0";
+      for(let i=0;i<5;i++){
+        ctx.beginPath();
+        ctx.moveTo(-b.w*0.10 + i*5, hy + b.h*0.08);
+        ctx.lineTo(-b.w*0.08 + i*5, hy + b.h*0.16);
+        ctx.lineTo(-b.w*0.06 + i*5, hy + b.h*0.08);
+        ctx.closePath(); ctx.fill();
+      }
+      // tiny floating embers around the head
+      ctx.fillStyle = "rgba(255,180,60,.85)";
+      for(let i=0;i<6;i++){
+        const ea = tB*0.7 + i*1.2;
+        const ex = Math.cos(ea) * b.w*0.55;
+        const ey = -b.h*1.0 + Math.sin(ea*1.3)*8 - i*2;
+        ctx.beginPath(); ctx.arc(ex, ey, 1.6, 0, 7); ctx.fill();
+      }
+      ctx.restore();
+      // HP pips — red flame icons above the boss
+      const cxB = x + b.w/2;
+      for(let i=0;i<3;i++){
+        ctx.fillStyle = i<b.hp ? "#ff5a1a" : "rgba(255,255,255,.35)";
+        // little flame pip
+        ctx.beginPath();
+        ctx.moveTo(cxB-24+i*17 + 6, y-24);
+        ctx.quadraticCurveTo(cxB-24+i*17 + 12, y-18, cxB-24+i*17 + 6, y-10);
+        ctx.quadraticCurveTo(cxB-24+i*17 + 0, y-18, cxB-24+i*17 + 6, y-24);
+        ctx.closePath(); ctx.fill();
+      }
+      return;
+    }
     if(theme==="dino"){
       // --- T-Rex ---
       const body  = flash ? "#a8e088" : "#4a8a3a";
@@ -4267,6 +4900,119 @@
         ctx.moveTo(x-2, pcy-52); ctx.quadraticCurveTo(x, pcy-52-fl*0.65, x+2, pcy-52);
         ctx.closePath(); ctx.fill();
       }
+    } else if(theme==="moria"){
+      const tG = Date.now()/400;
+      // ambient stone glow behind the door
+      const glow = ctx.createRadialGradient(x, baseY-95, 5, x, baseY-95, 170);
+      const gAlpha = goalActive ? 0.7 : 0.22;
+      glow.addColorStop(0,"rgba(200,230,255,"+gAlpha+")");
+      glow.addColorStop(1,"rgba(200,230,255,0)");
+      ctx.fillStyle=glow; ctx.fillRect(x-160, baseY-260, 320, 280);
+      // stone arch surround
+      ctx.fillStyle = "#2a242f";
+      rr(x-58, baseY-180, 116, 180, 4); ctx.fill();
+      // chiseled outer arch ring
+      ctx.fillStyle = "#3a3540";
+      ctx.beginPath();
+      ctx.moveTo(x-58, baseY-90);
+      ctx.lineTo(x-58, baseY-130);
+      ctx.quadraticCurveTo(x, baseY-200, x+58, baseY-130);
+      ctx.lineTo(x+58, baseY-90);
+      ctx.closePath(); ctx.fill();
+      // recessed door panel
+      ctx.fillStyle = "#08060c";
+      rr(x-46, baseY-170, 92, 170, 3); ctx.fill();
+      // door arch peak (rounded top)
+      ctx.beginPath();
+      ctx.moveTo(x-46, baseY-130);
+      ctx.quadraticCurveTo(x, baseY-184, x+46, baseY-130);
+      ctx.lineTo(x+46, baseY-100);
+      ctx.lineTo(x-46, baseY-100);
+      ctx.closePath(); ctx.fill();
+      // ithildin etchings — visible only when the goal is active (moonlight reveals them)
+      if(goalActive){
+        ctx.strokeStyle = "rgba(200,230,255,.95)";
+        ctx.lineWidth = 1.6;
+        // outer arch ring
+        ctx.beginPath();
+        ctx.arc(x, baseY-130, 36, Math.PI, 2*Math.PI);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x, baseY-130, 30, Math.PI, 2*Math.PI);
+        ctx.stroke();
+        // central tree of Galadriel (stylized)
+        ctx.strokeStyle = "rgba(220,240,255,.85)";
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(x, baseY-105); ctx.lineTo(x, baseY-150); ctx.stroke();
+        // tree branches
+        for(let i=0;i<4;i++){
+          const a = -Math.PI/2 - 0.5 + i*0.3;
+          const len = 16 - i*1.5;
+          ctx.beginPath();
+          ctx.moveTo(x, baseY-150);
+          ctx.lineTo(x + Math.cos(a)*len, baseY-150 + Math.sin(a)*len);
+          ctx.stroke();
+          // mirror
+          ctx.beginPath();
+          ctx.moveTo(x, baseY-150);
+          ctx.lineTo(x + Math.cos(Math.PI - a - Math.PI)*len, baseY-150 + Math.sin(Math.PI - a - Math.PI)*len);
+          ctx.stroke();
+        }
+        // crown of seven stars above the tree
+        ctx.fillStyle = "rgba(240,250,255,.95)";
+        for(let i=0;i<7;i++){
+          const sa = -Math.PI + i*Math.PI/6;
+          const ssx = x + Math.cos(sa)*28;
+          const ssy = baseY-160 + Math.sin(sa)*8;
+          ctx.beginPath();
+          for(let k=0;k<10;k++){
+            const ang = -Math.PI/2 + k*Math.PI/5;
+            const r = k%2 ? 0.8 : 2;
+            const px = ssx + Math.cos(ang)*r;
+            const py = ssy + Math.sin(ang)*r;
+            if(k===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+          }
+          ctx.closePath(); ctx.fill();
+        }
+        // elvish glyph line beneath: "Speak friend and enter" (stylized ticks)
+        ctx.fillStyle = "rgba(200,230,255,.85)";
+        ctx.font = "11px serif";
+        ctx.textAlign = "center";
+        ctx.fillText("ᛗᛖᛚᛚᛟᚾ", x, baseY-115);
+        // shimmering sparkles drifting up
+        for(let i=0;i<6;i++){
+          const a = tG*1.4 + i*1.0;
+          const sx = x + Math.cos(a)*38;
+          const sy = baseY-130 + Math.sin(a)*22;
+          ctx.fillStyle = "rgba(255,255,255,"+(0.6 + Math.sin(tG*2+i)*0.3)+")";
+          ctx.beginPath(); ctx.arc(sx, sy, 1.6, 0, 7); ctx.fill();
+        }
+        // a beam of moonlight from above
+        const beam = ctx.createLinearGradient(0, baseY-200, 0, baseY-100);
+        beam.addColorStop(0,"rgba(200,230,255,.4)"); beam.addColorStop(1,"rgba(200,230,255,0)");
+        ctx.fillStyle = beam;
+        ctx.beginPath();
+        ctx.moveTo(x-30, baseY-200);
+        ctx.lineTo(x+30, baseY-200);
+        ctx.lineTo(x+18, baseY-100);
+        ctx.lineTo(x-18, baseY-100);
+        ctx.closePath(); ctx.fill();
+      } else {
+        // locked: faint glyphs barely visible, plus a chain across
+        ctx.strokeStyle = "rgba(80,90,110,.3)"; ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(x, baseY-130, 30, Math.PI, 2*Math.PI);
+        ctx.stroke();
+        ctx.strokeStyle = "#aab0bc"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(x-30, baseY-110); ctx.lineTo(x+30, baseY-80); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x-30, baseY-80); ctx.lineTo(x+30, baseY-110); ctx.stroke();
+      }
+      // doorstep stones at the base
+      ctx.fillStyle = "#4a4555";
+      ctx.fillRect(x-58, baseY-8, 116, 8);
+      ctx.fillStyle = "#1a141a";
+      ctx.fillRect(x-58, baseY-2, 116, 2);
     } else if(theme==="monsoon"){
       const tG = Date.now()/500;
       // warm glow once the gangplank is open
@@ -4422,7 +5168,7 @@
       for(let a=0;a<8.5;a+=0.1){ const r2=a*5.4; const px=Math.cos(a)*r2, py=Math.sin(a)*r2; if(a===0)ctx.moveTo(px,py); else ctx.lineTo(px,py); }
       ctx.stroke(); ctx.restore();
     }
-    ctx.fillStyle = (theme==="castle"||theme==="underwater"||theme==="space"||theme==="haunted"||theme==="christmas"||theme==="toy"||theme==="dino"||theme==="monsoon") ? "#ffe1c0" : "#5B3A6E";
+    ctx.fillStyle = (theme==="castle"||theme==="underwater"||theme==="space"||theme==="haunted"||theme==="christmas"||theme==="toy"||theme==="dino"||theme==="monsoon"||theme==="moria") ? "#ffe1c0" : "#5B3A6E";
     ctx.font="700 16px 'Baloo 2', sans-serif"; ctx.textAlign="center";
     const goalLabel = theme==="castle" ? "🚪 ESCAPE"
                     : theme==="underwater" ? "💎 TREASURE"
@@ -4432,6 +5178,7 @@
                     : theme==="toy" ? "🧸 TOY BOX"
                     : theme==="dino" ? "🥚 HATCH"
                     : theme==="monsoon" ? "⛵ BOARD"
+                    : theme==="moria" ? "🗝️ MELLON"
                     : "🍭 GOAL";
     const lockText = boss && boss.name ? "🔒 Defeat the " + boss.name + "!" : "🔒 Locked";
     ctx.fillText(goalActive ? goalLabel : lockText, x, baseY+24);
@@ -4702,6 +5449,134 @@
         const py = syC + Math.sin(ang)*r;
         if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
       }
+      ctx.closePath(); ctx.fill();
+    }
+    if(theme==="moria"){
+      // Gandalf the Grey — wide-brim pointy hat, flowing white beard, wooden staff with a glowing crystal
+      const hx = bw*0.05;
+      const brimY = hy - bw*0.28;
+      // staff held in front of the cat
+      ctx.strokeStyle = "#5a3a18";
+      ctx.lineWidth = 3.2; ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(bw*0.30, -bh*0.20);
+      ctx.lineTo(bw*0.35, -bh*1.10);
+      ctx.stroke();
+      // knotted top of the staff — twisted wood gripping a crystal
+      ctx.strokeStyle = "#5a3a18"; ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(bw*0.34, -bh*1.04);
+      ctx.quadraticCurveTo(bw*0.46, -bh*1.12, bw*0.32, -bh*1.18);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(bw*0.36, -bh*1.04);
+      ctx.quadraticCurveTo(bw*0.24, -bh*1.10, bw*0.38, -bh*1.18);
+      ctx.stroke();
+      // crystal at the top (white-blue glow)
+      const staffGlow = ctx.createRadialGradient(bw*0.34, -bh*1.20, 1, bw*0.34, -bh*1.20, 14);
+      staffGlow.addColorStop(0, "rgba(220,240,255,.95)");
+      staffGlow.addColorStop(1, "rgba(220,240,255,0)");
+      ctx.fillStyle = staffGlow;
+      ctx.beginPath(); ctx.arc(bw*0.34, -bh*1.20, 14, 0, 7); ctx.fill();
+      ctx.fillStyle = "#e0eaff";
+      ctx.beginPath();
+      ctx.moveTo(bw*0.34, -bh*1.27);
+      ctx.lineTo(bw*0.40, -bh*1.20);
+      ctx.lineTo(bw*0.34, -bh*1.14);
+      ctx.lineTo(bw*0.28, -bh*1.20);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.9)";
+      ctx.beginPath();
+      ctx.moveTo(bw*0.34, -bh*1.27);
+      ctx.lineTo(bw*0.36, -bh*1.22);
+      ctx.lineTo(bw*0.34, -bh*1.20);
+      ctx.lineTo(bw*0.32, -bh*1.22);
+      ctx.closePath(); ctx.fill();
+      // grey robe — drapes from shoulders down past the legs
+      ctx.fillStyle = "#6a6470";
+      ctx.beginPath();
+      ctx.moveTo(-bw*0.42, -bh*0.62 + bodyBob);
+      ctx.lineTo( bw*0.42, -bh*0.62 + bodyBob);
+      ctx.lineTo( bw*0.50, -bh*0.05);
+      ctx.lineTo(-bw*0.50, -bh*0.05);
+      ctx.closePath(); ctx.fill();
+      // robe folds (darker shading)
+      ctx.fillStyle = "#4a4450";
+      ctx.beginPath();
+      ctx.moveTo(-bw*0.20, -bh*0.55 + bodyBob);
+      ctx.lineTo(-bw*0.30, -bh*0.05);
+      ctx.lineTo(-bw*0.18, -bh*0.05);
+      ctx.lineTo(-bw*0.10, -bh*0.55 + bodyBob);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo( bw*0.10, -bh*0.55 + bodyBob);
+      ctx.lineTo( bw*0.18, -bh*0.05);
+      ctx.lineTo( bw*0.30, -bh*0.05);
+      ctx.lineTo( bw*0.22, -bh*0.55 + bodyBob);
+      ctx.closePath(); ctx.fill();
+      // belt rope
+      ctx.fillStyle = "#3a2818";
+      ctx.fillRect(-bw*0.40, -bh*0.30 + bodyBob, bw*0.80, 3);
+      // simple knot at the front
+      ctx.beginPath(); ctx.arc(bw*0.10, -bh*0.29 + bodyBob, 3, 0, 7); ctx.fill();
+      // long white beard pouring down the chest
+      ctx.fillStyle = "#e8e2d6";
+      ctx.beginPath();
+      ctx.moveTo(bw*0.05 - bw*0.18, hy + bw*0.08);
+      ctx.lineTo(bw*0.05 + bw*0.18, hy + bw*0.08);
+      ctx.lineTo(bw*0.05 + bw*0.10, -bh*0.40 + bodyBob);
+      ctx.quadraticCurveTo(bw*0.05, -bh*0.32 + bodyBob, bw*0.05 - bw*0.10, -bh*0.40 + bodyBob);
+      ctx.closePath(); ctx.fill();
+      // beard shading
+      ctx.fillStyle = "#bcb6aa";
+      ctx.beginPath();
+      ctx.moveTo(bw*0.05 - bw*0.16, hy + bw*0.10);
+      ctx.lineTo(bw*0.05 - bw*0.12, hy + bw*0.10);
+      ctx.lineTo(bw*0.05 - bw*0.06, -bh*0.42 + bodyBob);
+      ctx.lineTo(bw*0.05 - bw*0.12, -bh*0.42 + bodyBob);
+      ctx.closePath(); ctx.fill();
+      // mustache curling over the mouth area
+      ctx.strokeStyle = "#e8e2d6"; ctx.lineWidth = 3; ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(bw*0.05 - bw*0.10, hy + bw*0.06);
+      ctx.quadraticCurveTo(bw*0.05 - bw*0.16, hy + bw*0.02, bw*0.05 - bw*0.18, hy + bw*0.08);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(bw*0.05 + bw*0.10, hy + bw*0.06);
+      ctx.quadraticCurveTo(bw*0.05 + bw*0.16, hy + bw*0.02, bw*0.05 + bw*0.18, hy + bw*0.08);
+      ctx.stroke();
+      // hat — wide grey brim
+      ctx.fillStyle = "#4a4450";
+      ctx.beginPath();
+      ctx.ellipse(hx, brimY, bw*0.62, 6, 0, 0, 7); ctx.fill();
+      // brim underside shadow
+      ctx.fillStyle = "rgba(20,16,24,.5)";
+      ctx.beginPath();
+      ctx.ellipse(hx, brimY+3, bw*0.62, 3, 0, 0, 7); ctx.fill();
+      // hat cone (tall and slightly bent forward)
+      ctx.fillStyle = "#5a5460";
+      ctx.beginPath();
+      ctx.moveTo(hx - bw*0.30, brimY - 1);
+      ctx.lineTo(hx + bw*0.30, brimY - 1);
+      ctx.quadraticCurveTo(hx + bw*0.34, brimY - bw*0.40, hx + bw*0.22, brimY - bw*0.70);
+      ctx.quadraticCurveTo(hx + bw*0.04, brimY - bw*0.94, hx - bw*0.04, brimY - bw*0.80);
+      ctx.lineTo(hx - bw*0.16, brimY - bw*0.40);
+      ctx.closePath(); ctx.fill();
+      // hat darker shading (front-bottom)
+      ctx.fillStyle = "#3a3540";
+      ctx.beginPath();
+      ctx.moveTo(hx - bw*0.30, brimY - 1);
+      ctx.lineTo(hx + bw*0.30, brimY - 1);
+      ctx.lineTo(hx + bw*0.20, brimY - bw*0.18);
+      ctx.lineTo(hx - bw*0.16, brimY - bw*0.18);
+      ctx.closePath(); ctx.fill();
+      // hat band (slightly darker)
+      ctx.fillStyle = "#2a242f";
+      ctx.beginPath();
+      ctx.moveTo(hx - bw*0.28, brimY - 2);
+      ctx.lineTo(hx + bw*0.28, brimY - 2);
+      ctx.lineTo(hx + bw*0.24, brimY - 8);
+      ctx.lineTo(hx - bw*0.20, brimY - 8);
       ctx.closePath(); ctx.fill();
     }
     // Kibble blaster (front-facing — canvas is already scaled by p.facing)
