@@ -3511,100 +3511,180 @@
       ctx.restore(); return;
     }
     if(theme==="moria"){
-      // cave goblin — grey-green skinny brute with a crude scimitar and yellow eyes
-      const wob = Math.sin(e.x*0.18)*1.6;
-      const stride = Math.sin(e.x*0.4)*3;
-      // tattered cloak/loincloth behind
+      // cave goblin — chunky hunched brute, big hooked nose, leather harness, club at side
+      // face the direction of travel
+      ctx.scale(e.vx >= 0 ? 1 : -1, 1);
+      const wob = Math.sin(e.x*0.18)*1.4;
+      const stride = Math.sin(e.x*0.4)*2.5;
+      const skin = "#6a8050", skinD = "#46583a", scar = "#3a4a2a";
+      // bandy legs — wider stance, planted
+      ctx.fillStyle = skinD;
+      rr(-e.w*0.22, -16+stride*0.5, 10, 16, 3); ctx.fill();
+      rr( e.w*0.12, -16-stride*0.5, 10, 16, 3); ctx.fill();
+      // crude leather boots
+      ctx.fillStyle = "#2a1a0e";
+      rr(-e.w*0.24, -4+stride*0.5, 14, 5, 2); ctx.fill();
+      rr( e.w*0.10, -4-stride*0.5, 14, 5, 2); ctx.fill();
+      // boot studs
+      ctx.fillStyle = "#7a5a2a";
+      ctx.fillRect(-e.w*0.20, -3+stride*0.5, 2, 2);
+      ctx.fillRect(-e.w*0.14, -3+stride*0.5, 2, 2);
+      ctx.fillRect( e.w*0.14, -3-stride*0.5, 2, 2);
+      ctx.fillRect( e.w*0.20, -3-stride*0.5, 2, 2);
+      // loincloth in front (covers the gap between legs)
       ctx.fillStyle = "#3a2a30";
       ctx.beginPath();
-      ctx.moveTo(-e.w*0.30, -e.h*0.55+wob);
-      ctx.lineTo(-e.w*0.50, -e.h*0.10+wob);
-      ctx.lineTo(-e.w*0.20, -e.h*0.20+wob);
+      ctx.moveTo(-e.w*0.20, -e.h*0.30+wob);
+      ctx.lineTo( e.w*0.22, -e.h*0.30+wob);
+      ctx.lineTo( e.w*0.18, -e.h*0.05+wob);
+      ctx.lineTo(-e.w*0.16, -e.h*0.05+wob);
       ctx.closePath(); ctx.fill();
-      // skinny legs
-      ctx.fillStyle = "#5a6a4a";
-      rr(-e.w*0.18, -14+stride, 7, 14, 2); ctx.fill();
-      rr( e.w*0.10, -14-stride, 7, 14, 2); ctx.fill();
-      // gnarled feet with claws
-      ctx.fillStyle = "#3a4a30";
-      rr(-e.w*0.20, -3+stride, 11, 3, 1); ctx.fill();
-      rr( e.w*0.08, -3-stride, 11, 3, 1); ctx.fill();
-      ctx.fillStyle = "#fff0d0";
-      for(let i=0;i<3;i++){
-        ctx.beginPath();
-        ctx.arc(-e.w*0.20 + i*4, -1+stride, 0.9, 0, 7); ctx.fill();
-        ctx.beginPath();
-        ctx.arc( e.w*0.08 + i*4, -1-stride, 0.9, 0, 7); ctx.fill();
-      }
-      // hunched body
-      ctx.fillStyle = "#6a7a52";
+      // belt strap
+      ctx.fillStyle = "#5a3a1a";
+      ctx.fillRect(-e.w*0.22, -e.h*0.32+wob, e.w*0.44, 3);
+      // belt buckle
+      ctx.fillStyle = "#aab0bc";
+      ctx.fillRect( e.w*0.01, -e.h*0.32+wob, 4, 3);
+      // chunky torso — taller than wide, hunched forward toward facing direction
+      ctx.fillStyle = skin;
       ctx.beginPath();
-      ctx.ellipse(0, -e.h*0.50+wob, e.w*0.36, e.h*0.36, 0, 0, 7); ctx.fill();
-      // ribs/sinew showing
-      ctx.strokeStyle = "#3a4a30"; ctx.lineWidth = 1;
-      for(let i=-1;i<=1;i++){
+      ctx.moveTo(-e.w*0.34, -e.h*0.80+wob);
+      ctx.lineTo( e.w*0.36, -e.h*0.82+wob);   // hunched: shoulder higher on the front
+      ctx.lineTo( e.w*0.30, -e.h*0.32+wob);
+      ctx.lineTo(-e.w*0.30, -e.h*0.32+wob);
+      ctx.closePath(); ctx.fill();
+      // body shading on the back (away from facing direction)
+      ctx.fillStyle = skinD;
+      ctx.beginPath();
+      ctx.moveTo(-e.w*0.34, -e.h*0.80+wob);
+      ctx.lineTo(-e.w*0.20, -e.h*0.80+wob);
+      ctx.lineTo(-e.w*0.18, -e.h*0.32+wob);
+      ctx.lineTo(-e.w*0.30, -e.h*0.32+wob);
+      ctx.closePath(); ctx.fill();
+      // leather chest harness — diagonal strap with a stud
+      ctx.strokeStyle = "#3a2418"; ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(-e.w*0.24, -e.h*0.72+wob);
+      ctx.lineTo( e.w*0.30, -e.h*0.48+wob);
+      ctx.stroke();
+      ctx.fillStyle = "#7a5a2a";
+      ctx.beginPath(); ctx.arc( e.w*0.04, -e.h*0.60+wob, 2.2, 0, 7); ctx.fill();
+      // back arm — tucked, holding nothing
+      ctx.fillStyle = skinD;
+      rr(-e.w*0.42, -e.h*0.74+wob, 8, e.h*0.38, 3); ctx.fill();
+      // forward arm — extends down at the side, holding a club
+      ctx.fillStyle = skin;
+      rr(e.w*0.24, -e.h*0.72+wob, 9, e.h*0.55, 3); ctx.fill();
+      // four-finger fist
+      ctx.fillStyle = skinD;
+      ctx.beginPath();
+      ctx.arc(e.w*0.29, -e.h*0.18+wob, 5, 0, 7); ctx.fill();
+      // club — heavy wooden mace hanging at the side
+      ctx.fillStyle = "#3a2210";
+      // shaft
+      rr(e.w*0.27, -e.h*0.15+wob, 4, 14, 1); ctx.fill();
+      // bulky head of the club
+      ctx.fillStyle = "#5a3a1a";
+      rr(e.w*0.22, -e.h*0.04+wob, 14, 12, 3); ctx.fill();
+      // iron spikes / nails on the club head
+      ctx.fillStyle = "#aab0bc";
+      ctx.beginPath(); ctx.arc(e.w*0.26, -e.h*0.00+wob, 1.2, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(e.w*0.32, -e.h*0.04+wob, 1.2, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(e.w*0.32, -e.h*0.00+wob, 1.2, 0, 7); ctx.fill();
+      // head — chunky, jutting forward, slightly turned to face camera
+      const hY = -e.h*1.02 + wob;
+      ctx.fillStyle = skin;
+      ctx.beginPath();
+      ctx.ellipse(e.w*0.04, hY, e.w*0.32, e.h*0.26, 0, 0, 7); ctx.fill();
+      // shadowed underside of jaw
+      ctx.fillStyle = skinD;
+      ctx.beginPath();
+      ctx.ellipse(e.w*0.04, hY + e.h*0.10, e.w*0.30, e.h*0.10, 0, 0, 7); ctx.fill();
+      // pointy ear poking up on the visible side
+      ctx.fillStyle = skin;
+      ctx.beginPath();
+      ctx.moveTo(-e.w*0.20, hY - e.h*0.06);
+      ctx.lineTo(-e.w*0.28, hY - e.h*0.32);
+      ctx.lineTo(-e.w*0.10, hY - e.h*0.18);
+      ctx.closePath(); ctx.fill();
+      // ear shadow
+      ctx.fillStyle = skinD;
+      ctx.beginPath();
+      ctx.moveTo(-e.w*0.18, hY - e.h*0.10);
+      ctx.lineTo(-e.w*0.24, hY - e.h*0.22);
+      ctx.lineTo(-e.w*0.14, hY - e.h*0.14);
+      ctx.closePath(); ctx.fill();
+      // wispy tufts of black hair on top
+      ctx.strokeStyle = "#1a1a24"; ctx.lineWidth = 1.4; ctx.lineCap = "round";
+      for(let i=-2;i<=2;i++){
         ctx.beginPath();
-        ctx.moveTo(i*5-1, -e.h*0.62+wob);
-        ctx.lineTo(i*5+1, -e.h*0.42+wob);
+        ctx.moveTo(e.w*0.04 + i*3, hY - e.h*0.16);
+        ctx.lineTo(e.w*0.04 + i*3 + 1, hY - e.h*0.28);
         ctx.stroke();
       }
-      // arm holding a crude scimitar in front
-      ctx.fillStyle = "#5a6a4a";
-      rr(e.w*0.10, -e.h*0.62+wob, 6, e.h*0.40, 2); ctx.fill();
-      // scimitar (rusty curved blade)
-      ctx.fillStyle = "#3a2a18";   // hilt
-      rr(e.w*0.16, -e.h*0.30+wob, 4, 8, 1); ctx.fill();
-      ctx.fillStyle = "#aab0bc";   // blade
+      // brow ridge — heavy and angry
+      ctx.fillStyle = scar;
+      ctx.fillRect(-e.w*0.18, hY - e.h*0.06, e.w*0.40, 2.2);
+      // scowling eyebrows
+      ctx.strokeStyle = "#1a1a24"; ctx.lineWidth = 2; ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.moveTo(e.w*0.18, -e.h*0.32+wob);
-      ctx.quadraticCurveTo(e.w*0.45, -e.h*0.55+wob, e.w*0.55, -e.h*0.30+wob);
-      ctx.lineTo(e.w*0.50, -e.h*0.24+wob);
-      ctx.quadraticCurveTo(e.w*0.36, -e.h*0.32+wob, e.w*0.18, -e.h*0.22+wob);
-      ctx.closePath(); ctx.fill();
-      // edge shine on the blade
-      ctx.fillStyle = "rgba(255,255,255,.45)";
-      ctx.beginPath();
-      ctx.moveTo(e.w*0.22, -e.h*0.34+wob);
-      ctx.quadraticCurveTo(e.w*0.42, -e.h*0.50+wob, e.w*0.50, -e.h*0.32+wob);
+      ctx.moveTo(-e.w*0.14, hY - e.h*0.06);
+      ctx.lineTo(-e.w*0.02, hY - e.h*0.02);
       ctx.stroke();
-      // hunched head with big ears
-      ctx.fillStyle = "#6a7a52";
       ctx.beginPath();
-      ctx.arc(e.w*0.05, -e.h*0.90+wob, e.w*0.26, 0, 7); ctx.fill();
-      // long pointed ears
-      ctx.beginPath();
-      ctx.moveTo(-e.w*0.20, -e.h*0.92+wob);
-      ctx.lineTo(-e.w*0.36, -e.h*1.05+wob);
-      ctx.lineTo(-e.w*0.16, -e.h*0.82+wob);
-      ctx.closePath(); ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(e.w*0.26, -e.h*0.92+wob);
-      ctx.lineTo(e.w*0.42, -e.h*1.05+wob);
-      ctx.lineTo(e.w*0.22, -e.h*0.82+wob);
-      ctx.closePath(); ctx.fill();
-      // grimy snout
-      ctx.fillStyle = "#5a6a44";
-      ctx.beginPath(); ctx.ellipse(e.w*0.20, -e.h*0.84+wob, 5, 3, 0, 0, 7); ctx.fill();
+      ctx.moveTo( e.w*0.08, hY - e.h*0.02);
+      ctx.lineTo( e.w*0.20, hY - e.h*0.06);
+      ctx.stroke();
       // glowing yellow eyes
       ctx.fillStyle = "#ffe09a";
-      ctx.beginPath(); ctx.arc(-e.w*0.04, -e.h*0.93+wob, 2.2, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.arc( e.w*0.10, -e.h*0.93+wob, 2.2, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(-e.w*0.06, hY - e.h*0.00, 2.4, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.14, hY - e.h*0.00, 2.4, 0, 7); ctx.fill();
       ctx.fillStyle = "#1a1a24";
-      ctx.beginPath(); ctx.arc(-e.w*0.03, -e.h*0.93+wob, 1, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.arc( e.w*0.11, -e.h*0.93+wob, 1, 0, 7); ctx.fill();
-      // grimacing mouth showing fangs
-      ctx.strokeStyle = "#1a1a24"; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.arc(-e.w*0.05, hY - e.h*0.00, 1, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.15, hY - e.h*0.00, 1, 0, 7); ctx.fill();
+      // big hooked nose — sticking forward
+      ctx.fillStyle = skinD;
       ctx.beginPath();
-      ctx.moveTo(-e.w*0.04, -e.h*0.82+wob);
-      ctx.lineTo(e.w*0.16, -e.h*0.82+wob); ctx.stroke();
-      ctx.fillStyle = "#fff";
-      for(let i=0;i<3;i++){
-        ctx.beginPath();
-        ctx.moveTo(-e.w*0.04 + i*4, -e.h*0.82+wob);
-        ctx.lineTo(-e.w*0.02 + i*4, -e.h*0.78+wob);
-        ctx.lineTo(0      + i*4, -e.h*0.82+wob);
-        ctx.closePath(); ctx.fill();
-      }
+      ctx.moveTo(e.w*0.06, hY + e.h*0.02);
+      ctx.quadraticCurveTo(e.w*0.30, hY + e.h*0.04, e.w*0.26, hY + e.h*0.14);
+      ctx.lineTo(e.w*0.18, hY + e.h*0.12);
+      ctx.quadraticCurveTo(e.w*0.10, hY + e.h*0.08, e.w*0.06, hY + e.h*0.10);
+      ctx.closePath(); ctx.fill();
+      // nostril shadow
+      ctx.fillStyle = "#2a2a18";
+      ctx.beginPath(); ctx.arc(e.w*0.22, hY + e.h*0.12, 0.9, 0, 7); ctx.fill();
+      // jutting lower jaw / underbite
+      ctx.fillStyle = skin;
+      ctx.beginPath();
+      ctx.moveTo(-e.w*0.08, hY + e.h*0.16);
+      ctx.lineTo( e.w*0.22, hY + e.h*0.18);
+      ctx.lineTo( e.w*0.16, hY + e.h*0.26);
+      ctx.lineTo(-e.w*0.04, hY + e.h*0.24);
+      ctx.closePath(); ctx.fill();
+      // snaggle fangs poking up from the lower jaw
+      ctx.fillStyle = "#fff0d0";
+      ctx.beginPath();
+      ctx.moveTo(-e.w*0.02, hY + e.h*0.16);
+      ctx.lineTo( e.w*0.00, hY + e.h*0.10);
+      ctx.lineTo( e.w*0.02, hY + e.h*0.16);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo( e.w*0.10, hY + e.h*0.17);
+      ctx.lineTo( e.w*0.12, hY + e.h*0.09);
+      ctx.lineTo( e.w*0.14, hY + e.h*0.17);
+      ctx.closePath(); ctx.fill();
+      // grimace line
+      ctx.strokeStyle = "#1a1a14"; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-e.w*0.04, hY + e.h*0.20);
+      ctx.lineTo(e.w*0.18, hY + e.h*0.20);
+      ctx.stroke();
+      // small scar across the cheek
+      ctx.strokeStyle = scar; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(e.w*0.06, hY - e.h*0.12);
+      ctx.lineTo(e.w*0.14, hY - e.h*0.04);
+      ctx.stroke();
       ctx.restore(); return;
     }
     if(theme==="monsoon"){
@@ -3687,6 +3767,8 @@
     }
     if(theme==="dino"){
       // velociraptor — green body, hook claws, snarling head
+      // face the direction of travel — the art is drawn facing +x by default
+      ctx.scale(e.vx >= 0 ? 1 : -1, 1);
       const wob = Math.sin(e.x*0.18)*2;
       const stride = Math.sin(e.x*0.4)*4;
       // tail (counterbalance)
@@ -4112,39 +4194,108 @@
         ctx.beginPath();
         ctx.arc(sx, sy - 14 - i*6, 9 + i*2, 0, 7); ctx.fill();
       }
-      // arm holding the flaming whip (front arm)
+      // arm raised overhead, mid-lash — holding the flaming whip
       ctx.fillStyle = body;
-      rr(b.w*0.16, -b.h*0.78+bob, 12, b.h*0.40, 4); ctx.fill();
-      // wrist
-      ctx.beginPath(); ctx.arc(b.w*0.22, -b.h*0.40+bob, 9, 0, 7); ctx.fill();
-      // whip — long curling fire cord trailing out in front
-      const whipAng = Math.sin(b.animT*0.10)*0.55;
-      ctx.save();
-      ctx.translate(b.w*0.28, -b.h*0.40+bob);
-      ctx.rotate(whipAng);
-      const whipColors = ["#ff3a18", "#ff7a1a", "#ffce4d", "#fff2a8"];
-      for(let layer=0; layer<whipColors.length; layer++){
-        ctx.strokeStyle = whipColors[layer];
-        ctx.lineWidth = 8 - layer*1.6;
-        ctx.lineCap = "round";
+      // shoulder-to-elbow segment (upward)
+      rr(b.w*0.16, -b.h*0.95+bob, 11, b.h*0.30, 4); ctx.fill();
+      // elbow joint
+      ctx.beginPath(); ctx.arc(b.w*0.24, -b.h*0.92+bob, 8, 0, 7); ctx.fill();
+      // forearm reaching up and slightly forward, gripping the whip handle
+      rr(b.w*0.22, -b.h*1.20+bob, 10, b.h*0.32, 4); ctx.fill();
+      // fist on the handle
+      ctx.beginPath(); ctx.arc(b.w*0.28, -b.h*1.18+bob, 7, 0, 7); ctx.fill();
+      // whip handle — short dark grip just above the fist
+      ctx.fillStyle = "#1a0606";
+      rr(b.w*0.24, -b.h*1.30+bob, 8, 14, 2); ctx.fill();
+      // bound leather wrap on the grip
+      ctx.strokeStyle = "#5a2a18"; ctx.lineWidth = 1;
+      for(let i=0;i<3;i++){
         ctx.beginPath();
-        ctx.moveTo(0, 0);
-        for(let i=1; i<=6; i++){
-          const wave = Math.sin(tB + i*0.6 + layer*0.4) * (6 - layer*1.2);
-          ctx.lineTo(i*14, -wave - i*1.5);
-        }
+        ctx.moveTo(b.w*0.24, -b.h*1.27+bob + i*4);
+        ctx.lineTo(b.w*0.32, -b.h*1.27+bob + i*4);
         ctx.stroke();
       }
-      // whip cracker — bright ember at the tip
-      ctx.fillStyle = "#fff2a8";
-      ctx.beginPath(); ctx.arc(6*14, -6*1.5, 3, 0, 7); ctx.fill();
-      ctx.fillStyle = "#ffd23f";
-      ctx.beginPath(); ctx.arc(6*14, -6*1.5, 5, 0, 7); ctx.fill();
+      // -------- the whip itself --------
+      // Path: starts at the handle (above the head), arcs up and BACK over the
+      // boss's shoulder, then curls forward and downward in front of the body,
+      // ending in a tapering flame tip pointed at the ground in front. The
+      // animation gently sways the path so it reads as actively lashing.
+      const sway = Math.sin(b.animT*0.10) * 0.6;
+      const handleX = b.w*0.28, handleY = -b.h*1.30 + bob;
+      // 12 control points along the whip's length
+      const segCount = 12;
+      const pts = [];
+      for(let i=0;i<=segCount;i++){
+        const t = i/segCount;
+        // arc parameters: up-and-back first, then forward-and-down
+        // x: starts at handle, goes negative (backward) a bit, then sweeps forward
+        // y: starts up high, dips to peak, then descends past head height
+        const arcX = handleX
+                   + Math.sin(t*Math.PI*0.95) * (b.w*0.55 + sway*4)
+                   - t*8;
+        const arcY = handleY
+                   + (1 - Math.cos(t*Math.PI*1.05)) * (b.h*1.20)
+                   + Math.sin(b.animT*0.10 + t*5) * (t*4);
+        pts.push({x: arcX, y: arcY, t: t});
+      }
+      // draw the whip in layered passes so it reads as a glowing fire rope
+      const whipLayers = [
+        {col: "rgba(255,40,10,.55)", widthMul: 1.8},   // outer glow
+        {col: "#c01a08", widthMul: 1.0},               // dark core
+        {col: "#ff5a1a", widthMul: 0.62},              // hot orange
+        {col: "#ffd23f", widthMul: 0.32},              // bright yellow center
+      ];
+      for(const layer of whipLayers){
+        ctx.strokeStyle = layer.col;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        // taper: thick near the handle, thin at the tip
+        for(let i=0;i<pts.length-1;i++){
+          const t = pts[i].t;
+          const thickness = (8 - t*7) * layer.widthMul;
+          if(thickness <= 0.4) continue;
+          ctx.lineWidth = thickness;
+          ctx.beginPath();
+          ctx.moveTo(pts[i].x, pts[i].y);
+          ctx.lineTo(pts[i+1].x, pts[i+1].y);
+          ctx.stroke();
+        }
+      }
+      // flame licks shedding off the whip along its length
       ctx.globalCompositeOperation = "lighter";
-      ctx.fillStyle = "rgba(255,210,90,.5)";
-      ctx.beginPath(); ctx.arc(6*14, -6*1.5, 9, 0, 7); ctx.fill();
+      for(let i=2; i<pts.length-1; i+=2){
+        const p = pts[i];
+        const flick = (Math.sin(tB*2 + i*0.7) + 1) * 0.5;
+        const flameR = 3 + flick * 3 - p.t*1.5;
+        if(flameR < 0.5) continue;
+        ctx.fillStyle = "rgba(255,170,60,.55)";
+        ctx.beginPath();
+        ctx.arc(p.x + Math.cos(tB+i)*2, p.y - 3 - flick*4, flameR, 0, 7);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,230,140,.7)";
+        ctx.beginPath();
+        ctx.arc(p.x + Math.cos(tB+i)*2, p.y - 3 - flick*4, flameR*0.4, 0, 7);
+        ctx.fill();
+      }
+      // tapering flame tip — a thin lick of fire at the very end
+      const tip = pts[pts.length-1];
+      const prev = pts[pts.length-2];
+      const dx = tip.x - prev.x, dy = tip.y - prev.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const tx = dx/len, ty = dy/len;
+      ctx.fillStyle = "rgba(255,90,20,.7)";
+      ctx.beginPath();
+      ctx.moveTo(tip.x - ty*3, tip.y + tx*3);
+      ctx.lineTo(tip.x + tx*14, tip.y + ty*14);
+      ctx.lineTo(tip.x + ty*3, tip.y - tx*3);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "rgba(255,230,140,.85)";
+      ctx.beginPath();
+      ctx.moveTo(tip.x - ty*1.4, tip.y + tx*1.4);
+      ctx.lineTo(tip.x + tx*9, tip.y + ty*9);
+      ctx.lineTo(tip.x + ty*1.4, tip.y - tx*1.4);
+      ctx.closePath(); ctx.fill();
       ctx.globalCompositeOperation = "source-over";
-      ctx.restore();
       // huge horned head
       const hy = -b.h*1.02 + bob;
       ctx.fillStyle = body;
@@ -5454,7 +5605,7 @@
     if(theme==="moria"){
       // Gandalf the Grey — wide-brim pointy hat, flowing white beard, wooden staff with a glowing crystal
       const hx = bw*0.05;
-      const brimY = hy - bw*0.28;
+      const brimY = hy - bw*0.52;
       // staff held in front of the cat
       ctx.strokeStyle = "#5a3a18";
       ctx.lineWidth = 3.2; ctx.lineCap = "round";
