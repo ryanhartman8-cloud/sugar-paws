@@ -389,7 +389,8 @@
     toy:       { name:"Andy's Playroom" },
     dino:      { name:"Jurassic Crunch" },
     monsoon:   { name:"Mount Ararat Monsoon" },
-    moria:     { name:"The Mines of Moria" }
+    moria:     { name:"The Mines of Moria" },
+    sky:       { name:"Cumulus Kingdom" }
   };
 
   // ======================================================================
@@ -905,6 +906,66 @@
         {x:2890,y:GROUND_Y+22, w:140, h:220},
       ],
       boss: { x:3700, w:120, h:104, hp:3, vx:1.9, min:3180, max:4180, name:"Balrog" }
+    },
+    // -------- WORLD 11: above the clouds, hop sky island to sky island --------
+    {
+      name: "Cumulus Kingdom", theme: "sky",
+      goalX: 4180, worldW: 4400,
+      platforms: [
+        // big puffy cumulus "islands" — the walkable ground
+        {x:0,    y:430, w:520, h:170, t:"bigcloud"},
+        {x:660,  y:430, w:420, h:170, t:"bigcloud"},
+        {x:1240, y:430, w:430, h:170, t:"bigcloud"},
+        {x:1810, y:430, w:480, h:170, t:"bigcloud"},
+        {x:2430, y:430, w:460, h:170, t:"bigcloud"},
+        {x:3030, y:430, w:1370,h:170, t:"bigcloud"},   // long approach to the cloud castle
+        // little stepping clouds + occasional rainbow arcs spanning the gaps
+        {x:280,  y:330, w:110, h:24, t:"cloud"},
+        {x:560,  y:320, w:100, h:24, t:"rainbow"},
+        {x:790,  y:340, w:110, h:24, t:"cloud"},
+        {x:990,  y:330, w:110, h:24, t:"cloud"},
+        {x:1320, y:325, w:120, h:24, t:"cloud"},
+        {x:1530, y:315, w:100, h:24, t:"rainbow"},
+        {x:1880, y:330, w:110, h:24, t:"cloud"},
+        {x:2080, y:315, w:100, h:24, t:"cloud"},
+        {x:2210, y:345, w:100, h:24, t:"cloud"},
+        {x:2580, y:340, w:110, h:24, t:"rainbow"},
+        {x:2790, y:320, w:110, h:24, t:"cloud"},
+        {x:2950, y:340, w:100, h:24, t:"cloud"},
+      ],
+      collectibles: [
+        // golden feathers drifting through the sky
+        {x:160, y:398, t:"feather"},
+        {x:340, y:398, t:"feather"},
+        {x:580, y:296, t:"feather"},
+        {x:815, y:316, t:"feather"},
+        {x:1015,y:306, t:"feather"},
+        {x:1380,y:301, t:"feather"},
+        {x:1900,y:306, t:"feather"},
+        {x:2135,y:291, t:"feather"},
+        {x:2600,y:316, t:"feather"},
+        {x:2840,y:296, t:"feather"},
+        {x:3300,y:398, t:"feather"},
+        {x:3700,y:398, t:"feather"},
+        // mice (so the candy-drop randomizer has something to convert)
+        {x:760, y:398, t:"mouse"},
+        {x:1500,y:398, t:"mouse"},
+        {x:3550,y:398, t:"mouse"},
+        // fish (grow-ups)
+        {x:1160,y:398, t:"fish"},
+        {x:2440,y:398, t:"fish"},
+        {x:3950,y:398, t:"fish"},
+      ],
+      enemies: [
+        {x:850, min:680,  max:1080, vx:1.8},
+        {x:1450,min:1260, max:1660, vx:1.9},
+        {x:2050,min:1840, max:2280, vx:1.9},
+        {x:2650,min:2470, max:2880, vx:1.9},
+      ],
+      // no hazards — the gaps between cloud islands are open sky.
+      // missing a jump falls past the world bottom and triggers loseLife() naturally.
+      hazards: [],
+      boss: null
     }
   ];
   worldTot.textContent = LEVELS.length;
@@ -1139,6 +1200,10 @@
           miceCount++; score+=250; sfx.coin();
           burst(c.x, c.y, "#ffd23f", 14);
         }
+        else if(c.t==="feather"){
+          miceCount++; score+=200; sfx.coin();
+          burst(c.x, c.y, "#fff2a8", 12);
+        }
         else if(c.t==="pair"){
           miceCount++; score+=200; sfx.coin();
           const animalColor = c.kind==="giraffe" ? "#f4c84a"
@@ -1302,6 +1367,110 @@
   }
 
   function drawBackground(){
+    if(theme==="sky"){
+      // bright blue sky — lighter on the horizon
+      const g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,"#3a90d8"); g.addColorStop(0.55,"#7fc4ec"); g.addColorStop(1,"#e6f4ff");
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      // big bright sun in the upper-left with a soft halo + rays
+      const tSky = Date.now()/600;
+      const sX = W*0.20, sY = 110;
+      const sunHalo = ctx.createRadialGradient(sX, sY, 10, sX, sY, 120);
+      sunHalo.addColorStop(0,"rgba(255,240,170,.55)"); sunHalo.addColorStop(1,"rgba(255,240,170,0)");
+      ctx.fillStyle=sunHalo; ctx.fillRect(sX-130, sY-130, 260, 260);
+      ctx.fillStyle="#fff4a8";
+      ctx.beginPath(); ctx.arc(sX, sY, 38, 0, 7); ctx.fill();
+      ctx.fillStyle="#ffe680";
+      ctx.beginPath(); ctx.arc(sX, sY, 30, 0, 7); ctx.fill();
+      // rotating rays
+      ctx.strokeStyle = "rgba(255,240,170,.45)"; ctx.lineWidth = 4; ctx.lineCap = "round";
+      for(let i=0;i<10;i++){
+        const a = i*Math.PI/5 + tSky*0.2;
+        ctx.beginPath();
+        ctx.moveTo(sX + Math.cos(a)*46, sY + Math.sin(a)*46);
+        ctx.lineTo(sX + Math.cos(a)*68, sY + Math.sin(a)*68);
+        ctx.stroke();
+      }
+      // distant rainbow arc in the deep background
+      const rcx = W*0.7, rcy = H*0.95;
+      const rainColors = ["#e84855","#ff8a4d","#ffd23f","#74e08a","#5fc8e0","#9a7aff"];
+      ctx.lineWidth = 5; ctx.lineCap = "butt";
+      for(let i=0;i<rainColors.length;i++){
+        ctx.strokeStyle = rainColors[i] + "55";   // 33% alpha
+        ctx.beginPath();
+        ctx.arc(rcx, rcy, 360 - i*5, Math.PI*1.15, Math.PI*1.85);
+        ctx.stroke();
+      }
+      // distant cloud banks — far parallax
+      const fp = cam.x*0.3;
+      ctx.fillStyle = "rgba(255,255,255,.55)";
+      for(let i=0;i<10;i++){
+        const cx = i*440 - (fp % 440) - 100;
+        const cy = 180 + (i%3)*30;
+        ctx.beginPath();
+        ctx.arc(cx,      cy,      26, 0, 7); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + 30, cy - 6,  32, 0, 7); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + 65, cy,      28, 0, 7); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + 95, cy + 4,  22, 0, 7); ctx.fill();
+      }
+      // mid clouds
+      const mp = cam.x*0.55;
+      ctx.fillStyle = "rgba(255,255,255,.78)";
+      for(let i=0;i<8;i++){
+        const cx = i*520 - (mp % 520) - 80;
+        const cy = 260 + (i%2)*22;
+        ctx.beginPath();
+        ctx.arc(cx,      cy,      30, 0, 7); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + 36, cy - 8,  40, 0, 7); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + 76, cy,      32, 0, 7); ctx.fill();
+      }
+      // V-formation birds soaring across the sky
+      const birdT = Date.now()/40;
+      ctx.strokeStyle = "rgba(20,30,50,.65)"; ctx.lineWidth = 1.4; ctx.lineCap = "round";
+      for(let group=0; group<3; group++){
+        const bgx = ((group*520 - birdT) % (W+200) + W+200) % (W+200) - 100;
+        const bgy = 90 + group*60;
+        for(let i=-2; i<=2; i++){
+          const bx = bgx + i*16;
+          const by = bgy + Math.abs(i)*6;
+          const flap = Math.sin(Date.now()/200 + i*1.3)*2 + 4;
+          ctx.beginPath();
+          ctx.moveTo(bx - 5, by);
+          ctx.lineTo(bx,     by - flap);
+          ctx.lineTo(bx + 5, by);
+          ctx.stroke();
+        }
+      }
+      // hot air balloon drifting slowly across the deep distance
+      const balX = ((Date.now()/120) % (W+300) + W+300) % (W+300) - 150 - cam.x*0.25;
+      const balY = 160 + Math.sin(tSky)*4;
+      if(balX > -80 && balX < W + 60){
+        // basket
+        ctx.fillStyle = "#7a4a22";
+        ctx.fillRect(balX-8, balY+34, 16, 10);
+        // ropes
+        ctx.strokeStyle = "#3a2a18"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(balX-8, balY+34); ctx.lineTo(balX-12, balY+12); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(balX+8, balY+34); ctx.lineTo(balX+12, balY+12); ctx.stroke();
+        // balloon — red/white stripes
+        ctx.fillStyle = "#e84855";
+        ctx.beginPath(); ctx.arc(balX, balY, 18, 0, 7); ctx.fill();
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.moveTo(balX-18, balY); ctx.lineTo(balX+18, balY);
+        ctx.lineTo(balX+14, balY-10); ctx.lineTo(balX-14, balY-10);
+        ctx.closePath(); ctx.fill();
+        // balloon highlight
+        ctx.fillStyle = "rgba(255,255,255,.4)";
+        ctx.beginPath(); ctx.ellipse(balX-6, balY-5, 4, 8, -0.5, 0, 7); ctx.fill();
+      }
+      return;
+    }
     if(theme==="moria"){
       // pitch-dark cavern with a warm red glow growing toward the boss arena
       const g = ctx.createLinearGradient(0,0,0,H);
@@ -2695,6 +2864,91 @@
         ctx.fillRect(x+pl.w-10, y+pl.h-5, 2, 2);
         break;
       }
+      case "bigcloud": {  // large cumulus "island" the cat walks on
+        // soft shadow underside (the wispy bottom of the cloud as it tapers into sky)
+        const tC = Date.now()/700;
+        // fluffy puff body — many overlapping arcs build the silhouette
+        ctx.fillStyle = "#ffffff";
+        const puffs = Math.max(4, Math.floor(pl.w/60));
+        for(let i=0; i<puffs; i++){
+          const px = x + (i + 0.5) * (pl.w/puffs);
+          const py = y + 18 + Math.sin(tC + i*0.7)*1.5;
+          const pr = 30 + (i%3)*6;
+          ctx.beginPath(); ctx.arc(px, py, pr, 0, 7); ctx.fill();
+        }
+        // smaller top tufts
+        ctx.fillStyle = "#fafdff";
+        for(let i=0; i<puffs+1; i++){
+          const px = x + (i*pl.w/puffs);
+          const py = y + 4 + Math.sin(tC*1.2 + i)*1.2;
+          ctx.beginPath(); ctx.arc(px, py, 22, 0, 7); ctx.fill();
+        }
+        // flat-ish walking surface highlight along the top
+        ctx.fillStyle = "rgba(255,255,255,.9)";
+        rr(x + 6, y - 2, pl.w - 12, 6, 3); ctx.fill();
+        // soft blue shading on the underside (rims fading into the sky)
+        ctx.fillStyle = "rgba(140,180,220,.4)";
+        for(let i=0; i<puffs; i++){
+          const px = x + (i + 0.5) * (pl.w/puffs);
+          ctx.beginPath();
+          ctx.ellipse(px, y + 44, 30, 14, 0, 0, 7); ctx.fill();
+        }
+        // little sparkle on top
+        ctx.fillStyle = "rgba(255,255,255,.9)";
+        ctx.beginPath(); ctx.arc(x + pl.w*0.3, y + 6, 1.4, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + pl.w*0.65, y + 4, 1.6, 0, 7); ctx.fill();
+        break;
+      }
+      case "cloud": {  // small fluffy stepping cloud
+        const tC = Date.now()/700;
+        // body — a cluster of overlapping puffs
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(x + 14, y + 12 + Math.sin(tC)*0.8, 14, 0, 7); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + pl.w*0.5, y + 10, 17, 0, 7); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + pl.w - 14, y + 12 + Math.sin(tC+1)*0.8, 14, 0, 7); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + pl.w*0.3, y + 6, 11, 0, 7); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + pl.w*0.7, y + 6, 11, 0, 7); ctx.fill();
+        // walking-surface highlight on top
+        ctx.fillStyle = "rgba(255,255,255,.95)";
+        rr(x + 4, y - 1, pl.w - 8, 4, 2); ctx.fill();
+        // soft blue underside
+        ctx.fillStyle = "rgba(140,180,220,.42)";
+        ctx.beginPath();
+        ctx.ellipse(x + pl.w/2, y + pl.h + 1, pl.w*0.5, 5, 0, 0, 7); ctx.fill();
+        break;
+      }
+      case "rainbow": {  // a short rainbow arc you can stand on
+        // base shadow that grounds the arc visually
+        ctx.fillStyle = "rgba(140,180,220,.35)";
+        ctx.beginPath();
+        ctx.ellipse(x + pl.w/2, y + pl.h + 2, pl.w*0.45, 4, 0, 0, 7); ctx.fill();
+        // tiny puffs at each end (the rainbow's "feet" in clouds)
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath(); ctx.arc(x + 6,        y + 10, 10, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + pl.w - 6, y + 10, 10, 0, 7); ctx.fill();
+        // rainbow bands forming a shallow arc across the top
+        const bands = ["#e84855","#ff8a4d","#ffd23f","#74e08a","#5fc8e0","#9a7aff"];
+        for(let i=0; i<bands.length; i++){
+          ctx.fillStyle = bands[i];
+          ctx.beginPath();
+          ctx.moveTo(x + 4 + i*0.6,         y + 6 + i*1.6);
+          ctx.quadraticCurveTo(x + pl.w/2,  y - 14 + i*2.4,
+                               x + pl.w - 4 - i*0.6, y + 6 + i*1.6);
+          ctx.lineTo(x + pl.w - 5 - i*0.6,  y + 8 + i*1.6);
+          ctx.quadraticCurveTo(x + pl.w/2,  y - 12 + i*2.4,
+                               x + 5 + i*0.6, y + 8 + i*1.6);
+          ctx.closePath(); ctx.fill();
+        }
+        // flat highlight strip along the very top so the player has a clear landing surface
+        ctx.fillStyle = "rgba(255,255,255,.7)";
+        rr(x + 6, y, pl.w - 12, 3, 1); ctx.fill();
+        break;
+      }
       case "dwarvenstone": {  // dark mossy dwarven block work with carved runes
         // base stone (cool grey-blue, very dark)
         ctx.fillStyle = "#2a2a35";
@@ -3310,6 +3564,50 @@
       ctx.beginPath(); ctx.arc(-3, -4, 2.8, 0, 7); ctx.fill();
       ctx.restore(); return;
     }
+    if(c.t==="feather"){
+      // a single golden feather drifting in place, gently rocking
+      ctx.rotate(Math.sin(c.phase*0.7) * 0.35 - 0.4);
+      // soft warm halo so it pops against the sky
+      const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, 18);
+      glow.addColorStop(0, "rgba(255,230,140,.55)");
+      glow.addColorStop(1, "rgba(255,230,140,0)");
+      ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(0, 0, 18, 0, 7); ctx.fill();
+      // quill shaft
+      ctx.strokeStyle = "#a07a18"; ctx.lineWidth = 1.6; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(0, 12); ctx.lineTo(0, -12); ctx.stroke();
+      // outer vane (curved teardrop)
+      ctx.fillStyle = "#ffd23f";
+      ctx.beginPath();
+      ctx.moveTo(0, -12);
+      ctx.quadraticCurveTo(10, -8, 7, 4);
+      ctx.quadraticCurveTo(4, 10, 0, 10);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(0, -12);
+      ctx.quadraticCurveTo(-10, -8, -7, 4);
+      ctx.quadraticCurveTo(-4, 10, 0, 10);
+      ctx.closePath(); ctx.fill();
+      // barb lines for texture
+      ctx.strokeStyle = "rgba(160,120,30,.55)"; ctx.lineWidth = 0.7;
+      for(let i=-8; i<=6; i+=3){
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(6 - Math.abs(i)*0.4, i + 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(-6 + Math.abs(i)*0.4, i + 2);
+        ctx.stroke();
+      }
+      // glossy highlight on one side
+      ctx.fillStyle = "rgba(255,255,200,.6)";
+      ctx.beginPath();
+      ctx.moveTo(0, -10);
+      ctx.quadraticCurveTo(4, -6, 3, 2);
+      ctx.quadraticCurveTo(1, 6, 0, 6);
+      ctx.closePath(); ctx.fill();
+      ctx.restore(); return;
+    }
     if(c.t==="ring"){
       // a single precious gold ring with engraved elvish glow
       const tR = Date.now()/220;
@@ -3445,6 +3743,7 @@
                     : theme==="dino" ? "#a8d4a0"
                     : theme==="monsoon" ? "#cfd6e0"
                     : theme==="moria" ? "#9aaa82"
+                    : theme==="sky" ? "#c8d0dc"
                     : "#ff8fc8";
       ctx.beginPath(); ctx.ellipse(0,-4,e.w/2+4,6,0,0,7); ctx.fill();
       ctx.restore(); return;
@@ -3508,6 +3807,73 @@
       // helmet highlight
       ctx.fillStyle = "rgba(255,255,255,.7)";
       ctx.beginPath(); ctx.ellipse(-e.w*0.18, -e.h*1.10+wob, 4, 1.8, -0.4, 0, 7); ctx.fill();
+      ctx.restore(); return;
+    }
+    if(theme==="sky"){
+      // grumpy little storm cloud — grey puff with eyebrows and tiny lightning
+      ctx.scale(e.vx >= 0 ? 1 : -1, 1);
+      const tS = Date.now()/280;
+      const bob = Math.sin(tS + e.x*0.02)*2;
+      // shadowy underside
+      ctx.fillStyle = "rgba(60,80,110,.45)";
+      ctx.beginPath();
+      ctx.ellipse(0, -e.h*0.30+bob, e.w*0.46, 4, 0, 0, 7); ctx.fill();
+      // body — overlapping grey puffs
+      ctx.fillStyle = "#a8b0c0";
+      ctx.beginPath(); ctx.arc(-e.w*0.30, -e.h*0.50+bob, 10, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.30, -e.h*0.50+bob, 10, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(0,         -e.h*0.55+bob, 14, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(-e.w*0.16, -e.h*0.70+bob, 11, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.16, -e.h*0.70+bob, 11, 0, 7); ctx.fill();
+      // darker grey underside
+      ctx.fillStyle = "#7a8294";
+      ctx.beginPath();
+      ctx.ellipse(0, -e.h*0.40+bob, e.w*0.46, 7, 0, 0, 7); ctx.fill();
+      // white highlight on top
+      ctx.fillStyle = "rgba(255,255,255,.7)";
+      ctx.beginPath(); ctx.arc(-e.w*0.08, -e.h*0.78+bob, 6, 0, 7); ctx.fill();
+      // angry eyebrows
+      ctx.strokeStyle = "#1a1a24"; ctx.lineWidth = 2; ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-e.w*0.20, -e.h*0.68+bob);
+      ctx.lineTo(-e.w*0.04, -e.h*0.62+bob);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo( e.w*0.04, -e.h*0.62+bob);
+      ctx.lineTo( e.w*0.20, -e.h*0.68+bob);
+      ctx.stroke();
+      // eyes (angled-narrow scowl)
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(-e.w*0.10, -e.h*0.56+bob, 3, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.10, -e.h*0.56+bob, 3, 0, 7); ctx.fill();
+      ctx.fillStyle = "#1a1a24";
+      ctx.beginPath(); ctx.arc(-e.w*0.09, -e.h*0.56+bob, 1.4, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.11, -e.h*0.56+bob, 1.4, 0, 7); ctx.fill();
+      // grumpy mouth
+      ctx.strokeStyle = "#1a1a24"; ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(-e.w*0.08, -e.h*0.40+bob);
+      ctx.quadraticCurveTo(0, -e.h*0.46+bob, e.w*0.08, -e.h*0.40+bob);
+      ctx.stroke();
+      // tiny lightning bolt dangling underneath (alternates flicker)
+      const flick = Math.floor(tS*4) % 4 !== 0;
+      if(flick){
+        ctx.fillStyle = "#ffd23f";
+        ctx.beginPath();
+        ctx.moveTo(-3, -e.h*0.28+bob);
+        ctx.lineTo( 2, -e.h*0.16+bob);
+        ctx.lineTo(-1, -e.h*0.14+bob);
+        ctx.lineTo( 3, -e.h*0.00+bob);
+        ctx.lineTo(-2, -e.h*0.10+bob);
+        ctx.lineTo( 1, -e.h*0.14+bob);
+        ctx.lineTo(-3, -e.h*0.20+bob);
+        ctx.closePath(); ctx.fill();
+        // bolt glow
+        ctx.globalCompositeOperation = "lighter";
+        ctx.fillStyle = "rgba(255,230,140,.5)";
+        ctx.beginPath(); ctx.arc(0, -e.h*0.14+bob, 7, 0, 7); ctx.fill();
+        ctx.globalCompositeOperation = "source-over";
+      }
       ctx.restore(); return;
     }
     if(theme==="moria"){
@@ -5016,6 +5382,123 @@
         ctx.moveTo(x-2, pcy-52); ctx.quadraticCurveTo(x, pcy-52-fl*0.65, x+2, pcy-52);
         ctx.closePath(); ctx.fill();
       }
+    } else if(theme==="sky"){
+      const tG = Date.now()/500;
+      // soft warm glow around the castle
+      const glow = ctx.createRadialGradient(x, baseY-100, 5, x, baseY-100, 170);
+      const gAlpha = goalActive ? 0.55 : 0.20;
+      glow.addColorStop(0,"rgba(255,230,150,"+gAlpha+")");
+      glow.addColorStop(1,"rgba(255,230,150,0)");
+      ctx.fillStyle=glow; ctx.fillRect(x-160, baseY-260, 320, 280);
+      // base puffy cloud the castle sits on (extra big)
+      ctx.fillStyle = "#ffffff";
+      for(let i=-2;i<=2;i++){
+        ctx.beginPath();
+        ctx.arc(x + i*22, baseY - 6 + Math.sin(tG + i)*1.2, 28, 0, 7); ctx.fill();
+      }
+      ctx.fillStyle = "rgba(140,180,220,.4)";
+      ctx.beginPath();
+      ctx.ellipse(x, baseY + 6, 80, 8, 0, 0, 7); ctx.fill();
+      // central keep — pastel pink/cream stone
+      ctx.fillStyle = "#f4d8e6";
+      rr(x-32, baseY-100, 64, 80, 4); ctx.fill();
+      // keep shading on the back side
+      ctx.fillStyle = "#d8b4c8";
+      rr(x-32, baseY-100, 14, 80, 4); ctx.fill();
+      // crenellations along the top of the keep
+      ctx.fillStyle = "#f4d8e6";
+      for(let i=-3;i<=3;i++){
+        ctx.fillRect(x + i*9 - 4, baseY-108, 7, 8);
+      }
+      // door — arched
+      ctx.fillStyle = goalActive ? "#ffd23f" : "#5b3a2a";
+      ctx.beginPath();
+      ctx.moveTo(x-10, baseY-20);
+      ctx.lineTo(x-10, baseY-44);
+      ctx.quadraticCurveTo(x, baseY-58, x+10, baseY-44);
+      ctx.lineTo(x+10, baseY-20);
+      ctx.closePath(); ctx.fill();
+      // door inner panel
+      ctx.fillStyle = goalActive ? "#fff2a8" : "#3a261a";
+      ctx.beginPath();
+      ctx.moveTo(x-6, baseY-22);
+      ctx.lineTo(x-6, baseY-42);
+      ctx.quadraticCurveTo(x, baseY-52, x+6, baseY-42);
+      ctx.lineTo(x+6, baseY-22);
+      ctx.closePath(); ctx.fill();
+      // little round windows on the keep
+      const winCol = goalActive ? "#fff2a8" : "#2a2030";
+      ctx.fillStyle = winCol;
+      ctx.beginPath(); ctx.arc(x-18, baseY-78, 4, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(x+18, baseY-78, 4, 0, 7); ctx.fill();
+      // side towers — slender turrets flanking the keep
+      ctx.fillStyle = "#f4d8e6";
+      rr(x-52, baseY-90, 16, 70, 3); ctx.fill();
+      rr(x+36, baseY-90, 16, 70, 3); ctx.fill();
+      // tower shading
+      ctx.fillStyle = "#d8b4c8";
+      rr(x-52, baseY-90, 4, 70, 3); ctx.fill();
+      rr(x+36, baseY-90, 4, 70, 3); ctx.fill();
+      // tower windows
+      ctx.fillStyle = winCol;
+      ctx.beginPath(); ctx.arc(x-44, baseY-66, 2.4, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(x+44, baseY-66, 2.4, 0, 7); ctx.fill();
+      // conical tower roofs (purple)
+      ctx.fillStyle = "#9a7aff";
+      ctx.beginPath();
+      ctx.moveTo(x-56, baseY-90); ctx.lineTo(x-32, baseY-90); ctx.lineTo(x-44, baseY-122);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x+32, baseY-90); ctx.lineTo(x+56, baseY-90); ctx.lineTo(x+44, baseY-122);
+      ctx.closePath(); ctx.fill();
+      // central keep cap with pennant flag
+      ctx.fillStyle = "#5fc8e0";
+      ctx.fillRect(x-2, baseY-128, 3, 16);
+      ctx.fillStyle = goalActive ? "#e84855" : "#7a3a4a";
+      const fw = 14 + Math.sin(tG*1.4)*2;
+      ctx.beginPath();
+      ctx.moveTo(x+1, baseY-128);
+      ctx.lineTo(x+1+fw, baseY-124);
+      ctx.lineTo(x+1, baseY-120);
+      ctx.closePath(); ctx.fill();
+      // gold star atop each side tower
+      ctx.fillStyle = goalActive ? "#ffd23f" : "#6a5a30";
+      for(const sxT of [x-44, x+44]){
+        const syT = baseY-128;
+        ctx.beginPath();
+        for(let k=0;k<10;k++){
+          const ang = -Math.PI/2 + k*Math.PI/5;
+          const r = k%2 ? 1.6 : 4;
+          const pxS = sxT + Math.cos(ang)*r;
+          const pyS = syT + Math.sin(ang)*r;
+          if(k===0) ctx.moveTo(pxS,pyS); else ctx.lineTo(pxS,pyS);
+        }
+        ctx.closePath(); ctx.fill();
+      }
+      // when active: sparkles drift up around the castle and a rainbow ribbon
+      if(goalActive){
+        for(let i=0;i<6;i++){
+          const a = tG*1.5 + i*1.0;
+          const sx2 = x + Math.cos(a)*64;
+          const sy2 = baseY-90 + Math.sin(a)*26;
+          ctx.fillStyle = "rgba(255,255,255,"+(0.55 + Math.sin(tG*2+i)*0.3)+")";
+          ctx.beginPath(); ctx.arc(sx2, sy2, 1.8, 0, 7); ctx.fill();
+        }
+        // rainbow band above the keep
+        const rb = ["#e84855","#ff8a4d","#ffd23f","#74e08a","#5fc8e0"];
+        ctx.lineWidth = 3;
+        for(let i=0;i<rb.length;i++){
+          ctx.strokeStyle = rb[i];
+          ctx.beginPath();
+          ctx.arc(x, baseY-100, 56 - i*3, Math.PI*1.1, Math.PI*1.9);
+          ctx.stroke();
+        }
+      } else {
+        // chains/lock motif on the door when not yet active
+        ctx.strokeStyle = "rgba(160,170,190,.7)"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x-10, baseY-30); ctx.lineTo(x+10, baseY-44); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x-10, baseY-44); ctx.lineTo(x+10, baseY-30); ctx.stroke();
+      }
     } else if(theme==="moria"){
       const tG = Date.now()/400;
       // ambient stone glow behind the door
@@ -5295,6 +5778,7 @@
                     : theme==="dino" ? "🥚 HATCH"
                     : theme==="monsoon" ? "⛵ BOARD"
                     : theme==="moria" ? "🗝️ MELLON"
+                    : theme==="sky" ? "🏰 CASTLE"
                     : "🍭 GOAL";
     const lockText = boss && boss.name ? "🔒 Defeat the " + boss.name + "!" : "🔒 Locked";
     ctx.fillText(goalActive ? goalLabel : lockText, x, baseY+24);
