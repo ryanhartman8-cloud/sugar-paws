@@ -3853,25 +3853,21 @@
       ctx.fillStyle = yellow;
       ctx.beginPath();
       ctx.ellipse(0, -e.h*0.55+bob, e.w*0.46, e.h*0.42, 0, 0, 7); ctx.fill();
-      // belly highlight
-      ctx.fillStyle = "#ffeb8a";
-      ctx.beginPath();
-      ctx.ellipse(-e.w*0.04, -e.h*0.48+bob, e.w*0.34, e.h*0.28, 0, 0, 7); ctx.fill();
-      // black stripes wrapping the body
-      ctx.fillStyle = black;
-      // helper: draw a stripe as a clipped curved band
+      // horizontal black stripes clipped to body — classic bee pattern
       ctx.save();
       ctx.beginPath();
       ctx.ellipse(0, -e.h*0.55+bob, e.w*0.46, e.h*0.42, 0, 0, 7);
       ctx.clip();
-      // three stripes across the body
+      ctx.fillStyle = black;
+      const bCy = -e.h*0.55+bob, strH = e.h*0.13, spacing = e.h*0.28;
       for(let i=-1; i<=1; i++){
-        const sx = i*e.w*0.20;
-        ctx.beginPath();
-        ctx.ellipse(sx, -e.h*0.55+bob, 5, e.h*0.46, 0, 0, 7);
-        ctx.fill();
+        ctx.fillRect(-e.w*0.5, bCy + i*spacing - strH/2, e.w, strH);
       }
       ctx.restore();
+      // subtle belly gleam on top of stripes for depth
+      ctx.fillStyle = "rgba(255,255,190,.22)";
+      ctx.beginPath();
+      ctx.ellipse(-e.w*0.06, -e.h*0.50+bob, e.w*0.26, e.h*0.18, 0, 0, 7); ctx.fill();
       // pointy stinger at the back
       ctx.fillStyle = black;
       ctx.beginPath();
