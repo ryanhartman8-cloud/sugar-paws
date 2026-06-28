@@ -195,6 +195,28 @@
   }
   .tbtn:active{ transform:translateY(3px); background:#fff; }
   #tjump{ background:var(--lemon); border-color:var(--cherry); color:var(--cherry); }
+
+  /* ---------- Skin selector ---------- */
+  #skinRow{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px;}
+  .skin-btn{
+    font-family:var(--display);font-weight:800;font-size:clamp(12px,1.8vw,15px);
+    background:#fff;border:3px solid var(--bubblegum);border-radius:999px;
+    padding:5px 13px;cursor:pointer;color:var(--plum);
+    box-shadow:0 3px 0 rgba(91,58,110,.14);transition:transform .08s ease;
+    touch-action:manipulation;
+  }
+  .skin-btn.active{background:var(--bubblegum);color:#fff;}
+  .skin-btn.locked{opacity:.45;cursor:default;border-color:#ccc;}
+  .skin-btn:not(.locked):active{transform:translateY(2px);}
+
+  /* ---------- Map screen ---------- */
+  #mapScreen{gap:8px;}
+  #mapScreen canvas{border-radius:16px;max-width:860px;width:100%;background:#1a0a2e;}
+  .btn.mint{
+    background:var(--mint);color:var(--plum);
+    box-shadow:0 7px 0 #3ab89a, 0 14px 22px rgba(116,224,194,.4);
+  }
+  .btn.mint:active{box-shadow:0 2px 0 #3ab89a;}
 </style>
 </head>
 <body>
@@ -237,6 +259,9 @@
     </div>
     <p class="modeNote"><b>Easy:</b> recover a life after each level. &nbsp;<span class="hard">Hard:</span> no recoveries.</p>
     <p class="keys">Move: ← →  /  A D &nbsp;•&nbsp; Jump: Space / ↑ / W</p>
+    <div id="skinRow"></div>
+    <p class="modeNote" style="font-size:clamp(11px,1.6vw,13px);margin-top:0;">🐟 Collect fish to unlock new cat colors</p>
+    <button class="btn mint" id="mapBtn" style="display:none;margin-top:4px;">🗺️ Level Select</button>
   </div>
 
   <!-- Level-complete screen -->
@@ -245,7 +270,10 @@
     <div class="kicker" id="levelKicker">World Complete</div>
     <h1 id="levelTitle">Nice!</h1>
     <p class="blurb" id="levelStats"></p>
-    <button class="btn" id="levelBtn">Next World →</button>
+    <div class="modeRow">
+      <button class="btn" id="levelBtn">Next World →</button>
+      <button class="btn mint" id="mapLevelBtn">🗺️ World Map</button>
+    </div>
   </div>
 
   <!-- Win screen -->
@@ -264,6 +292,14 @@
     <h1>Game <span class="sweet">Over</span></h1>
     <p class="blurb" id="loseStats">The candy got the better of you this time.</p>
     <button class="btn" id="loseBtn">Try Again</button>
+  </div>
+
+  <!-- World map / level select screen -->
+  <div class="screen hidden" id="mapScreen">
+    <div class="kicker">Adventure Map</div>
+    <h1 style="font-size:clamp(24px,5vw,48px);">World <span class="sweet">Select</span></h1>
+    <canvas id="mapCanvas" width="860" height="280"></canvas>
+    <button class="btn mint" id="mapCloseBtn">← Back</button>
   </div>
 
 <script>
@@ -492,16 +528,16 @@
         {x:2610, y:430, w:540, h:170, t:"reefrock"},
         {x:3280, y:430, w:920, h:170, t:"reefrock"},
         {x:300,  y:340, w:110, h:26, t:"coral"},
-        {x:770,  y:350, w:110, h:26, t:"shell"},
+        {x:770,  y:350, w:110, h:26, t:"shell", moveX:55, moveSpeed:1.0},
         {x:990,  y:330, w:110, h:26, t:"chest"},
         {x:1390, y:345, w:120, h:26, t:"coral"},
-        {x:1610, y:330, w:110, h:26, t:"shell"},
+        {x:1610, y:330, w:110, h:26, t:"shell", moveX:60, moveSpeed:0.9},
         {x:2050, y:350, w:120, h:26, t:"chest"},
         {x:2270, y:335, w:110, h:26, t:"coral"},
-        {x:2720, y:345, w:110, h:26, t:"shell"},
+        {x:2720, y:345, w:110, h:26, t:"shell", moveX:55, moveSpeed:1.1},
         {x:2920, y:330, w:120, h:26, t:"chest"},
         {x:3360, y:345, w:120, h:26, t:"coral"},
-        {x:3580, y:335, w:120, h:26, t:"shell"},
+        {x:3580, y:335, w:120, h:26, t:"shell", moveX:60, moveSpeed:1.0},
       ],
       collectibles: [
         {x:355,y:316,t:"fish"}, {x:605,y:398,t:"mouse"},{x:825,y:326,t:"mouse"},
@@ -594,16 +630,16 @@
         {x:3080, y:430, w:480, h:170, t:"graveground"},
         {x:3690, y:430, w:710, h:170, t:"graveground"},
         {x:300,  y:340, w:110, h:26, t:"tombstone"},
-        {x:760,  y:350, w:110, h:26, t:"pumpkin"},
+        {x:760,  y:350, w:110, h:26, t:"pumpkin", moveX:55, moveSpeed:1.0},
         {x:980,  y:330, w:110, h:26, t:"coffin"},
         {x:1340, y:345, w:120, h:26, t:"tombstone"},
-        {x:1570, y:330, w:110, h:26, t:"pumpkin"},
+        {x:1570, y:330, w:110, h:26, t:"pumpkin", moveX:50, moveSpeed:0.9},
         {x:1940, y:350, w:120, h:26, t:"coffin"},
         {x:2170, y:335, w:110, h:26, t:"tombstone"},
-        {x:2540, y:345, w:110, h:26, t:"pumpkin"},
+        {x:2540, y:345, w:110, h:26, t:"pumpkin", moveX:60, moveSpeed:1.1},
         {x:2760, y:330, w:120, h:26, t:"coffin"},
         {x:3180, y:345, w:120, h:26, t:"tombstone"},
-        {x:3400, y:335, w:110, h:26, t:"pumpkin"},
+        {x:3400, y:335, w:110, h:26, t:"pumpkin", moveX:55, moveSpeed:0.9},
         {x:3800, y:340, w:110, h:26, t:"coffin"},
       ],
       collectibles: [
@@ -693,15 +729,15 @@
         {x:3080, y:430, w:480, h:170, t:"woodfloor"},
         {x:3690, y:430, w:710, h:170, t:"woodfloor"},
         {x:300,  y:340, w:110, h:26, t:"block"},
-        {x:760,  y:350, w:110, h:26, t:"bookstack"},
+        {x:760,  y:350, w:110, h:26, t:"bookstack", moveX:60, moveSpeed:1.1},
         {x:980,  y:330, w:110, h:26, t:"stud"},
         {x:1340, y:345, w:120, h:26, t:"crayon"},
         {x:1570, y:330, w:110, h:26, t:"block"},
-        {x:1940, y:350, w:120, h:26, t:"bookstack"},
+        {x:1940, y:350, w:120, h:26, t:"bookstack", moveX:55, moveSpeed:1.0},
         {x:2170, y:335, w:110, h:26, t:"stud"},
         {x:2540, y:345, w:110, h:26, t:"crayon"},
         {x:2760, y:330, w:120, h:26, t:"block"},
-        {x:3180, y:345, w:120, h:26, t:"bookstack"},
+        {x:3180, y:345, w:120, h:26, t:"bookstack", moveX:65, moveSpeed:1.2},
         {x:3400, y:335, w:110, h:26, t:"stud"},
         {x:3800, y:340, w:110, h:26, t:"crayon"},
       ],
@@ -791,19 +827,19 @@
         {x:3000, y:430, w:1400,h:170, t:"hilltop"},   // long landing approach to the ark
         // floating debris — rooftops, driftwood, cargo crates
         {x:260,  y:330, w:110, h:24, t:"rooftop"},
-        {x:560,  y:320, w:100, h:24, t:"driftwood"},  // bridges pit 1
-        {x:790,  y:340, w:110, h:24, t:"crate"},
+        {x:560,  y:320, w:100, h:24, t:"driftwood", moveX:45, moveSpeed:0.9},
+        {x:790,  y:340, w:110, h:24, t:"crate", moveX:40, moveSpeed:0.8},
         {x:990,  y:330, w:110, h:24, t:"rooftop"},
-        {x:1320, y:325, w:120, h:24, t:"driftwood"},
+        {x:1320, y:325, w:120, h:24, t:"driftwood", moveX:50, moveSpeed:1.0},
         {x:1530, y:315, w:100, h:24, t:"crate"},
         {x:1880, y:330, w:110, h:24, t:"rooftop"},
-        {x:2080, y:315, w:100, h:24, t:"driftwood"},
-        {x:2210, y:345, w:100, h:24, t:"crate"},
+        {x:2080, y:315, w:100, h:24, t:"driftwood", moveX:45, moveSpeed:0.9},
+        {x:2210, y:345, w:100, h:24, t:"crate", moveX:40, moveSpeed:0.8},
         {x:2580, y:340, w:110, h:24, t:"rooftop"},
-        {x:2790, y:320, w:110, h:24, t:"driftwood"},
+        {x:2790, y:320, w:110, h:24, t:"driftwood", moveX:50, moveSpeed:1.0},
         {x:2940, y:340, w:100, h:24, t:"crate"},      // bridges last pit
         {x:3220, y:330, w:110, h:24, t:"rooftop"},
-        {x:3520, y:320, w:110, h:24, t:"driftwood"},
+        {x:3520, y:320, w:110, h:24, t:"driftwood", moveX:45, moveSpeed:0.9},
         {x:3820, y:340, w:100, h:24, t:"crate"},
       ],
       collectibles: [
@@ -920,18 +956,18 @@
         {x:2430, y:430, w:460, h:170, t:"bigcloud"},
         {x:3030, y:430, w:1370,h:170, t:"bigcloud"},   // long approach to the cloud castle
         // little stepping clouds + occasional rainbow arcs spanning the gaps
-        {x:280,  y:330, w:110, h:24, t:"cloud"},
-        {x:560,  y:320, w:100, h:24, t:"rainbow"},
-        {x:790,  y:340, w:110, h:24, t:"cloud"},
-        {x:990,  y:330, w:110, h:24, t:"cloud"},
-        {x:1320, y:325, w:120, h:24, t:"cloud"},
-        {x:1530, y:315, w:100, h:24, t:"rainbow"},
-        {x:1880, y:330, w:110, h:24, t:"cloud"},
-        {x:2080, y:315, w:100, h:24, t:"cloud"},
-        {x:2210, y:345, w:100, h:24, t:"cloud"},
-        {x:2580, y:340, w:110, h:24, t:"rainbow"},
-        {x:2790, y:320, w:110, h:24, t:"cloud"},
-        {x:2950, y:340, w:100, h:24, t:"cloud"},
+        {x:280,  y:330, w:110, h:24, t:"cloud", moveX:40, moveSpeed:0.6},
+        {x:560,  y:320, w:100, h:24, t:"rainbow", moveX:50, moveSpeed:0.7},
+        {x:790,  y:340, w:110, h:24, t:"cloud", moveX:35, moveSpeed:0.6},
+        {x:990,  y:330, w:110, h:24, t:"cloud", moveX:45, moveSpeed:0.65},
+        {x:1320, y:325, w:120, h:24, t:"cloud", moveX:40, moveSpeed:0.6},
+        {x:1530, y:315, w:100, h:24, t:"rainbow", moveX:55, moveSpeed:0.7},
+        {x:1880, y:330, w:110, h:24, t:"cloud", moveX:45, moveSpeed:0.65},
+        {x:2080, y:315, w:100, h:24, t:"cloud", moveX:40, moveSpeed:0.6},
+        {x:2210, y:345, w:100, h:24, t:"cloud", moveX:35, moveSpeed:0.65},
+        {x:2580, y:340, w:110, h:24, t:"rainbow", moveX:60, moveSpeed:0.8},
+        {x:2790, y:320, w:110, h:24, t:"cloud", moveX:45, moveSpeed:0.65},
+        {x:2950, y:340, w:100, h:24, t:"cloud", moveX:40, moveSpeed:0.6},
       ],
       collectibles: [
         // golden feathers drifting through the sky
@@ -976,6 +1012,168 @@
       state, score, lives, fishCount, miceCount;
   let easyMode = false;
 
+  // ---------- Persistence ----------
+  function loadSave(){ try{ return JSON.parse(localStorage.getItem("sugarPawsSave")||"{}"); }catch(e){ return {}; } }
+  function getSave(k,d){ const s=loadSave(); return k in s ? s[k] : d; }
+  function setSave(k,v){ const s=loadSave(); s[k]=v; localStorage.setItem("sugarPawsSave",JSON.stringify(s)); }
+
+  // ---------- Skins ----------
+  const SKINS = [
+    {name:"Marmalade",emoji:"🟠",fish:0,   primary:"#ff9a4d",dark:"#f07e2e",cream:"#ffe6cf"},
+    {name:"Silver",   emoji:"⚪",fish:10,  primary:"#c8c8d8",dark:"#9898b8",cream:"#f0f0fc"},
+    {name:"Midnight", emoji:"🌙",fish:25,  primary:"#4a4aaa",dark:"#2a2a6a",cream:"#8888cc"},
+    {name:"Calico",   emoji:"🐈",fish:50,  primary:"#ff9a4d",dark:"#883322",cream:"#fffaf0"},
+    {name:"Royal",    emoji:"👑",fish:100, primary:"#b060ff",dark:"#7a20dd",cream:"#e8d0ff"},
+  ];
+  let currentSkin       = getSave("currentSkin", 0);
+  let lifetimeFish      = getSave("lifetimeFish", 0);
+  let highestCompleted  = getSave("highestCompleted", -1);
+  let mapAnimFrame      = null;
+  let mapReturnTo       = "start";
+
+  function updateSkinUI(){
+    const row = document.getElementById("skinRow");
+    row.innerHTML = "";
+    SKINS.forEach((sk, i) => {
+      const btn = document.createElement("button");
+      const unlocked = lifetimeFish >= sk.fish;
+      btn.className = "skin-btn" + (i===currentSkin?" active":"") + (unlocked?"":" locked");
+      btn.textContent = sk.emoji + " " + sk.name + (unlocked?"":" 🔒"+sk.fish+"🐟");
+      btn.title = unlocked ? sk.name : "Need "+sk.fish+" lifetime fish";
+      if(unlocked){
+        btn.addEventListener("click", ()=>{
+          currentSkin = i;
+          setSave("currentSkin", currentSkin);
+          updateSkinUI();
+        });
+      }
+      row.appendChild(btn);
+    });
+    const mapBtn = document.getElementById("mapBtn");
+    if(mapBtn) mapBtn.style.display = highestCompleted >= 0 ? "" : "none";
+  }
+
+  // ---------- World map ----------
+  const MAP_NODES = [
+    {wx:70, wy:90},{wx:195,wy:90},{wx:320,wy:90},{wx:445,wy:90},
+    {wx:570,wy:90},{wx:695,wy:90},
+    {wx:695,wy:195},{wx:570,wy:195},{wx:445,wy:195},
+    {wx:320,wy:195},{wx:195,wy:195}
+  ];
+  const MAP_EMOJIS = ["🍭","🏰","🐠","🚀","🎃","❄️","🧸","🦕","⛵","💎","☁️"];
+
+  function drawMap(pulse){
+    const mc = document.getElementById("mapCanvas");
+    if(!mc) return;
+    const mctx = mc.getContext("2d");
+    const W2 = mc.width, H2 = mc.height;
+
+    // night-sky gradient
+    const bg = mctx.createLinearGradient(0,0,0,H2);
+    bg.addColorStop(0,"#1a0a2e"); bg.addColorStop(1,"#2d1060");
+    mctx.fillStyle = bg; mctx.fillRect(0,0,W2,H2);
+
+    // stars
+    mctx.fillStyle="rgba(255,255,255,.7)";
+    for(let i=0;i<60;i++){
+      const sx=(Math.sin(i*7.3)*0.5+0.5)*W2, sy=(Math.cos(i*5.1)*0.5+0.5)*H2;
+      const sr=0.8+(Math.sin(i*2.7+pulse*0.03)*0.5+0.5)*1.2;
+      mctx.beginPath(); mctx.arc(sx,sy,sr,0,7); mctx.fill();
+    }
+
+    // draw connecting path
+    mctx.strokeStyle="rgba(255,255,255,.25)"; mctx.lineWidth=4; mctx.setLineDash([8,8]);
+    mctx.beginPath();
+    MAP_NODES.forEach((n,i)=>{ i===0?mctx.moveTo(n.wx,n.wy):mctx.lineTo(n.wx,n.wy); });
+    mctx.stroke(); mctx.setLineDash([]);
+
+    // draw nodes
+    MAP_NODES.forEach((n,i)=>{
+      const completed = i <= highestCompleted;
+      const isNext    = i === highestCompleted + 1;
+      const locked    = i > highestCompleted + 1;
+
+      // glow for next node
+      if(isNext){
+        const glow = Math.sin(pulse*0.12)*0.4+0.6;
+        mctx.shadowColor="#ffd23f"; mctx.shadowBlur=16*glow;
+      } else {
+        mctx.shadowBlur = 0;
+      }
+
+      // outer ring
+      mctx.beginPath(); mctx.arc(n.wx,n.wy,22,0,7);
+      if(completed)       mctx.fillStyle="#74E0C2";
+      else if(isNext)     mctx.fillStyle="#FFD23F";
+      else                mctx.fillStyle="#4a3a6a";
+      mctx.fill();
+
+      // inner circle
+      mctx.beginPath(); mctx.arc(n.wx,n.wy,16,0,7);
+      if(completed)       mctx.fillStyle="#1a0a2e";
+      else if(isNext)     mctx.fillStyle="#5B3A6E";
+      else                mctx.fillStyle="#2d1060";
+      mctx.fill();
+
+      mctx.shadowBlur = 0;
+
+      // emoji or lock
+      mctx.font = locked ? "14px sans-serif" : "18px sans-serif";
+      mctx.textAlign="center"; mctx.textBaseline="middle";
+      mctx.fillText(locked ? "🔒" : MAP_EMOJIS[i], n.wx, n.wy);
+
+      // world number below
+      mctx.font="bold 11px sans-serif"; mctx.fillStyle=locked?"#6a5a8a":"#fff";
+      mctx.fillText("W"+(i+1), n.wx, n.wy+32);
+
+      // world name tiny below that
+      if(!locked){
+        mctx.font="10px sans-serif"; mctx.fillStyle="rgba(255,255,255,.6)";
+        mctx.fillText(LEVELS[i].name.split(" ")[0], n.wx, n.wy+44);
+      }
+    });
+    mctx.textBaseline="alphabetic";
+  }
+
+  function openMap(returnTo){
+    mapReturnTo = returnTo || "start";
+    const ms = document.getElementById("mapScreen");
+    show(ms);
+    let pulse = 0;
+    function animMap(){
+      drawMap(pulse++);
+      mapAnimFrame = requestAnimationFrame(animMap);
+    }
+    if(mapAnimFrame) cancelAnimationFrame(mapAnimFrame);
+    animMap();
+    // click-to-jump
+    const mc = document.getElementById("mapCanvas");
+    mc.onclick = (e)=>{
+      const rect = mc.getBoundingClientRect();
+      const scaleX = mc.width / rect.width;
+      const scaleY = mc.height / rect.height;
+      const cx = (e.clientX - rect.left)*scaleX;
+      const cy = (e.clientY - rect.top)*scaleY;
+      MAP_NODES.forEach((n,i)=>{
+        if(i > highestCompleted+1) return;
+        const dx=cx-n.wx, dy=cy-n.wy;
+        if(Math.hypot(dx,dy)<28){
+          closeMap();
+          loadLevel(i); state="play";
+          hide(document.getElementById("levelScreen"));
+        }
+      });
+    };
+  }
+
+  function closeMap(){
+    if(mapAnimFrame){ cancelAnimationFrame(mapAnimFrame); mapAnimFrame=null; }
+    const ms = document.getElementById("mapScreen");
+    hide(ms);
+    const mc = document.getElementById("mapCanvas");
+    if(mc) mc.onclick = null;
+  }
+
   function resetPlayer(){
     player = {
       x: 60, y: GROUND_Y - SMALL.h, vx:0, vy:0,
@@ -1012,9 +1210,11 @@
     // Floating platforms get lifted FLOAT_LIFT px so the big cat doesn't
     // head-bonk them on a normal jump. Ground platforms (y>=420) are untouched.
     const FLOAT_LIFT = 22;
-    platforms = L.platforms.map(pl =>
-      pl.y < 420 ? {...pl, y: pl.y - FLOAT_LIFT} : pl
-    );
+    platforms = L.platforms.map(pl => {
+      const p2 = pl.y < 420 ? {...pl, y: pl.y - FLOAT_LIFT} : {...pl};
+      if(p2.moveX !== undefined){ p2.baseX = p2.x; p2.phase = Math.random()*Math.PI*2; p2.dx = 0; }
+      return p2;
+    });
     // Pickups follow: items above a floating platform move with it, and
     // any low pickup over a chasm (no ground beneath) gets lifted onto the
     // natural jump arc so the player isn't forced into a risky low jump.
@@ -1082,6 +1282,15 @@
     const p = player;
     p.animT += 1;
 
+    // moving platforms
+    for(const pl of platforms){
+      if(pl.baseX === undefined) continue;
+      const prevX = pl.x;
+      pl.phase += 0.022 * pl.moveSpeed;
+      pl.x = pl.baseX + pl.moveX * Math.sin(pl.phase);
+      pl.dx = pl.x - prevX;
+    }
+
     // horizontal input
     const speed = p.big ? SPD_BIG : SPD_SMALL;
     let ax = 0;
@@ -1140,6 +1349,18 @@
       if(aabb(p,pl)){
         if(p.vy>0){ p.y = pl.y - p.h; p.vy=0; p.onGround=true; }
         else if(p.vy<0){ p.y = pl.y + pl.h; p.vy=0; }
+      }
+    }
+
+    // carry player horizontally on moving platforms
+    if(p.onGround){
+      for(const pl of platforms){
+        if(!pl.dx) continue;
+        if(Math.abs((p.y + p.h) - pl.y) < 2 && p.x + p.w > pl.x && p.x < pl.x + pl.w){
+          p.x += pl.dx;
+          if(p.x < 0) p.x = 0;
+          break;
+        }
       }
     }
 
@@ -5892,7 +6113,8 @@
     const walk = (keys.left||keys.right) && p.onGround;
     const legSwing = walk ? Math.sin(p.animT*0.3)*3 : 0;
     const bodyBob = walk ? Math.abs(Math.sin(p.animT*0.3))*1.5 : 0;
-    const orange="#ff9a4d", orangeD="#f07e2e", cream="#ffe6cf";
+    const sk = SKINS[currentSkin] || SKINS[0];
+    const orange = sk.primary, orangeD = sk.dark, cream = sk.cream;
     // Star-power soap bubble — translucent shell with iridescent rim
     if(p.activePower==="star"){
       const t  = Date.now()/200;
@@ -6379,12 +6601,19 @@
     if(mode === "easy") easyMode = true;
     else if(mode === "hard") easyMode = false;
     if(actx && actx.state==="suspended") actx.resume();
+    closeMap();
     newGame(); state="play";
     hide(startScreen); hide(levelScreen); hide(winScreen); hide(loseScreen);
+    hide(document.getElementById("mapScreen"));
   }
   function reachGoal(){
     if(currentLevel < LEVELS.length-1){
       state="levelclear";
+      // persist progress
+      if(currentLevel > highestCompleted){
+        highestCompleted = currentLevel;
+        setSave("highestCompleted", highestCompleted);
+      }
       document.getElementById("levelKicker").textContent = "World "+(currentLevel+1)+" Complete";
       document.getElementById("levelTitle").textContent  = LEVELS[currentLevel].name + " — Clear!";
       const bonus = easyMode ? " • +1 life 🩷" : "";
@@ -6399,15 +6628,22 @@
   }
   function win(){
     state="won"; sfx.win();
+    lifetimeFish += fishCount; setSave("lifetimeFish", lifetimeFish);
+    if(currentLevel >= LEVELS.length-1 && currentLevel > highestCompleted){
+      highestCompleted = currentLevel; setSave("highestCompleted", highestCompleted);
+    }
     document.getElementById("winStats").textContent =
       "You sweetened the kingdom with " + score + " points — " + fishCount + " fish and " + miceCount + " mice gobbled!";
     show(winScreen);
+    updateSkinUI();
   }
   function lose(){
     state="lost";
+    lifetimeFish += fishCount; setSave("lifetimeFish", lifetimeFish);
     document.getElementById("loseStats").textContent =
       "You scored " + score + " points across " + (currentLevel+1) + " world(s). The kingdom awaits another try!";
     show(loseScreen);
+    updateSkinUI();
   }
 
   // Robust activation: tap (touch/pointer) AND click, de-duplicated.
@@ -6425,8 +6661,18 @@
   onActivate(document.getElementById("winBtn"),   () => startPlay());
   onActivate(document.getElementById("loseBtn"),  () => startPlay());
 
+  // Map buttons
+  onActivate(document.getElementById("mapBtn"),      () => openMap("start"));
+  onActivate(document.getElementById("mapLevelBtn"), () => openMap("level"));
+  onActivate(document.getElementById("mapCloseBtn"), () => {
+    closeMap();
+    if(mapReturnTo === "level") show(levelScreen);
+    else show(startScreen);
+  });
+
   // ---------- Boot ----------
   state="menu"; newGame();
+  updateSkinUI();
   requestAnimationFrame(loop);
 })();
 </script>
