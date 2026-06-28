@@ -3810,110 +3810,67 @@
       ctx.restore(); return;
     }
     if(theme==="sky"){
-      // chunky bumblebee — round striped body, blurred wings, big round eyes
+      // bumblebee — bold stripes, clear wings, black head
       ctx.scale(e.vx >= 0 ? 1 : -1, 1);
       const tS = Date.now();
       const bob = Math.sin(tS/240 + e.x*0.02)*2;
-      const yellow = "#ffd23f", yellowD = "#c9921f", black = "#1a1a24";
-      // soft shadow underneath
-      ctx.fillStyle = "rgba(40,40,30,.30)";
-      ctx.beginPath();
-      ctx.ellipse(0, -e.h*0.20+bob, e.w*0.42, 4, 0, 0, 7); ctx.fill();
-      // dangling stick legs
-      ctx.strokeStyle = black; ctx.lineWidth = 1.4; ctx.lineCap = "round";
-      const legSwing = Math.sin(tS/160)*1.5;
-      for(let i=-1;i<=1;i++){
-        ctx.beginPath();
-        ctx.moveTo(i*e.w*0.18, -e.h*0.32+bob);
-        ctx.lineTo(i*e.w*0.18 - 2, -e.h*0.10+bob+legSwing);
-        ctx.stroke();
-      }
-      // wings — translucent ovals with a fast-buzz blur (two alpha layers slightly offset)
-      const flap = Math.sin(tS/30)*1.5;
-      ctx.globalCompositeOperation = "lighter";
-      ctx.fillStyle = "rgba(220,230,250,.35)";
-      // back wing
-      ctx.beginPath();
-      ctx.ellipse(-e.w*0.10, -e.h*0.95+bob + flap, e.w*0.34, e.h*0.22, -0.35, 0, 7); ctx.fill();
-      // front wing
-      ctx.beginPath();
-      ctx.ellipse( e.w*0.05, -e.h*0.98+bob - flap, e.w*0.36, e.h*0.24, -0.20, 0, 7); ctx.fill();
-      // soft inner highlight on each wing
-      ctx.fillStyle = "rgba(255,255,255,.55)";
-      ctx.beginPath();
-      ctx.ellipse(-e.w*0.14, -e.h*0.98+bob + flap, e.w*0.18, e.h*0.12, -0.35, 0, 7); ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse( e.w*0.02, -e.h*1.02+bob - flap, e.w*0.20, e.h*0.14, -0.20, 0, 7); ctx.fill();
-      ctx.globalCompositeOperation = "source-over";
-      // wing outline (subtle)
-      ctx.strokeStyle = "rgba(60,60,90,.45)"; ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.ellipse( e.w*0.05, -e.h*0.98+bob - flap, e.w*0.36, e.h*0.24, -0.20, 0, 7); ctx.stroke();
-      // body — fat round striped torso
+      const yellow = "#ffd23f", black = "#1a1a24";
+      // wings (source-over, drawn behind body)
+      const flap = Math.sin(tS/35)*2;
+      ctx.fillStyle = "rgba(210,230,255,.75)";
+      ctx.strokeStyle = "rgba(80,100,180,.65)"; ctx.lineWidth = 1.2;
+      ctx.beginPath(); // back wing
+      ctx.ellipse(-e.w*0.08, -e.h*0.90+bob + flap, e.w*0.28, e.h*0.18, -0.28, 0, 7);
+      ctx.fill(); ctx.stroke();
+      ctx.beginPath(); // front wing
+      ctx.ellipse( e.w*0.08, -e.h*0.94+bob - flap, e.w*0.32, e.h*0.22, -0.15, 0, 7);
+      ctx.fill(); ctx.stroke();
+      // body — yellow base
       ctx.fillStyle = yellow;
       ctx.beginPath();
       ctx.ellipse(0, -e.h*0.55+bob, e.w*0.46, e.h*0.42, 0, 0, 7); ctx.fill();
-      // horizontal black stripes clipped to body — classic bee pattern
+      // two thick black stripes clipped to body — unmistakably bee
       ctx.save();
       ctx.beginPath();
       ctx.ellipse(0, -e.h*0.55+bob, e.w*0.46, e.h*0.42, 0, 0, 7);
       ctx.clip();
       ctx.fillStyle = black;
-      const bCy = -e.h*0.55+bob, strH = e.h*0.13, spacing = e.h*0.28;
-      for(let i=-1; i<=1; i++){
-        ctx.fillRect(-e.w*0.5, bCy + i*spacing - strH/2, e.w, strH);
-      }
+      const bCy = -e.h*0.55+bob, strH = e.h*0.22, spc = e.h*0.30;
+      ctx.fillRect(-e.w*0.5, bCy - spc - strH*0.5, e.w, strH);
+      ctx.fillRect(-e.w*0.5, bCy + spc - strH*0.5, e.w, strH);
       ctx.restore();
-      // subtle belly gleam on top of stripes for depth
-      ctx.fillStyle = "rgba(255,255,190,.22)";
+      // body outline
+      ctx.strokeStyle = "#b07800"; ctx.lineWidth = 1.2;
       ctx.beginPath();
-      ctx.ellipse(-e.w*0.06, -e.h*0.50+bob, e.w*0.26, e.h*0.18, 0, 0, 7); ctx.fill();
-      // pointy stinger at the back
+      ctx.ellipse(0, -e.h*0.55+bob, e.w*0.46, e.h*0.42, 0, 0, 7); ctx.stroke();
+      // stinger
       ctx.fillStyle = black;
       ctx.beginPath();
       ctx.moveTo(-e.w*0.42, -e.h*0.50+bob);
-      ctx.lineTo(-e.w*0.58, -e.h*0.55+bob);
-      ctx.lineTo(-e.w*0.42, -e.h*0.60+bob);
+      ctx.lineTo(-e.w*0.60, -e.h*0.55+bob);
+      ctx.lineTo(-e.w*0.42, -e.h*0.62+bob);
       ctx.closePath(); ctx.fill();
-      // head — slightly smaller round bulb at the front
-      ctx.fillStyle = "#3a2818";
+      // head (black, front)
+      ctx.fillStyle = black;
       ctx.beginPath();
-      ctx.ellipse(e.w*0.42, -e.h*0.62+bob, e.w*0.20, e.h*0.22, 0, 0, 7); ctx.fill();
-      // head fuzz suggestion (small bumps along the top)
-      ctx.fillStyle = "rgba(20,16,12,.6)";
-      for(let i=0;i<3;i++){
-        ctx.beginPath();
-        ctx.arc(e.w*0.34 + i*5, -e.h*0.78+bob, 1.4, 0, 7); ctx.fill();
-      }
-      // antennae — two curved black wires with little bulbs
+      ctx.arc(e.w*0.44, -e.h*0.58+bob, e.w*0.18, 0, 7); ctx.fill();
+      // eye
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(e.w*0.50, -e.h*0.64+bob, 3, 0, 7); ctx.fill();
+      ctx.fillStyle = black;
+      ctx.beginPath(); ctx.arc(e.w*0.51, -e.h*0.64+bob, 1.5, 0, 7); ctx.fill();
+      // antennae
       ctx.strokeStyle = black; ctx.lineWidth = 1.4; ctx.lineCap = "round";
       const antWob = Math.sin(tS/200)*1.5;
       ctx.beginPath();
-      ctx.moveTo(e.w*0.38, -e.h*0.80+bob);
-      ctx.quadraticCurveTo(e.w*0.42, -e.h*1.05+bob + antWob, e.w*0.36, -e.h*1.18+bob + antWob);
-      ctx.stroke();
+      ctx.moveTo(e.w*0.38, -e.h*0.74+bob);
+      ctx.lineTo(e.w*0.28, -e.h*1.00+bob + antWob); ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(e.w*0.46, -e.h*0.80+bob);
-      ctx.quadraticCurveTo(e.w*0.52, -e.h*1.05+bob - antWob, e.w*0.48, -e.h*1.18+bob - antWob);
-      ctx.stroke();
+      ctx.moveTo(e.w*0.46, -e.h*0.74+bob);
+      ctx.lineTo(e.w*0.38, -e.h*1.02+bob - antWob); ctx.stroke();
       ctx.fillStyle = yellow;
-      ctx.beginPath(); ctx.arc(e.w*0.36, -e.h*1.18+bob + antWob, 1.6, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.arc(e.w*0.48, -e.h*1.18+bob - antWob, 1.6, 0, 7); ctx.fill();
-      // big round eyes
-      ctx.fillStyle = "#fff";
-      ctx.beginPath(); ctx.arc(e.w*0.36, -e.h*0.68+bob, 3.4, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.arc(e.w*0.52, -e.h*0.68+bob, 3.4, 0, 7); ctx.fill();
-      ctx.fillStyle = black;
-      ctx.beginPath(); ctx.arc(e.w*0.37, -e.h*0.68+bob, 1.8, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.arc(e.w*0.53, -e.h*0.68+bob, 1.8, 0, 7); ctx.fill();
-      ctx.fillStyle = "#fff";
-      ctx.beginPath(); ctx.arc(e.w*0.38, -e.h*0.69+bob, 0.7, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.arc(e.w*0.54, -e.h*0.69+bob, 0.7, 0, 7); ctx.fill();
-      // little smiling mouth
-      ctx.strokeStyle = black; ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.arc(e.w*0.44, -e.h*0.52+bob, 2.4, 0.2, Math.PI-0.2);
-      ctx.stroke();
+      ctx.beginPath(); ctx.arc(e.w*0.28, -e.h*1.00+bob + antWob, 2, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(e.w*0.38, -e.h*1.02+bob - antWob, 2, 0, 7); ctx.fill();
       ctx.restore(); return;
     }
     if(theme==="moria"){
