@@ -3741,7 +3741,7 @@
                     : theme==="christmas" ? "#dceaf8"
                     : theme==="toy" ? "#c8c8d6"
                     : theme==="dino" ? "#a8d4a0"
-                    : theme==="monsoon" ? "#cfd6e0"
+                    : theme==="monsoon" ? "#a8c098"
                     : theme==="moria" ? "#9aaa82"
                     : theme==="sky" ? "#c8d0dc"
                     : "#ff8fc8";
@@ -4071,81 +4071,136 @@
       ctx.restore(); return;
     }
     if(theme==="monsoon"){
-      // stormy seagull — white/grey body, flapping wings, yellow beak
-      const wob = Math.sin(e.x*0.16)*2;
-      const flap = Math.sin(Date.now()/120)*0.7;
-      // tail feathers
-      ctx.fillStyle = "#cfd6e0";
+      // alligator — long low scaly body, big snout, scuttles along the flooded rooftops
+      ctx.scale(e.vx >= 0 ? 1 : -1, 1);
+      const tA = Date.now()/180;
+      const stride = Math.sin(tA + e.x*0.01)*1.4;
+      const body = "#4a7244", belly = "#bcd09a", scale = "#2f4a2b";
+      // tail — long, curling back from the body, narrowing to a point
+      ctx.fillStyle = body;
       ctx.beginPath();
-      ctx.moveTo(-e.w*0.42, -e.h*0.5+wob);
-      ctx.lineTo(-e.w*0.62, -e.h*0.45+wob);
-      ctx.lineTo(-e.w*0.42, -e.h*0.40+wob);
+      ctx.moveTo(-e.w*0.35, -e.h*0.30);
+      ctx.quadraticCurveTo(-e.w*0.85, -e.h*0.10 + Math.sin(tA)*2,
+                           -e.w*1.05, -e.h*0.32 + Math.sin(tA)*3);
+      ctx.lineTo(-e.w*1.05, -e.h*0.22 + Math.sin(tA)*3);
+      ctx.quadraticCurveTo(-e.w*0.85, -e.h*0.02 + Math.sin(tA)*2,
+                           -e.w*0.35, -e.h*0.15);
       ctx.closePath(); ctx.fill();
-      ctx.fillStyle = "#1a1a24";
-      ctx.fillRect(-e.w*0.58, -e.h*0.46+wob, 8, 1.5);
-      // body
-      ctx.fillStyle = "#e8ecf2";
+      // tail scale ridges
+      ctx.fillStyle = scale;
+      for(let i=0;i<4;i++){
+        const tx = -e.w*0.45 - i*e.w*0.14;
+        const ty = -e.h*0.32 + Math.sin(tA + i*0.4)*2;
+        ctx.beginPath();
+        ctx.moveTo(tx - 4, ty + 2);
+        ctx.lineTo(tx, ty - 5);
+        ctx.lineTo(tx + 4, ty + 2);
+        ctx.closePath(); ctx.fill();
+      }
+      // back legs (positioned behind the body)
+      ctx.fillStyle = body;
+      rr(-e.w*0.30 + stride*0.6, -e.h*0.18, 8, 10, 2); ctx.fill();
+      // toes on back leg
+      ctx.fillStyle = scale;
+      for(let i=0;i<3;i++){
+        ctx.fillRect(-e.w*0.30 + stride*0.6 + i*3, -e.h*0.04, 2, 3);
+      }
+      // belly — long pale underbelly running the length of the body
+      ctx.fillStyle = belly;
       ctx.beginPath();
-      ctx.ellipse(0, -e.h*0.55+wob, e.w*0.4, e.h*0.36, 0, 0, 7); ctx.fill();
-      // grey back / wing-base patch
-      ctx.fillStyle = "#a8b0bc";
+      ctx.ellipse(0, -e.h*0.18, e.w*0.55, e.h*0.18, 0, 0, 7); ctx.fill();
+      // main body — long horizontal ellipse
+      ctx.fillStyle = body;
       ctx.beginPath();
-      ctx.ellipse(-e.w*0.05, -e.h*0.7+wob, e.w*0.3, e.h*0.16, 0, 0, 7); ctx.fill();
-      // flapping wings
-      ctx.fillStyle = "#a8b0bc";
-      ctx.save();
-      ctx.translate(-e.w*0.05, -e.h*0.7+wob);
-      ctx.rotate(-flap);
+      ctx.ellipse(0, -e.h*0.42, e.w*0.58, e.h*0.32, 0, 0, 7); ctx.fill();
+      // back scutes — triangular bumps running along the spine
+      ctx.fillStyle = scale;
+      for(let i=-3; i<=3; i++){
+        const sx = i*e.w*0.14;
+        ctx.beginPath();
+        ctx.moveTo(sx - 3, -e.h*0.66);
+        ctx.lineTo(sx,     -e.h*0.82);
+        ctx.lineTo(sx + 3, -e.h*0.66);
+        ctx.closePath(); ctx.fill();
+      }
+      // scaly texture spots on the back
+      ctx.fillStyle = "rgba(20,40,20,.5)";
+      for(let i=-2;i<=2;i++){
+        ctx.beginPath(); ctx.arc(i*e.w*0.16, -e.h*0.55, 1.5, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(i*e.w*0.16 + e.w*0.06, -e.h*0.45, 1.2, 0, 7); ctx.fill();
+      }
+      // front legs (in front of the body, two visible stride positions)
+      ctx.fillStyle = body;
+      rr(e.w*0.15 - stride*0.6, -e.h*0.18, 8, 10, 2); ctx.fill();
+      // toes on front leg
+      ctx.fillStyle = scale;
+      for(let i=0;i<3;i++){
+        ctx.fillRect(e.w*0.15 - stride*0.6 + i*3, -e.h*0.04, 2, 3);
+      }
+      // toe claws (tiny white tips)
+      ctx.fillStyle = "#fff0d0";
+      for(let i=0;i<3;i++){
+        ctx.fillRect(e.w*0.15 - stride*0.6 + i*3, -e.h*0.00, 1, 1.4);
+        ctx.fillRect(-e.w*0.30 + stride*0.6 + i*3, -e.h*0.00, 1, 1.4);
+      }
+      // head — extends forward from the body, low and broad
+      ctx.fillStyle = body;
       ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.quadraticCurveTo(-e.w*0.5, -e.h*0.4, -e.w*0.65, -e.h*0.05);
-      ctx.quadraticCurveTo(-e.w*0.4, -e.h*0.08, 0, 4);
+      ctx.ellipse(e.w*0.50, -e.h*0.46, e.w*0.22, e.h*0.18, 0, 0, 7); ctx.fill();
+      // long snout — flat-topped and extending forward
+      ctx.beginPath();
+      ctx.moveTo(e.w*0.62, -e.h*0.58);
+      ctx.lineTo(e.w*1.05, -e.h*0.50);
+      ctx.lineTo(e.w*1.05, -e.h*0.34);
+      ctx.lineTo(e.w*0.62, -e.h*0.30);
       ctx.closePath(); ctx.fill();
-      ctx.restore();
-      ctx.save();
-      ctx.translate(-e.w*0.05, -e.h*0.7+wob);
-      ctx.rotate(flap);
+      // upper jaw highlight (lighter green stripe)
+      ctx.fillStyle = "#6a9a5a";
+      ctx.fillRect(e.w*0.66, -e.h*0.56, e.w*0.36, 2);
+      // jaw seam (mouth line)
+      ctx.strokeStyle = "#1a2a14"; ctx.lineWidth = 1.2;
       ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.quadraticCurveTo(e.w*0.5, -e.h*0.4, e.w*0.65, -e.h*0.05);
-      ctx.quadraticCurveTo(e.w*0.4, -e.h*0.08, 0, 4);
-      ctx.closePath(); ctx.fill();
-      // wingtip black tips
-      ctx.fillStyle = "#1a1a24";
+      ctx.moveTo(e.w*0.60, -e.h*0.42);
+      ctx.lineTo(e.w*1.05, -e.h*0.42);
+      ctx.stroke();
+      // teeth poking up from the lower jaw along the snout
+      ctx.fillStyle = "#fff0d0";
+      for(let i=0;i<5;i++){
+        const tx = e.w*0.66 + i*e.w*0.08;
+        ctx.beginPath();
+        ctx.moveTo(tx,      -e.h*0.42);
+        ctx.lineTo(tx + 2,  -e.h*0.50);
+        ctx.lineTo(tx + 4,  -e.h*0.42);
+        ctx.closePath(); ctx.fill();
+      }
+      // and a couple poking DOWN from the upper jaw too
+      for(let i=0;i<4;i++){
+        const tx = e.w*0.72 + i*e.w*0.08;
+        ctx.beginPath();
+        ctx.moveTo(tx,      -e.h*0.42);
+        ctx.lineTo(tx + 2,  -e.h*0.34);
+        ctx.lineTo(tx + 4,  -e.h*0.42);
+        ctx.closePath(); ctx.fill();
+      }
+      // nostril on the snout tip
+      ctx.fillStyle = "#1a2a14";
+      ctx.beginPath(); ctx.arc(e.w*1.00, -e.h*0.50, 1.2, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(e.w*1.00, -e.h*0.44, 1.2, 0, 7); ctx.fill();
+      // raised eye ridge on top of the head — the classic gator silhouette
+      ctx.fillStyle = body;
       ctx.beginPath();
-      ctx.moveTo(e.w*0.62, -e.h*0.08);
-      ctx.lineTo(e.w*0.68, -e.h*0.02);
-      ctx.lineTo(e.w*0.58, -e.h*0.04);
-      ctx.closePath(); ctx.fill();
-      ctx.restore();
-      // head
-      ctx.fillStyle = "#e8ecf2";
-      ctx.beginPath();
-      ctx.arc(e.w*0.30, -e.h*0.95+wob, e.w*0.22, 0, 7); ctx.fill();
-      // beady eye
-      ctx.fillStyle = "#1a1a24";
-      ctx.beginPath();
-      ctx.arc(e.w*0.36, -e.h*0.99+wob, 1.6, 0, 7); ctx.fill();
+      ctx.ellipse(e.w*0.46, -e.h*0.66, 5, 4, 0, 0, 7); ctx.fill();
+      // yellow eye with vertical slit pupil
+      ctx.fillStyle = "#ffd23f";
+      ctx.beginPath(); ctx.arc(e.w*0.48, -e.h*0.68, 3, 0, 7); ctx.fill();
+      ctx.fillStyle = "#1a2a14";
+      ctx.beginPath(); ctx.ellipse(e.w*0.49, -e.h*0.68, 0.8, 2.4, 0, 0, 7); ctx.fill();
       ctx.fillStyle = "#fff";
-      ctx.beginPath();
-      ctx.arc(e.w*0.37, -e.h*1.00+wob, 0.6, 0, 7); ctx.fill();
-      // yellow beak with red tip
-      ctx.fillStyle = "#ffce4d";
-      ctx.beginPath();
-      ctx.moveTo(e.w*0.46, -e.h*0.95+wob);
-      ctx.lineTo(e.w*0.66, -e.h*0.92+wob);
-      ctx.lineTo(e.w*0.46, -e.h*0.88+wob);
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle = "#e84855";
-      ctx.beginPath();
-      ctx.moveTo(e.w*0.60, -e.h*0.93+wob);
-      ctx.lineTo(e.w*0.66, -e.h*0.92+wob);
-      ctx.lineTo(e.w*0.60, -e.h*0.89+wob);
-      ctx.closePath(); ctx.fill();
-      // tiny tucked legs
-      ctx.fillStyle = "#ffce4d";
-      ctx.fillRect(-e.w*0.04, -e.h*0.2+wob, 3, 6);
-      ctx.fillRect( e.w*0.10, -e.h*0.2+wob, 3, 6);
+      ctx.beginPath(); ctx.arc(e.w*0.50, -e.h*0.70, 0.7, 0, 7); ctx.fill();
+      // water dripping off the belly
+      ctx.fillStyle = "rgba(180,210,240,.6)";
+      ctx.fillRect(-e.w*0.10, -e.h*0.02, 1, 4);
+      ctx.fillRect( e.w*0.20, -e.h*0.02, 1, 4);
       ctx.restore(); return;
     }
     if(theme==="dino"){
