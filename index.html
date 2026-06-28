@@ -197,7 +197,9 @@
   #tjump{ background:var(--lemon); border-color:var(--cherry); color:var(--cherry); }
 
   /* ---------- Skin selector ---------- */
-  #skinRow{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px;}
+  #skinPreviewWrap{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:4px;}
+  #skinPreview{border-radius:50%;background:rgba(255,255,255,.6);box-shadow:0 4px 12px rgba(91,58,110,.18);}
+  #skinRow{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
   .skin-btn{
     font-family:var(--display);font-weight:800;font-size:clamp(12px,1.8vw,15px);
     background:#fff;border:3px solid var(--bubblegum);border-radius:999px;
@@ -211,7 +213,12 @@
 
   /* ---------- Map screen ---------- */
   #mapScreen{gap:8px;}
-  #mapScreen canvas{border-radius:16px;max-width:860px;width:100%;background:#1a0a2e;}
+  #mapWrap{
+    width:100%;max-width:860px;overflow:hidden;position:relative;
+    border-radius:16px;cursor:grab;touch-action:pan-y;
+  }
+  #mapWrap:active{cursor:grabbing;}
+  #mapCanvas{display:block;width:860px;height:280px;background:#1a0a2e;}
   .btn.mint{
     background:var(--mint);color:var(--plum);
     box-shadow:0 7px 0 #3ab89a, 0 14px 22px rgba(116,224,194,.4);
@@ -259,7 +266,10 @@
     </div>
     <p class="modeNote"><b>Easy:</b> recover a life after each level. &nbsp;<span class="hard">Hard:</span> no recoveries.</p>
     <p class="keys">Move: ← →  /  A D &nbsp;•&nbsp; Jump: Space / ↑ / W</p>
-    <div id="skinRow"></div>
+    <div id="skinPreviewWrap">
+      <canvas id="skinPreview" width="72" height="72"></canvas>
+      <div id="skinRow"></div>
+    </div>
     <p class="modeNote" style="font-size:clamp(11px,1.6vw,13px);margin-top:0;">🐟 Collect fish to unlock new cat colors</p>
     <button class="btn mint" id="mapBtn" style="display:none;margin-top:4px;">🗺️ Level Select</button>
   </div>
@@ -291,14 +301,19 @@
     <div class="kicker">Out of Lives</div>
     <h1>Game <span class="sweet">Over</span></h1>
     <p class="blurb" id="loseStats">The candy got the better of you this time.</p>
-    <button class="btn" id="loseBtn">Try Again</button>
+    <div class="modeRow">
+      <button class="btn" id="loseBtn">Try Again</button>
+      <button class="btn mint" id="loseMenuBtn">Main Menu</button>
+    </div>
   </div>
 
   <!-- World map / level select screen -->
   <div class="screen hidden" id="mapScreen">
     <div class="kicker">Adventure Map</div>
     <h1 style="font-size:clamp(24px,5vw,48px);">World <span class="sweet">Select</span></h1>
-    <canvas id="mapCanvas" width="860" height="280"></canvas>
+    <div id="mapWrap">
+      <canvas id="mapCanvas" width="860" height="280"></canvas>
+    </div>
     <button class="btn mint" id="mapCloseBtn">← Back</button>
   </div>
 
@@ -1030,6 +1045,82 @@
   let highestCompleted  = getSave("highestCompleted", -1);
   let mapAnimFrame      = null;
   let mapReturnTo       = "start";
+  let mapPanX           = 0;
+  let mapDragListeners  = null;
+
+  function drawSkinPreview(idx){
+    const pc = document.getElementById("skinPreview");
+    if(!pc) return;
+    const pctx = pc.getContext("2d");
+    const PW = pc.width, PH = pc.height;
+    const sk = SKINS[idx] || SKINS[0];
+
+    pctx.clearRect(0,0,PW,PH);
+
+    // rounded-rect helper for this canvas
+    const rrp = (x,y,w,h,r)=>{
+      pctx.beginPath();
+      pctx.moveTo(x+r,y); pctx.lineTo(x+w-r,y); pctx.quadraticCurveTo(x+w,y,x+w,y+r);
+      pctx.lineTo(x+w,y+h-r); pctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+      pctx.lineTo(x+r,y+h); pctx.quadraticCurveTo(x,y+h,x,y+h-r);
+      pctx.lineTo(x,y+r); pctx.quadraticCurveTo(x,y,x+r,y); pctx.closePath();
+    };
+
+    const cx = PW/2, bw = PW*0.52, bh = PH*0.38, baseY = PH*0.96;
+
+    // tail
+    pctx.strokeStyle = sk.primary; pctx.lineWidth = 3.5; pctx.lineCap = "round";
+    pctx.beginPath();
+    pctx.moveTo(cx - bw*0.3, baseY - bh*0.2);
+    pctx.quadraticCurveTo(cx - bw*1.0, baseY - bh*0.5, cx - bw*0.65, baseY - bh*1.15);
+    pctx.stroke();
+
+    // body
+    pctx.fillStyle = sk.primary;
+    rrp(cx-bw/2, baseY-bh, bw, bh, 10); pctx.fill();
+
+    // belly
+    pctx.fillStyle = sk.cream;
+    pctx.beginPath(); pctx.ellipse(cx, baseY-bh*0.44, bw*0.28, bh*0.40, 0, 0, 7); pctx.fill();
+
+    // stripes
+    pctx.strokeStyle = sk.dark; pctx.lineWidth = 1.5;
+    for(let s=0;s<3;s++){
+      pctx.beginPath();
+      pctx.moveTo(cx-bw*0.40, baseY-bh*0.82+s*5); pctx.lineTo(cx-bw*0.22, baseY-bh*0.82+s*5);
+      pctx.stroke();
+    }
+
+    // head
+    const hr = PW*0.27, hy = baseY - bh - hr*0.55;
+    pctx.fillStyle = sk.primary;
+    pctx.beginPath(); pctx.arc(cx, hy, hr, 0, 7); pctx.fill();
+
+    // ears (outer)
+    pctx.fillStyle = sk.primary;
+    pctx.beginPath(); pctx.moveTo(cx-hr*0.55,hy-hr*0.38); pctx.lineTo(cx-hr*0.9,hy-hr*0.98); pctx.lineTo(cx-hr*0.12,hy-hr*0.68); pctx.closePath(); pctx.fill();
+    pctx.beginPath(); pctx.moveTo(cx+hr*0.55,hy-hr*0.38); pctx.lineTo(cx+hr*0.9,hy-hr*0.98); pctx.lineTo(cx+hr*0.12,hy-hr*0.68); pctx.closePath(); pctx.fill();
+
+    // ears (inner)
+    pctx.fillStyle = "#ffb6c1";
+    pctx.beginPath(); pctx.moveTo(cx-hr*0.52,hy-hr*0.40); pctx.lineTo(cx-hr*0.76,hy-hr*0.82); pctx.lineTo(cx-hr*0.18,hy-hr*0.62); pctx.closePath(); pctx.fill();
+    pctx.beginPath(); pctx.moveTo(cx+hr*0.52,hy-hr*0.40); pctx.lineTo(cx+hr*0.76,hy-hr*0.82); pctx.lineTo(cx+hr*0.18,hy-hr*0.62); pctx.closePath(); pctx.fill();
+
+    // eyes
+    pctx.fillStyle = "#2c2c3a";
+    pctx.beginPath(); pctx.arc(cx-hr*0.30, hy, 3, 0, 7); pctx.fill();
+    pctx.beginPath(); pctx.arc(cx+hr*0.30, hy, 3, 0, 7); pctx.fill();
+    pctx.fillStyle = "#fff";
+    pctx.beginPath(); pctx.arc(cx-hr*0.24, hy-1.5, 1.1, 0, 7); pctx.fill();
+    pctx.beginPath(); pctx.arc(cx+hr*0.36, hy-1.5, 1.1, 0, 7); pctx.fill();
+
+    // nose + whiskers
+    pctx.fillStyle = "#ff7a9c";
+    pctx.beginPath(); pctx.moveTo(cx,hy+3); pctx.lineTo(cx+4,hy+3); pctx.lineTo(cx+2,hy+7); pctx.closePath(); pctx.fill();
+    pctx.strokeStyle="rgba(255,255,255,.8)"; pctx.lineWidth=1;
+    pctx.beginPath(); pctx.moveTo(cx+4,hy+5); pctx.lineTo(cx+14,hy+3); pctx.stroke();
+    pctx.beginPath(); pctx.moveTo(cx+4,hy+7); pctx.lineTo(cx+14,hy+9); pctx.stroke();
+  }
 
   function updateSkinUI(){
     const row = document.getElementById("skinRow");
@@ -1051,6 +1142,7 @@
     });
     const mapBtn = document.getElementById("mapBtn");
     if(mapBtn) mapBtn.style.display = highestCompleted >= 0 ? "" : "none";
+    drawSkinPreview(currentSkin);
   }
 
   // ---------- World map ----------
@@ -1137,27 +1229,55 @@
 
   function openMap(returnTo){
     mapReturnTo = returnTo || "start";
-    const ms = document.getElementById("mapScreen");
-    show(ms);
+    show(document.getElementById("mapScreen"));
+
+    // reset pan to left edge
+    mapPanX = 0;
+    const mc = document.getElementById("mapCanvas");
+    mc.style.transform = "translateX(0)";
+
     let pulse = 0;
-    function animMap(){
-      drawMap(pulse++);
-      mapAnimFrame = requestAnimationFrame(animMap);
-    }
+    function animMap(){ drawMap(pulse++); mapAnimFrame = requestAnimationFrame(animMap); }
     if(mapAnimFrame) cancelAnimationFrame(mapAnimFrame);
     animMap();
-    // click-to-jump
-    const mc = document.getElementById("mapCanvas");
+
+    // drag-to-pan
+    const wrap = document.getElementById("mapWrap");
+    let dragStart = null, dragStartPan = 0, dragDist = 0;
+
+    const onStart = (e)=>{
+      dragStart = e.touches ? e.touches[0].clientX : e.clientX;
+      dragStartPan = mapPanX; dragDist = 0;
+    };
+    const onMove = (e)=>{
+      if(dragStart === null) return;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const delta = clientX - dragStart;
+      dragDist = Math.abs(delta);
+      const maxPan = Math.min(0, -(860 - wrap.offsetWidth));
+      mapPanX = Math.max(maxPan, Math.min(0, dragStartPan + delta));
+      mc.style.transform = "translateX("+mapPanX+"px)";
+      if(e.cancelable) e.preventDefault();
+    };
+    const onEnd = ()=>{ dragStart = null; };
+
+    wrap.addEventListener("mousedown", onStart);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onEnd);
+    wrap.addEventListener("touchstart", onStart, {passive:true});
+    wrap.addEventListener("touchmove", onMove, {passive:false});
+    wrap.addEventListener("touchend", onEnd);
+    mapDragListeners = {wrap, onStart, onMove, onEnd};
+
+    // click-to-jump (ignore if user was dragging)
     mc.onclick = (e)=>{
+      if(dragDist > 8) return;
       const rect = mc.getBoundingClientRect();
-      const scaleX = mc.width / rect.width;
-      const scaleY = mc.height / rect.height;
-      const cx = (e.clientX - rect.left)*scaleX;
-      const cy = (e.clientY - rect.top)*scaleY;
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
       MAP_NODES.forEach((n,i)=>{
         if(i > highestCompleted+1) return;
-        const dx=cx-n.wx, dy=cy-n.wy;
-        if(Math.hypot(dx,dy)<28){
+        if(Math.hypot(cx-n.wx, cy-n.wy) < 28){
           closeMap();
           loadLevel(i); state="play";
           hide(document.getElementById("levelScreen"));
@@ -1168,8 +1288,17 @@
 
   function closeMap(){
     if(mapAnimFrame){ cancelAnimationFrame(mapAnimFrame); mapAnimFrame=null; }
-    const ms = document.getElementById("mapScreen");
-    hide(ms);
+    if(mapDragListeners){
+      const {wrap, onStart, onMove, onEnd} = mapDragListeners;
+      wrap.removeEventListener("mousedown", onStart);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onEnd);
+      wrap.removeEventListener("touchstart", onStart);
+      wrap.removeEventListener("touchmove", onMove);
+      wrap.removeEventListener("touchend", onEnd);
+      mapDragListeners = null;
+    }
+    hide(document.getElementById("mapScreen"));
     const mc = document.getElementById("mapCanvas");
     if(mc) mc.onclick = null;
   }
@@ -6660,6 +6789,9 @@
   // Win/Lose buttons restart from level 1 in the same mode you chose.
   onActivate(document.getElementById("winBtn"),   () => startPlay());
   onActivate(document.getElementById("loseBtn"),  () => startPlay());
+  onActivate(document.getElementById("loseMenuBtn"), () => {
+    hide(loseScreen); show(startScreen); updateSkinUI();
+  });
 
   // Map buttons
   onActivate(document.getElementById("mapBtn"),      () => openMap("start"));
