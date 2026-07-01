@@ -1,0 +1,209 @@
+  :root{
+    --sky:#E9D8F4; --bubblegum:#FF6FB5; --bubblegum-deep:#E84D9C;
+    --mint:#74E0C2; --lemon:#FFD23F; --cherry:#E84855; --choco:#6B4226;
+    --cream:#FFF6EA; --plum:#5B3A6E;
+    --display:"Baloo 2", system-ui, sans-serif;
+    --body:"Nunito", system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family:var(--body);
+    background:
+      radial-gradient(circle at 20% 15%, #FFE3F2 0%, transparent 45%),
+      radial-gradient(circle at 85% 10%, #DDF6EE 0%, transparent 40%),
+      linear-gradient(170deg,#F3E4FB 0%, #E9D8F4 50%, #F8E0EE 100%);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;color:var(--plum);
+    touch-action:none;
+  }
+  #wrap{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+  #stage{
+    position:relative;
+    width:min(96vw, 168vh);
+    display:flex; align-items:center; justify-content:center;
+  }
+  #frame{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/9;
+    max-height:100%;
+    border-radius:24px;
+    overflow:hidden;
+    box-shadow:0 24px 60px rgba(91,58,110,.35), inset 0 0 0 6px #fff, inset 0 0 0 12px var(--bubblegum);
+    background:#bfe9ff;
+  }
+  canvas{display:block;width:100%;height:100%;image-rendering:auto;}
+
+  /* Portrait phones: stage fills viewport height; 16:9 frame centers inside it.
+     Body gradient shows in the bands above/below the frame. */
+  @media (orientation: portrait) and (max-width: 820px){
+    body{ align-items:stretch; }
+    #wrap{
+      width:100%;
+      height:100dvh;
+      justify-content:center;
+      gap:22px;
+      padding: max(env(safe-area-inset-top), 10px) 0 calc(max(env(safe-area-inset-bottom), 10px) + 28px);
+    }
+    #stage{
+      width:100vw;
+      flex:1 1 auto;
+      min-height:0;
+    }
+    /* #frame keeps the base width:100% + aspect-ratio:16/9; the
+       earlier height:100% override was the source of the stretching. */
+  }
+
+  /* Landscape phones: cap stage by available height so touch bar + HUD fit.
+     ~160px reserves room for touch bar (~116), gap, and safe-area insets. */
+  @media (orientation: landscape) and (max-height: 600px){
+    body{
+      padding:
+        max(env(safe-area-inset-top), 6px)
+        max(env(safe-area-inset-right), 0px)
+        max(env(safe-area-inset-bottom), 6px)
+        max(env(safe-area-inset-left), 0px);
+    }
+    #wrap{ gap:10px; }
+    #stage{
+      width: min(96vw, calc((100dvh - 160px) * 16 / 9));
+    }
+  }
+
+  /* ---------- HUD ---------- */
+  #hud{
+    position:absolute;top:0;left:0;right:0;
+    display:flex;align-items:center;gap:10px;
+    padding:14px 18px;pointer-events:none;
+    font-family:var(--display);
+  }
+  .pill{
+    background:rgba(255,255,255,.85);
+    border-radius:999px;padding:6px 13px;
+    display:flex;align-items:center;gap:6px;
+    font-weight:800;font-size:clamp(12px,2vw,19px);
+    color:var(--plum);
+    box-shadow:0 4px 0 rgba(91,58,110,.18);
+    backdrop-filter:blur(2px);
+  }
+  .pill .ico{font-size:1.1em;line-height:1;}
+  #lives{color:var(--cherry);}
+  .spacer{flex:1;}
+
+  /* ---------- Overlays ---------- */
+  .screen{
+    position:fixed;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:24px;gap:10px;
+    background:radial-gradient(circle at 50% 35%, rgba(255,255,255,.55), rgba(233,216,244,.92));
+    backdrop-filter:blur(3px);
+    z-index:20; touch-action:manipulation;
+    overflow-y:auto;
+  }
+  .screen.hidden{display:none;}
+  .kicker{
+    font-family:var(--display);font-weight:700;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--bubblegum-deep);
+    font-size:clamp(11px,1.8vw,15px);
+  }
+  h1{
+    font-family:var(--display);font-weight:800;
+    font-size:clamp(30px,7vw,72px);line-height:.95;
+    color:var(--plum);
+    text-shadow:3px 3px 0 #fff, 6px 6px 0 var(--bubblegum);
+  }
+  h1 .sweet{color:var(--bubblegum-deep);}
+  .blurb{
+    max-width:46ch;font-weight:800;color:var(--plum);
+    font-size:clamp(14px,2.3vw,19px);opacity:.9;
+  }
+  .legend{
+    display:flex;flex-wrap:wrap;gap:10px 18px;justify-content:center;
+    margin:6px 0 2px;font-weight:800;font-size:clamp(12px,2vw,16px);
+  }
+  .legend span{display:flex;align-items:center;gap:6px;background:#fff;
+    padding:5px 12px;border-radius:999px;box-shadow:0 3px 0 rgba(91,58,110,.14);}
+  .btn{
+    font-family:var(--display);font-weight:800;
+    font-size:clamp(18px,3vw,26px);
+    color:#fff;background:var(--bubblegum);
+    border:none;border-radius:999px;
+    padding:14px 40px;margin-top:8px;cursor:pointer;
+    box-shadow:0 7px 0 var(--bubblegum-deep), 0 14px 22px rgba(232,77,156,.4);
+    transition:transform .08s ease, box-shadow .08s ease;
+    touch-action:manipulation;
+  }
+  .btn:active{transform:translateY(5px);box-shadow:0 2px 0 var(--bubblegum-deep);}
+  .btn.alt{
+    background:var(--cherry);
+    box-shadow:0 7px 0 #a32e36, 0 14px 22px rgba(232,72,85,.4);
+  }
+  .btn.alt:active{box-shadow:0 2px 0 #a32e36;}
+  .modeRow{
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+    margin-top:6px;
+  }
+  @media (min-width:520px){
+    .modeRow{flex-direction:row;gap:22px;}
+  }
+  .modeNote{
+    font-weight:800;color:var(--plum);opacity:.85;
+    font-size:clamp(13px,2vw,16px);max-width:46ch;margin-top:2px;
+  }
+  .modeNote b{color:var(--bubblegum-deep);}
+  .modeNote .hard{color:var(--cherry);}
+  .keys{font-weight:800;color:var(--plum);opacity:.75;font-size:clamp(12px,2vw,15px);}
+  .bigcat{font-size:clamp(48px,11vw,92px);animation:bob 1.4s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg);}50%{transform:translateY(-12px) rotate(3deg);}}
+
+  /* ---------- Touch controls (bar BELOW the play window) ---------- */
+  #touch{
+    display:none;
+    width:min(96vw, 168vh);
+    align-items:center; justify-content:space-between;
+    gap:18px; padding:0 6px;
+  }
+  #touch.on{ display:flex; }
+  .dpad{ display:flex; gap:18px; }
+  .tbtn{
+    width:clamp(88px,21vw,116px); height:clamp(88px,21vw,116px);
+    border-radius:50%; background:rgba(255,255,255,.92);
+    border:3px solid var(--bubblegum);
+    display:flex; align-items:center; justify-content:center;
+    font-size:clamp(36px,8.5vw,48px); color:var(--bubblegum-deep);
+    user-select:none; font-family:var(--display); font-weight:800;
+    box-shadow:0 5px 0 rgba(91,58,110,.2);
+    touch-action:manipulation;
+  }
+  .tbtn:active{ transform:translateY(3px); background:#fff; }
+  #tjump{ background:var(--lemon); border-color:var(--cherry); color:var(--cherry); }
+
+  /* ---------- Skin selector ---------- */
+  #skinPreviewWrap{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:4px;}
+  #skinPreview{border-radius:50%;background:rgba(255,255,255,.6);box-shadow:0 4px 12px rgba(91,58,110,.18);}
+  #skinRow{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+  .skin-btn{
+    font-family:var(--display);font-weight:800;font-size:clamp(12px,1.8vw,15px);
+    background:#fff;border:3px solid var(--bubblegum);border-radius:999px;
+    padding:5px 13px;cursor:pointer;color:var(--plum);
+    box-shadow:0 3px 0 rgba(91,58,110,.14);transition:transform .08s ease;
+    touch-action:manipulation;
+  }
+  .skin-btn.active{background:var(--bubblegum);color:#fff;}
+  .skin-btn.locked{opacity:.45;cursor:default;border-color:#ccc;}
+  .skin-btn:not(.locked):active{transform:translateY(2px);}
+
+  /* ---------- Map screen ---------- */
+  #mapScreen{gap:8px;}
+  #mapWrap{
+    width:100%;max-width:860px;overflow:hidden;position:relative;
+    border-radius:16px;cursor:grab;touch-action:pan-y;
+  }
+  #mapWrap:active{cursor:grabbing;}
+  #mapCanvas{display:block;width:860px;height:280px;background:#1a0a2e;}
+  .btn.mint{
+    background:var(--mint);color:var(--plum);
+    box-shadow:0 7px 0 #3ab89a, 0 14px 22px rgba(116,224,194,.4);
+  }
+  .btn.mint:active{box-shadow:0 2px 0 #3ab89a;}
