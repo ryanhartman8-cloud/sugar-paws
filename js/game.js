@@ -10,9 +10,25 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     flyPuff(pt){ particles.push(pt); },
   };
 
+  // ---------- Visual juice state ----------
+  let shake = 0, popups = [], ambient = [], wipeT = 0, scoreShown = 0;
+  function addShake(n){ shake = Math.max(shake, n); }
+  function popup(x, y, text, color="#fff"){ popups.push({x, y, text, color, life:1}); }
+
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
-  const W = canvas.width, H = canvas.height;
+  const W = 880, H = 495;   // logical resolution; the backing store scales to display size
+
+  // High-DPI: size the backing store to CSS size x devicePixelRatio and map the
+  // logical 880x495 coordinate system onto it, so all draw code stays unchanged.
+  function fitCanvas(){
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    const rect = canvas.getBoundingClientRect();
+    const bw = Math.max(1, Math.round(rect.width  * dpr));
+    const bh = Math.max(1, Math.round(rect.height * dpr));
+    if(canvas.width !== bw || canvas.height !== bh){ canvas.width = bw; canvas.height = bh; }
+    ctx.setTransform(bw / W, 0, 0, bh / H, 0, 0);
+  }
 
   // ---------- HUD refs ----------
   const livesNum = document.getElementById("livesNum");
@@ -55,7 +71,10 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     const pc = document.getElementById("skinPreview");
     if(!pc) return;
     const pctx = pc.getContext("2d");
-    const PW = pc.width, PH = pc.height;
+    const PW = 72, PH = 72;   // logical size; CSS pins the element to 72x72
+    const pdpr = Math.min(window.devicePixelRatio || 1, 3);
+    if(pc.width !== PW*pdpr){ pc.width = PW*pdpr; pc.height = PH*pdpr; }
+    pctx.setTransform(pdpr, 0, 0, pdpr, 0, 0);
     const sk = SKINS[idx] || SKINS[0];
 
     pctx.clearRect(0,0,PW,PH);
@@ -161,7 +180,10 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     const mc = document.getElementById("mapCanvas");
     if(!mc) return;
     const mctx = mc.getContext("2d");
-    const W2 = mc.width, H2 = mc.height;
+    const W2 = 860, H2 = 280;
+    const mdpr = Math.min(window.devicePixelRatio || 1, 3);
+    if(mc.width !== W2*mdpr){ mc.width = W2*mdpr; mc.height = H2*mdpr; }
+    mctx.setTransform(mdpr, 0, 0, mdpr, 0, 0);
 
     // night-sky gradient
     const bg = mctx.createLinearGradient(0,0,0,H2);
@@ -282,8 +304,9 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
         if(i > highestCompleted+1) return;
         if(Math.hypot(cx-n.wx, cy-n.wy) < 28){
           closeMap();
-          loadLevel(i); state="play";
+          loadLevel(i); state="play"; wipeT = 1;
           hide(document.getElementById("levelScreen"));
+          hide(document.getElementById("startScreen"));
         }
       });
     };
@@ -311,7 +334,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       x: 60, y: GROUND_Y - SMALL.h, vx:0, vy:0,
       w: SMALL.w, h: SMALL.h,
       onGround:false, facing:1, big:false,
-      inv:0, coyote:0, jumpBuf:0, animT:0, blink:0,
+      inv:0, coyote:0, jumpBuf:0, animT:0, blink:0, landT:0,
       activePower:null, powerTimer:0, shotCd:0
     };
   }
@@ -367,7 +390,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
                      name:L.boss.name, alive:true, hitCd:0, face:-1, animT:0} : null;
     goalActive = !boss;                              // boss levels: goal opens after the boss falls
     stars = makeStars();
-    projectiles = [];
+    projectiles = []; ambient = []; popups = [];
     resetPlayer();
     cam = {x:0};
     syncHUD();
@@ -375,6 +398,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
 
   function newGame(){
     score=0; lives=3; fishCount=0; miceCount=0; particles=[]; projectiles=[];
+    popups=[]; scoreShown=0; shake=0;
     loadLevel(0);
   }
 
@@ -388,7 +412,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     livesNum.textContent = lives;
     fishNum.textContent  = fishCount;
     miceNum.textContent  = miceCount;
-    scoreNum.textContent = score;
+    scoreNum.textContent = scoreShown;
     worldNum.textContent = currentLevel+1;
     if(player && player.activePower){
       powerPill.style.display = "";
@@ -413,7 +437,19 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     const p = player;
     p.animT += 1;
 
+    const wasAirborne = !p.onGround, fallVy = p.vy;
     stepPlayer(p, platforms, keys, physFx);
+
+    // landing: squash timer + dust puff (only for real falls, not micro-steps)
+    if(wasAirborne && p.onGround && fallVy > 5){
+      p.landT = 8;
+      for(let i=0;i<6;i++){
+        particles.push({ x: p.x + p.w/2 + (Math.random()-.5)*p.w, y: p.y + p.h - 2,
+          vx:(Math.random()-.5)*2.4, vy:-(0.4+Math.random()*1.1),
+          life:0.5, color:"#fff", r:Math.random()*2.5+1.5 });
+      }
+    }
+    if(p.landT > 0) p.landT--;
 
     if(p.inv>0) p.inv--;
     p.blink = (p.blink+1) % 220;
@@ -467,14 +503,16 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       const cb = {x:c.x-14, y:c.y-14, w:28, h:28};
       if(aabb(p, cb)){
         c.got=true;
-        if(c.t==="mouse"){ miceCount++; score+=200; sfx.coin(); burst(c.x,c.y,"#9aa0ff",10); }
+        if(c.t==="mouse"){ miceCount++; score+=200; sfx.coin(); burst(c.x,c.y,"#9aa0ff",10); popup(c.x, c.y-16, "+200"); }
         else if(c.t==="ring"){
           miceCount++; score+=250; sfx.coin();
           burst(c.x, c.y, "#ffd23f", 14);
+          popup(c.x, c.y-16, "+250");
         }
         else if(c.t==="feather"){
           miceCount++; score+=200; sfx.coin();
           burst(c.x, c.y, "#fff2a8", 12);
+          popup(c.x, c.y-16, "+200");
         }
         else if(c.t==="pair"){
           miceCount++; score+=200; sfx.coin();
@@ -483,6 +521,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
                             : c.kind==="lion"     ? "#e89a3a"
                             : "#a06a3a";
           burst(c.x, c.y, animalColor, 12);
+          popup(c.x, c.y-16, "+200");
         }
         else if(c.t==="candy"){
           const powers = ["fly","shoot","star","magnet"];
@@ -495,9 +534,11 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
                     : pick==="star" ? "#ff6fb5"
                     : "#74e0c2";
           burst(c.x, c.y, col, 22);
+          popup(c.x, c.y-16, "+150", col);
         }
-        else { fishCount++; score+=100;
-          if(!p.big){ growUp(); sfx.power(); } else { score+=200; sfx.coin(); }
+        else { fishCount++;
+          if(!p.big){ score+=100; growUp(); sfx.power(); popup(c.x, c.y-16, "+100"); }
+          else { score+=300; sfx.coin(); popup(c.x, c.y-16, "+300"); }
           burst(c.x,c.y,"#7fd9ff",14);
         }
         syncHUD();
@@ -514,6 +555,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
           if(!e.alive) continue;
           if(pr.x > e.x && pr.x < e.x + e.w && pr.y > e.y && pr.y < e.y + e.h){
             e.alive = false; e.squish = 18; score += 200; sfx.stomp();
+            popup(e.x + e.w/2, e.y - 10, "+200"); addShake(2);
             burst(e.x + e.w/2, e.y, "#ffd23f", 12);
             pr.life = 0; syncHUD();
             break;
@@ -524,10 +566,12 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
              pr.y > boss.y && pr.y < boss.y + boss.h){
             if(boss.hitCd <= 0){
               boss.hp--; boss.hitCd = 55; score += 300; sfx.stomp();
+              popup(boss.x + boss.w/2, pr.y - 12, "+300"); addShake(4);
               burst(boss.x + boss.w/2, pr.y, "#ffd23f", 16);
               boss.vx = (boss.vx<0?-1:1)*(Math.abs(boss.vx)+0.4);
               if(boss.hp <= 0){
                 boss.alive = false; goalActive = true; sfx.win();
+                popup(boss.x + boss.w/2, boss.y, "+1000", "#ffd23f"); addShake(8);
                 burst(boss.x + boss.w/2, boss.y + boss.h/2, "#ffd23f", 34);
                 score += 1000;
               }
@@ -552,10 +596,12 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
         if(p.activePower==="star"){
           e.alive=false; e.squish=18; score+=300; sfx.stomp();
           burst(e.x+e.w/2, e.y, "#ff8fc8", 14); syncHUD();
+          popup(e.x+e.w/2, e.y-10, "+300"); addShake(3);
         } else {
           const stomping = p.vy>1 && (p.y + p.h - e.y) < 22;
           if(stomping){ e.alive=false; e.squish=18; p.vy=-9; score+=300; sfx.stomp();
-            burst(e.x+e.w/2, e.y, "#ff8fc8", 12); syncHUD(); }
+            burst(e.x+e.w/2, e.y, "#ff8fc8", 12); syncHUD();
+            popup(e.x+e.w/2, e.y-10, "+300"); addShake(3); }
           else if(p.inv<=0){ hurt(); }
         }
       }
@@ -565,7 +611,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     if(boss && boss.alive) updateBoss();
 
     // hazards (lava) — instant death
-    for(const hz of hazards){ if(aabb(p,hz)){ sfx.lava(); burst(p.x+p.w/2,p.y+p.h,"#ff7a1a",16); loseLife(); break; } }
+    for(const hz of hazards){ if(aabb(p,hz)){ sfx.lava(); addShake(7); burst(p.x+p.w/2,p.y+p.h,"#ff7a1a",16); loseLife(); break; } }
 
     // fall off world
     if(p.y > WORLD_H + 40){ loseLife(); }
@@ -576,6 +622,18 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     // particles
     for(const pt of particles){ pt.x+=pt.vx; pt.y+=pt.vy; pt.vy+=0.18; pt.life-=0.03; }
     particles = particles.filter(pt=>pt.life>0);
+
+    // juice: shake decay, score popups, ambient atmosphere, level wipe, score easing
+    if(shake > 0){ shake *= 0.86; if(shake < 0.3) shake = 0; }
+    for(const s of popups){ s.y -= 0.7; s.life -= 0.025; }
+    popups = popups.filter(s => s.life > 0);
+    updateAmbient();
+    if(wipeT > 0) wipeT = Math.max(0, wipeT - 0.035);
+    if(scoreShown !== score){
+      const d = score - scoreShown;
+      scoreShown = d > 0 ? scoreShown + Math.max(1, Math.ceil(d*0.12)) : score;
+      scoreNum.textContent = scoreShown;
+    }
 
     // camera
     const targetCam = p.x - W*0.38;
@@ -596,10 +654,12 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       const starHit = p.activePower==="star";
       if((stomping || starHit) && b.hitCd<=0){
         b.hp--; b.hitCd=55; if(stomping) p.vy=-11.5; score+=500; sfx.stomp();
+        popup(b.x+b.w/2, b.y-10, "+500"); addShake(5);
         burst(b.x+b.w/2, b.y, "#ff5a5a", 18); syncHUD();
         b.vx = (b.vx<0?-1:1)*(Math.abs(b.vx)+0.6);   // enrage: faster each hit
         if(b.hp<=0){
           b.alive=false; goalActive=true; sfx.win();
+          popup(b.x+b.w/2, b.y, "+1000", "#ffd23f"); addShake(8);
           burst(b.x+b.w/2, b.y+b.h/2, "#ffd23f", 34);
           score+=1000; syncHUD();
         }
@@ -618,14 +678,14 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     const p=player; p.big=false; p.y += (p.h - SMALL.h); p.w=SMALL.w; p.h=SMALL.h; p.inv=100;
   }
   function hurt(){
-    const p=player; if(p.inv>0) return; sfx.hurt();
+    const p=player; if(p.inv>0) return; sfx.hurt(); addShake(4);
     if(p.big){ shrink(); burst(p.x+p.w/2,p.y,"#ffb3d9",12); }
     else { loseLife(); }
   }
   function loseLife(){
     lives--; syncHUD();
     if(lives<=0){ lose(); return; }
-    resetPlayer(); player.inv=90;
+    resetPlayer(); player.inv=90; wipeT = 0.8;
     cam.x = Math.max(0, player.x - W*0.38);
   }
 
@@ -5160,6 +5220,14 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     const x = p.x - cam.x, y = p.y;
     if(p.inv>0 && Math.floor(p.inv/4)%2===0){ return; }
     ctx.save(); ctx.translate(x + p.w/2, y + p.h); ctx.scale(p.facing, 1);
+    // squash & stretch, anchored at the feet
+    if(p.landT > 0){
+      const k = p.landT / 8;
+      ctx.scale(1 + 0.14*k, 1 - 0.16*k);
+    } else if(!p.onGround){
+      const k = Math.min(1, Math.abs(p.vy) / 13);
+      ctx.scale(1 - 0.06*k, 1 + 0.09*k);
+    }
     const bw = p.w, bh = p.h;
     const walk = (keys.left||keys.right) && p.onGround;
     const legSwing = walk ? Math.sin(p.animT*0.3)*3 : 0;
@@ -5624,18 +5692,157 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     }
   }
 
+  // ---------- Ambient theme particles ----------
+  const AMBIENT_STYLES = {
+    candy:     { cap:26, rate:0.05, kind:"confetti" },
+    castle:    { cap:30, rate:0.10, kind:"ember" },
+    underwater:{ cap:30, rate:0.10, kind:"bubble" },
+    space:     { cap:26, rate:0.06, kind:"mote" },
+    haunted:   { cap:22, rate:0.05, kind:"wisp" },
+    christmas: { cap:60, rate:0.30, kind:"snow" },
+    toy:       { cap:20, rate:0.04, kind:"sparkle" },
+    dino:      { cap:22, rate:0.05, kind:"leaf" },
+    monsoon:   { cap:90, rate:1.6,  kind:"rain" },
+    moria:     { cap:24, rate:0.06, kind:"ember" },
+    sky:       { cap:24, rate:0.08, kind:"puff" },
+  };
+  const CONFETTI_COLORS = ["#ff6fb5","#ffd23f","#74e0c2","#b28dff","#ff9a4d"];
+
+  function spawnAmbient(kind){
+    const x = cam.x + Math.random()*(W+240) - 120;
+    const ph = Math.random()*7;
+    switch(kind){
+      case "confetti": return {x, y:-10, vx:(Math.random()-.5)*0.4, vy:0.6+Math.random()*0.7, r:2+Math.random()*2, c:CONFETTI_COLORS[(Math.random()*CONFETTI_COLORS.length)|0], a:0.8, sway:0.8+Math.random(), phase:ph, kind};
+      case "snow":     return {x, y:-10, vx:0, vy:0.5+Math.random()*0.9, r:1.2+Math.random()*2.4, c:"#fff", a:0.85, sway:0.6+Math.random(), phase:ph, kind};
+      case "ember":    return {x, y:H+10, vx:(Math.random()-.5)*0.3, vy:-(0.5+Math.random()*0.9), r:1+Math.random()*1.8, c:Math.random()<0.5?"#ff8a4d":"#ffd23f", a:0.7, sway:0.5, phase:ph, kind};
+      case "bubble":   return {x, y:H+10, vx:0, vy:-(0.5+Math.random()*0.8), r:2+Math.random()*3.5, c:"rgba(220,245,255,.9)", a:0.55, sway:1.2, phase:ph, kind};
+      case "mote":     return {x, y:Math.random()*H, vx:-(0.15+Math.random()*0.2), vy:(Math.random()-.5)*0.1, r:1+Math.random()*1.4, c:Math.random()<0.5?"#fff":"#cfc4ff", a:0.7, sway:0, phase:ph, kind};
+      case "wisp":     return {x, y:H*0.35+Math.random()*H*0.6, vx:(Math.random()-.5)*0.2, vy:-(0.15+Math.random()*0.25), r:1.6+Math.random()*2, c:"#b8ffd9", a:0.4, sway:1.4, phase:ph, kind};
+      case "sparkle":  return {x, y:Math.random()*H*0.8, vx:0, vy:0.15, r:1.4+Math.random()*1.6, c:Math.random()<0.5?"#fff":"#ffd23f", a:0.9, sway:0, phase:ph, kind};
+      case "leaf":     return {x, y:-10, vx:-(0.2+Math.random()*0.3), vy:0.5+Math.random()*0.5, r:2.2+Math.random()*1.8, c:Math.random()<0.5?"#7cc95e":"#4da65a", a:0.8, sway:1.8, phase:ph, kind};
+      case "rain":     return {x, y:-12, vx:-2.2, vy:9+Math.random()*3, r:0, c:"rgba(190,220,255,.55)", a:1, sway:0, phase:0, kind};
+      case "puff":     return {x, y:Math.random()*H*0.7, vx:0.5+Math.random()*0.7, vy:(Math.random()-.5)*0.05, r:1.5+Math.random()*2, c:"rgba(255,255,255,.8)", a:0.5, sway:0.3, phase:ph, kind};
+    }
+  }
+
+  function updateAmbient(){
+    const st = AMBIENT_STYLES[theme];
+    if(!st) return;
+    let n = st.rate;
+    while(ambient.length < st.cap && n > 0){
+      if(n >= 1 || Math.random() < n) ambient.push(spawnAmbient(st.kind));
+      n -= 1;
+    }
+    for(const a of ambient){
+      a.phase += 0.03;
+      a.x += a.vx + (a.sway ? Math.sin(a.phase*2)*a.sway*0.35 : 0);
+      a.y += a.vy;
+    }
+    ambient = ambient.filter(a =>
+      a.y < H+30 && a.y > -30 && a.x > cam.x - 260 && a.x < cam.x + W + 260);
+  }
+
+  function drawAmbient(){
+    if(!ambient.length) return;
+    ctx.save();
+    for(const a of ambient){
+      const x = a.x - cam.x;
+      if(a.kind === "rain"){
+        ctx.strokeStyle = a.c; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(x, a.y); ctx.lineTo(x + a.vx*2.2, a.y + a.vy*2.2); ctx.stroke();
+        continue;
+      }
+      let alpha = a.a;
+      if(a.kind === "sparkle" || a.kind === "mote") alpha *= 0.55 + 0.45*Math.sin(a.phase*3);
+      ctx.globalAlpha = Math.max(0, alpha);
+      if(a.kind === "bubble"){
+        ctx.strokeStyle = a.c; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.arc(x, a.y, a.r, 0, 7); ctx.stroke();
+        ctx.fillStyle = "rgba(255,255,255,.5)";
+        ctx.beginPath(); ctx.arc(x - a.r*0.35, a.y - a.r*0.35, a.r*0.25, 0, 7); ctx.fill();
+      } else if(a.kind === "leaf" || a.kind === "confetti"){
+        ctx.fillStyle = a.c;
+        ctx.beginPath(); ctx.ellipse(x, a.y, a.r, a.r*0.55, Math.sin(a.phase*2)*1.2, 0, 7); ctx.fill();
+      } else if(a.kind === "ember"){
+        ctx.fillStyle = a.c;
+        ctx.beginPath(); ctx.arc(x, a.y, a.r*(0.8+0.3*Math.sin(a.phase*4)), 0, 7); ctx.fill();
+      } else {
+        ctx.fillStyle = a.c;
+        ctx.beginPath(); ctx.arc(x, a.y, a.r, 0, 7); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  // Soft contact shadow under the cat; tracks the platform below and fades with height.
+  function drawShadow(){
+    const p = player;
+    const foot = p.y + p.h;
+    let gy = Infinity;
+    for(const pl of platforms){
+      if(p.x + p.w > pl.x && p.x < pl.x + pl.w && pl.y >= foot - 2 && pl.y < gy) gy = pl.y;
+    }
+    if(gy === Infinity) return;              // over a pit
+    const k = Math.max(0, 1 - (gy - foot)/240);
+    if(k <= 0.05) return;
+    ctx.fillStyle = `rgba(91,58,110,${(0.16*k).toFixed(3)})`;
+    ctx.beginPath();
+    ctx.ellipse(p.x + p.w/2 - cam.x, gy + 3, p.w*0.42*(0.6+0.4*k), 4.5*k, 0, 0, 7);
+    ctx.fill();
+  }
+
+  function drawPopups(){
+    if(!popups.length) return;
+    ctx.save();
+    ctx.font = "800 15px 'Baloo 2', sans-serif";
+    ctx.textAlign = "center";
+    ctx.lineJoin = "round";
+    for(const s of popups){
+      ctx.globalAlpha = Math.max(0, Math.min(1, s.life*1.6));
+      ctx.strokeStyle = "rgba(91,58,110,.85)"; ctx.lineWidth = 3;
+      ctx.strokeText(s.text, s.x - cam.x, s.y);
+      ctx.fillStyle = s.color;
+      ctx.fillText(s.text, s.x - cam.x, s.y);
+    }
+    ctx.restore();
+  }
+
+  // Circle-wipe iris centered on the cat, used for level start and respawn.
+  function drawWipe(){
+    if(wipeT <= 0) return;
+    const p = player;
+    const cx = p.x - cam.x + p.w/2, cy = p.y + p.h/2;
+    const maxR = Math.hypot(Math.max(cx, W-cx), Math.max(cy, H-cy)) + 20;
+    const r = Math.max(0.01, (1 - wipeT) * maxR);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, W, H);
+    ctx.arc(cx, cy, r, 0, Math.PI*2, true);
+    ctx.fillStyle = "#5B3A6E";
+    ctx.fill("evenodd");
+    ctx.restore();
+  }
+
   function render(){
+    fitCanvas();
     ctx.clearRect(0,0,W,H);
+    ctx.save();
+    if(shake > 0.4) ctx.translate((Math.random()-.5)*shake, (Math.random()-.5)*shake);
     drawBackground();
+    drawAmbient();
     for(const pl of platforms) drawPlatform(pl);
     for(const hz of hazards) drawLava(hz);
     drawGoal();
+    drawShadow();
     for(const c of collectibles) drawCollectible(c);
     for(const e of enemies) drawEnemy(e);
     if(boss) drawBoss();
     drawProjectiles();
     drawParticles();
     drawCat();
+    drawPopups();
+    ctx.restore();
+    drawWipe();
   }
 
   function loop(){ update(); render(); requestAnimationFrame(loop); }
@@ -5653,7 +5860,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     else if(mode === "hard") easyMode = false;
     resumeAudio();
     closeMap();
-    newGame(); state="play";
+    newGame(); state="play"; wipeT = 1;
     hide(startScreen); hide(levelScreen); hide(winScreen); hide(loseScreen);
     hide(document.getElementById("mapScreen"));
   }
@@ -5675,7 +5882,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
   }
   function goNextLevel(){
     if(easyMode){ lives = Math.min(lives + 1, 9); }
-    currentLevel++; loadLevel(currentLevel); state="play"; hide(levelScreen);
+    currentLevel++; loadLevel(currentLevel); state="play"; wipeT = 1; hide(levelScreen);
   }
   function win(){
     state="won"; sfx.win();

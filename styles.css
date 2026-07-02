@@ -207,3 +207,16 @@
     box-shadow:0 7px 0 #3ab89a, 0 14px 22px rgba(116,224,194,.4);
   }
   .btn.mint:active{box-shadow:0 2px 0 #3ab89a;}
+
+  /* ---------- Visual polish ---------- */
+  .screen{animation:screenIn .35s ease both;}
+  @keyframes screenIn{from{opacity:0;transform:scale(1.03);}to{opacity:1;transform:none;}}
+  .bigcat{animation:catBob 3s ease-in-out infinite;display:inline-block;}
+  @keyframes catBob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-7px) rotate(2deg);}}
+  #skinPreview{width:72px;height:72px;animation:catBob 3.4s ease-in-out infinite;}
+  /* `scale` (not transform) so the .btn:active translateY press still applies */
+  .btn{animation:btnBreathe 2.8s ease-in-out infinite;}
+  @keyframes btnBreathe{0%,100%{scale:1;}50%{scale:1.035;}}
+  @media (prefers-reduced-motion: reduce){
+    .screen,.bigcat,#skinPreview,.btn{animation:none;}
+  }
