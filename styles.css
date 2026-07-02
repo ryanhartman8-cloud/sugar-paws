@@ -196,12 +196,33 @@
 
   /* ---------- Map screen ---------- */
   #mapScreen{gap:8px;}
-  #mapWrap{
-    width:100%;max-width:860px;overflow:hidden;position:relative;
-    border-radius:16px;cursor:grab;touch-action:pan-y;
+  #mapList{
+    width:min(92vw, 480px);
+    max-height:56vh;
+    overflow-y:auto;
+    display:flex;flex-direction:column;gap:10px;
+    padding:6px 10px;
+    -webkit-overflow-scrolling:touch;
   }
-  #mapWrap:active{cursor:grabbing;}
-  #mapCanvas{display:block;width:860px;height:280px;background:#1a0a2e;}
+  .map-row{
+    display:flex;align-items:center;gap:14px;
+    font-family:var(--display);font-weight:800;
+    font-size:clamp(15px,2.4vw,19px);
+    color:var(--plum);text-align:left;
+    background:rgba(255,255,255,.92);
+    border:none;border-radius:18px;
+    padding:12px 18px;cursor:pointer;
+    box-shadow:0 4px 0 rgba(232,77,156,.35), 0 8px 16px rgba(91,58,110,.18);
+    touch-action:manipulation;
+  }
+  .map-row:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(232,77,156,.35);}
+  .map-row .map-emoji{font-size:26px;}
+  .map-row .map-name{display:flex;flex-direction:column;flex:1;line-height:1.15;}
+  .map-row .map-name b{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--bubblegum-deep);}
+  .map-row .map-badge{font-size:18px;}
+  .map-row.locked{opacity:.5;cursor:default;}
+  .map-row.locked:active{transform:none;box-shadow:0 4px 0 rgba(232,77,156,.35), 0 8px 16px rgba(91,58,110,.18);}
+  .map-row.done{background:rgba(255,246,234,.95);}
   .btn.mint{
     background:var(--mint);color:var(--plum);
     box-shadow:0 7px 0 #3ab89a, 0 14px 22px rgba(116,224,194,.4);
