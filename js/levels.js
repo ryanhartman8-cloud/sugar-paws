@@ -12,7 +12,8 @@ import { GROUND_Y } from "./physics.js";
     dino:      { name:"Jurassic Crunch" },
     monsoon:   { name:"Mount Ararat Monsoon" },
     moria:     { name:"The Mines of Moria" },
-    sky:       { name:"Cumulus Kingdom" }
+    sky:       { name:"Cumulus Kingdom" },
+    island:    { name:"Kitty Cat Island" }
   };
 
   // ======================================================================
@@ -587,6 +588,73 @@ import { GROUND_Y } from "./physics.js";
       // no hazards — the gaps between cloud islands are open sky.
       // missing a jump falls past the world bottom and triggers loseLife() naturally.
       hazards: [],
+      boss: null
+    },
+    // -------- WORLD 12: Kitty Cat Island — sandy islets across a turquoise sea --------
+    {
+      name: "Kitty Cat Island", theme: "island",
+      goalX: 4160, worldW: 4300,
+      platforms: [
+        // sandy islets — the walkable ground
+        {x:0,    y:430, w:560,  h:170, t:"sand"},
+        {x:690,  y:430, w:480,  h:170, t:"sand"},
+        {x:1320, y:430, w:520,  h:170, t:"sand"},
+        {x:1970, y:430, w:460,  h:170, t:"sand"},
+        {x:2580, y:430, w:520,  h:170, t:"sand"},
+        {x:3230, y:430, w:1070, h:170, t:"sand"},   // long beach up to the sandcastle
+        // palm canopies over the islets (coconuts float above them)
+        {x:300,  y:340, w:110, h:26, t:"palm"},
+        {x:780,  y:335, w:110, h:26, t:"palm"},
+        {x:1450, y:330, w:120, h:26, t:"palm"},
+        {x:2080, y:340, w:110, h:26, t:"palm"},
+        {x:2760, y:330, w:120, h:26, t:"palm"},
+        {x:3400, y:335, w:110, h:26, t:"palm"},
+        {x:3650, y:320, w:110, h:26, t:"palm"},
+        // driftwood planks bridging the two widest channels
+        {x:1195, y:350, w:100, h:24, t:"driftwood"},
+        {x:2455, y:350, w:100, h:24, t:"driftwood"},
+      ],
+      collectibles: [
+        // coconuts above the palm canopies
+        {x:355,  y:306, t:"coconut"},
+        {x:835,  y:301, t:"coconut"},
+        {x:1510, y:296, t:"coconut"},
+        {x:2135, y:306, t:"coconut"},
+        {x:2820, y:296, t:"coconut"},
+        {x:3455, y:301, t:"coconut"},
+        {x:3705, y:286, t:"coconut"},
+        // bonus coconuts over the driftwood bridges
+        {x:1245, y:316, t:"coconut"},
+        {x:2505, y:316, t:"coconut"},
+        // mice (the candy-drop randomizer converts 1-2 of these)
+        {x:450,  y:398, t:"mouse"},
+        {x:1050, y:398, t:"mouse"},
+        {x:1900, y:398, t:"mouse"},
+        {x:2300, y:398, t:"mouse"},
+        {x:3320, y:398, t:"mouse"},
+        {x:3850, y:398, t:"mouse"},
+        // fish (grow-ups)
+        {x:200,  y:398, t:"fish"},
+        {x:1600, y:398, t:"fish"},
+        {x:2900, y:398, t:"fish"},
+        {x:4000, y:398, t:"fish"},
+      ],
+      enemies: [
+        {x:800,  min:700,  max:1060, vx:1.6},
+        {x:1500, min:1340, max:1750, vx:1.7},
+        {x:2100, min:1990, max:2340, vx:1.7},
+        {x:2700, min:2600, max:3010, vx:1.8},
+        {x:3500, min:3250, max:3800, vx:1.8},
+        {x:3950, min:3860, max:4100, vx:1.6},
+      ],
+      // turquoise sea filling every channel between islets
+      hazards: [
+        {x:560,  y:GROUND_Y+22, w:130, h:220},
+        {x:1170, y:GROUND_Y+22, w:150, h:220},
+        {x:1840, y:GROUND_Y+22, w:130, h:220},
+        {x:2430, y:GROUND_Y+22, w:150, h:220},
+        {x:3100, y:GROUND_Y+22, w:130, h:220},
+      ],
       boss: null
     }
   ];
