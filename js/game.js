@@ -181,7 +181,10 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
         '<span class="map-name"><b>World ' + (i+1) + '</b>' + L.name + '</span>' +
         '<span class="map-badge">' + (done ? "⭐" : (locked ? "" : "▶")) + '</span>';
       if(!locked){
-        onActivate(row, () => {
+        // plain click, NOT onActivate: touchend fires at the end of a scroll
+        // gesture, so a touchend-based handler starts a level on every scroll.
+        // Browsers only synthesize click for real taps.
+        row.addEventListener("click", () => {
           closeMap();
           loadLevel(i); state="play"; wipeT = 1;
           hide(document.getElementById("levelScreen"));
