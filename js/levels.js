@@ -13,7 +13,8 @@ import { GROUND_Y } from "./physics.js";
     monsoon:   { name:"Mount Ararat Monsoon" },
     moria:     { name:"The Mines of Moria" },
     sky:       { name:"Cumulus Kingdom" },
-    island:    { name:"Kitty Cat Island" }
+    island:    { name:"Sandy Paws Cove" },
+    kittyland: { name:"Kitty Cat Island" }
   };
 
   // ======================================================================
@@ -592,7 +593,7 @@ import { GROUND_Y } from "./physics.js";
     },
     // -------- WORLD 12: Kitty Cat Island — sandy islets across a turquoise sea --------
     {
-      name: "Kitty Cat Island", theme: "island",
+      name: "Sandy Paws Cove", theme: "island",
       goalX: 4160, worldW: 4300,
       platforms: [
         // sandy islets — the walkable ground
@@ -654,6 +655,71 @@ import { GROUND_Y } from "./physics.js";
         {x:1840, y:GROUND_Y+22, w:130, h:220},
         {x:2430, y:GROUND_Y+22, w:150, h:220},
         {x:3100, y:GROUND_Y+22, w:130, h:220},
+      ],
+      boss: null
+    },
+    // -------- WORLD 13: Kitty Cat Island — a whole land of kitty cats and cat accessories --------
+    {
+      name: "Kitty Cat Island", theme: "kittyland",
+      goalX: 4150, worldW: 4300,
+      platforms: [
+        // carpeted paw-print ground, dotted with napping resident kitties
+        {x:0,    y:430, w:520,  h:170, t:"pawground"},
+        {x:650,  y:430, w:470,  h:170, t:"pawground"},
+        {x:1260, y:430, w:500,  h:170, t:"pawground"},
+        {x:1890, y:430, w:480,  h:170, t:"pawground"},
+        {x:2520, y:430, w:500,  h:170, t:"pawground"},
+        {x:3150, y:430, w:1150, h:170, t:"pawground"},   // long lawn up to Meow Manor
+        // plump velvet cushions to hop on
+        {x:290,  y:340, w:110, h:26, t:"cushion"},
+        {x:760,  y:335, w:110, h:26, t:"cushion"},
+        {x:1180, y:348, w:100, h:26, t:"cushion"},   // bridges the second bath
+        {x:1400, y:330, w:120, h:26, t:"cushion"},
+        {x:2010, y:340, w:110, h:26, t:"cushion"},
+        {x:2420, y:348, w:100, h:26, t:"cushion"},   // bridges the fourth bath
+        {x:2700, y:330, w:120, h:26, t:"cushion"},
+        {x:3300, y:340, w:110, h:26, t:"cushion"},
+        {x:3600, y:322, w:110, h:26, t:"cushion"},
+      ],
+      collectibles: [
+        // balls of yarn floating above the cushions
+        {x:345,  y:306, t:"yarn"},
+        {x:815,  y:301, t:"yarn"},
+        {x:1230, y:314, t:"yarn"},
+        {x:1460, y:296, t:"yarn"},
+        {x:2065, y:306, t:"yarn"},
+        {x:2470, y:314, t:"yarn"},
+        {x:2760, y:296, t:"yarn"},
+        {x:3355, y:306, t:"yarn"},
+        {x:3655, y:288, t:"yarn"},
+        // mice (the candy-drop randomizer converts 1-2 of these)
+        {x:430,  y:398, t:"mouse"},
+        {x:1000, y:398, t:"mouse"},
+        {x:1700, y:398, t:"mouse"},
+        {x:2250, y:398, t:"mouse"},
+        {x:3250, y:398, t:"mouse"},
+        {x:3800, y:398, t:"mouse"},
+        // fish (grow-ups — it is a cat island, after all)
+        {x:180,  y:398, t:"fish"},
+        {x:1550, y:398, t:"fish"},
+        {x:2850, y:398, t:"fish"},
+        {x:3990, y:398, t:"fish"},
+      ],
+      enemies: [
+        {x:760,  min:670,  max:1010, vx:1.6},
+        {x:1450, min:1280, max:1670, vx:1.7},
+        {x:2050, min:1910, max:2280, vx:1.7},
+        {x:2650, min:2540, max:2930, vx:1.8},
+        {x:3400, min:3170, max:3700, vx:1.8},
+        {x:3900, min:3780, max:4060, vx:1.6},
+      ],
+      // sudsy bath puddles between the lawns — every cat's nightmare
+      hazards: [
+        {x:520,  y:GROUND_Y+22, w:130, h:220},
+        {x:1120, y:GROUND_Y+22, w:140, h:220},
+        {x:1760, y:GROUND_Y+22, w:130, h:220},
+        {x:2370, y:GROUND_Y+22, w:150, h:220},
+        {x:3020, y:GROUND_Y+22, w:130, h:220},
       ],
       boss: null
     }
