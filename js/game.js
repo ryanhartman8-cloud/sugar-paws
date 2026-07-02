@@ -628,7 +628,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     for(const s of popups){ s.y -= 0.7; s.life -= 0.025; }
     popups = popups.filter(s => s.life > 0);
     updateAmbient();
-    if(wipeT > 0) wipeT = Math.max(0, wipeT - 0.035);
+    if(wipeT > 0) wipeT = Math.max(0, wipeT - 0.018);
     if(scoreShown !== score){
       const d = score - scoreShown;
       scoreShown = d > 0 ? scoreShown + Math.max(1, Math.ceil(d*0.12)) : score;
@@ -5785,9 +5785,9 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     if(gy === Infinity) return;              // over a pit
     const k = Math.max(0, 1 - (gy - foot)/240);
     if(k <= 0.05) return;
-    ctx.fillStyle = `rgba(91,58,110,${(0.16*k).toFixed(3)})`;
+    ctx.fillStyle = `rgba(91,58,110,${(0.25*k).toFixed(3)})`;
     ctx.beginPath();
-    ctx.ellipse(p.x + p.w/2 - cam.x, gy + 3, p.w*0.42*(0.6+0.4*k), 4.5*k, 0, 0, 7);
+    ctx.ellipse(p.x + p.w/2 - cam.x, gy + 4, p.w*0.62*(0.55+0.45*k), 5.5*k, 0, 0, 7);
     ctx.fill();
   }
 
@@ -5813,13 +5813,16 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     const p = player;
     const cx = p.x - cam.x + p.w/2, cy = p.y + p.h/2;
     const maxR = Math.hypot(Math.max(cx, W-cx), Math.max(cy, H-cy)) + 20;
-    const r = Math.max(0.01, (1 - wipeT) * maxR);
+    const r = Math.max(0.01, Math.pow(1 - wipeT, 1.5) * maxR);
     ctx.save();
     ctx.beginPath();
     ctx.rect(0, 0, W, H);
     ctx.arc(cx, cy, r, 0, Math.PI*2, true);
     ctx.fillStyle = "#5B3A6E";
     ctx.fill("evenodd");
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = "rgba(255,255,255,.9)";
+    ctx.beginPath(); ctx.arc(cx, cy, r + 2.5, 0, Math.PI*2); ctx.stroke();
     ctx.restore();
   }
 
