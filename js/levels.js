@@ -14,7 +14,9 @@ import { GROUND_Y } from "./physics.js";
     moria:     { name:"The Mines of Moria" },
     sky:       { name:"Cumulus Kingdom" },
     island:    { name:"Sandy Paws Cove" },
-    kittyland: { name:"Kitty Cat Island" }
+    kittyland: { name:"Kitty Cat Island" },
+    city:      { name:"Meowtropolis Downtown" },
+    jungle:    { name:"Wildcat Jungle" }
   };
 
   // ======================================================================
@@ -720,6 +722,134 @@ import { GROUND_Y } from "./physics.js";
         {x:1760, y:GROUND_Y+22, w:130, h:220},
         {x:2370, y:GROUND_Y+22, w:150, h:220},
         {x:3020, y:GROUND_Y+22, w:130, h:220},
+      ],
+      boss: null
+    },
+    // -------- WORLD 14: Meowtropolis — downtown at dusk, awnings and steamy manholes --------
+    {
+      name: "Meowtropolis Downtown", theme: "city",
+      goalX: 4150, worldW: 4300,
+      platforms: [
+        // sidewalk blocks
+        {x:0,    y:430, w:540,  h:170, t:"sidewalk"},
+        {x:670,  y:430, w:450,  h:170, t:"sidewalk"},
+        {x:1260, y:430, w:540,  h:170, t:"sidewalk"},
+        {x:1930, y:430, w:440,  h:170, t:"sidewalk"},
+        {x:2520, y:430, w:480,  h:170, t:"sidewalk"},
+        {x:3130, y:430, w:1170, h:170, t:"sidewalk"},   // final block to the penthouse tower
+        // shop awnings to bounce across
+        {x:280,  y:340, w:110, h:26, t:"awning"},
+        {x:770,  y:335, w:110, h:26, t:"awning"},
+        {x:1150, y:348, w:100, h:26, t:"awning"},   // spans the second manhole
+        {x:1420, y:330, w:120, h:26, t:"awning"},
+        {x:2040, y:340, w:110, h:26, t:"awning"},
+        {x:2420, y:348, w:100, h:26, t:"awning"},   // spans the fourth manhole
+        {x:2720, y:330, w:120, h:26, t:"awning"},
+        {x:3320, y:340, w:110, h:26, t:"awning"},
+        {x:3620, y:322, w:110, h:26, t:"awning"},
+      ],
+      collectibles: [
+        // fresh donuts above the awnings
+        {x:335,  y:306, t:"donut"},
+        {x:825,  y:301, t:"donut"},
+        {x:1200, y:314, t:"donut"},
+        {x:1480, y:296, t:"donut"},
+        {x:2095, y:306, t:"donut"},
+        {x:2470, y:314, t:"donut"},
+        {x:2780, y:296, t:"donut"},
+        {x:3375, y:306, t:"donut"},
+        {x:3675, y:288, t:"donut"},
+        {x:420,  y:398, t:"mouse"},
+        {x:1010, y:398, t:"mouse"},
+        {x:1690, y:398, t:"mouse"},
+        {x:2230, y:398, t:"mouse"},
+        {x:3230, y:398, t:"mouse"},
+        {x:3810, y:398, t:"mouse"},
+        {x:170,  y:398, t:"fish"},
+        {x:1560, y:398, t:"fish"},
+        {x:2860, y:398, t:"fish"},
+        {x:3990, y:398, t:"fish"},
+      ],
+      enemies: [
+        {x:780,  min:690,  max:1010, vx:1.6},
+        {x:1450, min:1280, max:1710, vx:1.7},
+        {x:2060, min:1950, max:2280, vx:1.7},
+        {x:2650, min:2540, max:2910, vx:1.8},
+        {x:3400, min:3150, max:3700, vx:1.8},
+        {x:3900, min:3780, max:4060, vx:1.6},
+      ],
+      // open manholes venting steam between the sidewalk blocks
+      hazards: [
+        {x:540,  y:GROUND_Y+22, w:130, h:220},
+        {x:1120, y:GROUND_Y+22, w:140, h:220},
+        {x:1800, y:GROUND_Y+22, w:130, h:220},
+        {x:2370, y:GROUND_Y+22, w:150, h:220},
+        {x:3000, y:GROUND_Y+22, w:130, h:220},
+      ],
+      boss: null
+    },
+    // -------- WORLD 15: Wildcat Jungle — deep rainforest of the big cats --------
+    {
+      name: "Wildcat Jungle", theme: "jungle",
+      goalX: 4150, worldW: 4300,
+      platforms: [
+        // mossy jungle floor
+        {x:0,    y:430, w:500,  h:170, t:"junglefloor"},
+        {x:640,  y:430, w:500,  h:170, t:"junglefloor"},
+        {x:1270, y:430, w:460,  h:170, t:"junglefloor"},
+        {x:1880, y:430, w:520,  h:170, t:"junglefloor"},
+        {x:2530, y:430, w:470,  h:170, t:"junglefloor"},
+        {x:3140, y:430, w:1160, h:170, t:"junglefloor"},   // final stretch to the temple
+        // mossy branches through the canopy
+        {x:270,  y:340, w:110, h:26, t:"branch"},
+        {x:520,  y:350, w:100, h:26, t:"branch"},   // spans the first pond
+        {x:750,  y:335, w:110, h:26, t:"branch"},
+        {x:1755, y:348, w:100, h:26, t:"branch"},   // spans the wide third pond
+        {x:1400, y:330, w:120, h:26, t:"branch"},
+        {x:2000, y:340, w:110, h:26, t:"branch"},
+        {x:2430, y:348, w:100, h:26, t:"branch"},   // spans the fourth pond
+        {x:2700, y:330, w:120, h:26, t:"branch"},
+        {x:3020, y:350, w:100, h:26, t:"branch"},   // spans the last pond
+        {x:3310, y:340, w:110, h:26, t:"branch"},
+        {x:3610, y:322, w:110, h:26, t:"branch"},
+      ],
+      collectibles: [
+        // ripe mangos hanging in the canopy
+        {x:325,  y:306, t:"mango"},
+        {x:805,  y:301, t:"mango"},
+        {x:1805, y:314, t:"mango"},
+        {x:1460, y:296, t:"mango"},
+        {x:2055, y:306, t:"mango"},
+        {x:2480, y:314, t:"mango"},
+        {x:2760, y:296, t:"mango"},
+        {x:3365, y:306, t:"mango"},
+        {x:3665, y:288, t:"mango"},
+        {x:430,  y:398, t:"mouse"},
+        {x:1000, y:398, t:"mouse"},
+        {x:1660, y:398, t:"mouse"},
+        {x:2260, y:398, t:"mouse"},
+        {x:3240, y:398, t:"mouse"},
+        {x:3820, y:398, t:"mouse"},
+        {x:180,  y:398, t:"fish"},
+        {x:1540, y:398, t:"fish"},
+        {x:2870, y:398, t:"fish"},
+        {x:3980, y:398, t:"fish"},
+      ],
+      enemies: [
+        {x:760,  min:660,  max:1030, vx:1.6},
+        {x:1440, min:1290, max:1680, vx:1.7},
+        {x:2050, min:1900, max:2310, vx:1.7},
+        {x:2650, min:2550, max:2910, vx:1.8},
+        {x:3400, min:3160, max:3700, vx:1.8},
+        {x:3900, min:3780, max:4060, vx:1.6},
+      ],
+      // murky piranha ponds between the clearings
+      hazards: [
+        {x:500,  y:GROUND_Y+22, w:140, h:220},
+        {x:1140, y:GROUND_Y+22, w:130, h:220},
+        {x:1730, y:GROUND_Y+22, w:150, h:220},
+        {x:2400, y:GROUND_Y+22, w:130, h:220},
+        {x:3000, y:GROUND_Y+22, w:140, h:220},
       ],
       boss: null
     }
