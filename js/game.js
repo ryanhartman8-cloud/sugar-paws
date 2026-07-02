@@ -62,10 +62,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
   let currentSkin       = getSave("currentSkin", 0);
   let lifetimeFish      = getSave("lifetimeFish", 0);
   let highestCompleted  = getSave("highestCompleted", -1);
-  let mapAnimFrame      = null;
   let mapReturnTo       = "start";
-  let mapPanX           = 0;
-  let mapDragListeners  = null;
 
   function drawSkinPreview(idx){
     const pc = document.getElementById("skinPreview");
@@ -168,166 +165,39 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
   }
 
   // ---------- World map ----------
-  const MAP_NODES = [
-    {wx:70, wy:60},{wx:195,wy:60},{wx:320,wy:60},{wx:445,wy:60},
-    {wx:570,wy:60},{wx:695,wy:60},
-    {wx:695,wy:140},{wx:570,wy:140},{wx:445,wy:140},
-    {wx:320,wy:140},{wx:195,wy:140},{wx:70,wy:140},
-    {wx:70,wy:220},{wx:195,wy:220},{wx:320,wy:220}
-  ];
   const MAP_EMOJIS = ["🍭","🏰","🐠","🚀","🎃","❄️","🧸","🦕","⛵","💎","☁️","🏝️","🐱","🏙️","🦜"];
-
-  function drawMap(pulse){
-    const mc = document.getElementById("mapCanvas");
-    if(!mc) return;
-    const mctx = mc.getContext("2d");
-    const W2 = 860, H2 = 280;
-    const mdpr = Math.min(window.devicePixelRatio || 1, 3);
-    if(mc.width !== W2*mdpr){ mc.width = W2*mdpr; mc.height = H2*mdpr; }
-    mctx.setTransform(mdpr, 0, 0, mdpr, 0, 0);
-
-    // night-sky gradient
-    const bg = mctx.createLinearGradient(0,0,0,H2);
-    bg.addColorStop(0,"#1a0a2e"); bg.addColorStop(1,"#2d1060");
-    mctx.fillStyle = bg; mctx.fillRect(0,0,W2,H2);
-
-    // stars
-    mctx.fillStyle="rgba(255,255,255,.7)";
-    for(let i=0;i<60;i++){
-      const sx=(Math.sin(i*7.3)*0.5+0.5)*W2, sy=(Math.cos(i*5.1)*0.5+0.5)*H2;
-      const sr=0.8+(Math.sin(i*2.7+pulse*0.03)*0.5+0.5)*1.2;
-      mctx.beginPath(); mctx.arc(sx,sy,sr,0,7); mctx.fill();
-    }
-
-    // draw connecting path
-    mctx.strokeStyle="rgba(255,255,255,.25)"; mctx.lineWidth=4; mctx.setLineDash([8,8]);
-    mctx.beginPath();
-    MAP_NODES.forEach((n,i)=>{ i===0?mctx.moveTo(n.wx,n.wy):mctx.lineTo(n.wx,n.wy); });
-    mctx.stroke(); mctx.setLineDash([]);
-
-    // draw nodes
-    MAP_NODES.forEach((n,i)=>{
-      const completed = i <= highestCompleted;
-      const isNext    = i === highestCompleted + 1;
-      const locked    = i > highestCompleted + 1;
-
-      // glow for next node
-      if(isNext){
-        const glow = Math.sin(pulse*0.12)*0.4+0.6;
-        mctx.shadowColor="#ffd23f"; mctx.shadowBlur=16*glow;
-      } else {
-        mctx.shadowBlur = 0;
-      }
-
-      // outer ring
-      mctx.beginPath(); mctx.arc(n.wx,n.wy,22,0,7);
-      if(completed)       mctx.fillStyle="#74E0C2";
-      else if(isNext)     mctx.fillStyle="#FFD23F";
-      else                mctx.fillStyle="#4a3a6a";
-      mctx.fill();
-
-      // inner circle
-      mctx.beginPath(); mctx.arc(n.wx,n.wy,16,0,7);
-      if(completed)       mctx.fillStyle="#1a0a2e";
-      else if(isNext)     mctx.fillStyle="#5B3A6E";
-      else                mctx.fillStyle="#2d1060";
-      mctx.fill();
-
-      mctx.shadowBlur = 0;
-
-      // emoji or lock
-      mctx.font = locked ? "14px sans-serif" : "18px sans-serif";
-      mctx.textAlign="center"; mctx.textBaseline="middle";
-      mctx.fillText(locked ? "🔒" : MAP_EMOJIS[i], n.wx, n.wy);
-
-      // world number below
-      mctx.font="bold 11px sans-serif"; mctx.fillStyle=locked?"#6a5a8a":"#fff";
-      mctx.fillText("W"+(i+1), n.wx, n.wy+32);
-
-      // world name tiny below that
-      if(!locked){
-        mctx.font="10px sans-serif"; mctx.fillStyle="rgba(255,255,255,.6)";
-        mctx.fillText(LEVELS[i].name.split(" ")[0], n.wx, n.wy+44);
-      }
-    });
-    mctx.textBaseline="alphabetic";
-  }
 
   function openMap(returnTo){
     mapReturnTo = returnTo || "start";
-    show(document.getElementById("mapScreen"));
-
-    // reset pan to left edge
-    mapPanX = 0;
-    const mc = document.getElementById("mapCanvas");
-    mc.style.transform = "translateX(0)";
-
-    let pulse = 0;
-    function animMap(){ drawMap(pulse++); mapAnimFrame = requestAnimationFrame(animMap); }
-    if(mapAnimFrame) cancelAnimationFrame(mapAnimFrame);
-    animMap();
-
-    // drag-to-pan
-    const wrap = document.getElementById("mapWrap");
-    let dragStart = null, dragStartPan = 0, dragDist = 0;
-
-    const onStart = (e)=>{
-      dragStart = e.touches ? e.touches[0].clientX : e.clientX;
-      dragStartPan = mapPanX; dragDist = 0;
-    };
-    const onMove = (e)=>{
-      if(dragStart === null) return;
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const delta = clientX - dragStart;
-      dragDist = Math.abs(delta);
-      const maxPan = Math.min(0, -(860 - wrap.offsetWidth));
-      mapPanX = Math.max(maxPan, Math.min(0, dragStartPan + delta));
-      mc.style.transform = "translateX("+mapPanX+"px)";
-      if(e.cancelable) e.preventDefault();
-    };
-    const onEnd = ()=>{ dragStart = null; };
-
-    wrap.addEventListener("mousedown", onStart);
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onEnd);
-    wrap.addEventListener("touchstart", onStart, {passive:true});
-    wrap.addEventListener("touchmove", onMove, {passive:false});
-    wrap.addEventListener("touchend", onEnd);
-    mapDragListeners = {wrap, onStart, onMove, onEnd};
-
-    // click-to-jump (ignore if user was dragging)
-    mc.onclick = (e)=>{
-      if(dragDist > 8) return;
-      const rect = mc.getBoundingClientRect();
-      const cx = e.clientX - rect.left;
-      const cy = e.clientY - rect.top;
-      MAP_NODES.forEach((n,i)=>{
-        if(i > highestCompleted+1) return;
-        if(Math.hypot(cx-n.wx, cy-n.wy) < 28){
+    const list = document.getElementById("mapList");
+    list.innerHTML = "";
+    LEVELS.forEach((L, i) => {
+      const locked = i > highestCompleted + 1;
+      const done   = i <= highestCompleted;
+      const row = document.createElement("button");
+      row.className = "map-row" + (locked ? " locked" : "") + (done ? " done" : "");
+      row.innerHTML =
+        '<span class="map-emoji">' + (locked ? "🔒" : MAP_EMOJIS[i]) + '</span>' +
+        '<span class="map-name"><b>World ' + (i+1) + '</b>' + L.name + '</span>' +
+        '<span class="map-badge">' + (done ? "⭐" : (locked ? "" : "▶")) + '</span>';
+      if(!locked){
+        onActivate(row, () => {
           closeMap();
           loadLevel(i); state="play"; wipeT = 1;
           hide(document.getElementById("levelScreen"));
           hide(document.getElementById("startScreen"));
-        }
-      });
-    };
+        });
+      }
+      list.appendChild(row);
+    });
+    show(document.getElementById("mapScreen"));
+    // center the next playable world in the list
+    const next = list.children[Math.min(highestCompleted + 1, LEVELS.length - 1)];
+    if(next) list.scrollTop = next.offsetTop - list.clientHeight/2 + next.clientHeight/2;
   }
 
   function closeMap(){
-    if(mapAnimFrame){ cancelAnimationFrame(mapAnimFrame); mapAnimFrame=null; }
-    if(mapDragListeners){
-      const {wrap, onStart, onMove, onEnd} = mapDragListeners;
-      wrap.removeEventListener("mousedown", onStart);
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onEnd);
-      wrap.removeEventListener("touchstart", onStart);
-      wrap.removeEventListener("touchmove", onMove);
-      wrap.removeEventListener("touchend", onEnd);
-      mapDragListeners = null;
-    }
     hide(document.getElementById("mapScreen"));
-    const mc = document.getElementById("mapCanvas");
-    if(mc) mc.onclick = null;
   }
 
   function resetPlayer(){
