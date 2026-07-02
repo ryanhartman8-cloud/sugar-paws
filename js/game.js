@@ -3908,7 +3908,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
                     : theme==="monsoon" ? "#a8c098"
                     : theme==="moria" ? "#9aaa82"
                     : theme==="city" ? "#c0c4d0"
-                    : theme==="jungle" ? "#8fd48a"
+                    : theme==="jungle" ? "#c9a8ee"
                     : theme==="kittyland" ? "#c8c8d8"
                     : theme==="island" ? "#ffb09a"
                     : theme==="sky" ? "#ffd680"
@@ -4023,14 +4023,15 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     if(theme==="jungle"){
       // sneaky jungle snake — coiled body, raised head, flicking tongue
       ctx.scale(e.vx >= 0 ? 1 : -1, 1);
+      ctx.scale(1.45, 1.45);   // art reads bigger; the AABB stays 34x30
       const tS2 = Date.now()/180;
       const slither = Math.sin(tS2 + e.x*0.06)*2;
       // coils
-      ctx.fillStyle="#3fa14e";
+      ctx.fillStyle="#9a5fd8";
       ctx.beginPath(); ctx.ellipse(-e.w*0.16, -e.h*0.22, e.w*0.30, e.h*0.20, 0, 0, 7); ctx.fill();
       ctx.beginPath(); ctx.ellipse(e.w*0.10+slither*0.4, -e.h*0.34, e.w*0.24, e.h*0.16, 0, 0, 7); ctx.fill();
       // diamond markings
-      ctx.fillStyle="#2a7a38";
+      ctx.fillStyle="#6a2aa0";
       for(let i=-1;i<=1;i++){
         const dx2 = -e.w*0.16 + i*9;
         ctx.beginPath();
@@ -4039,7 +4040,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
         ctx.closePath(); ctx.fill();
       }
       // neck + head raised
-      ctx.fillStyle="#3fa14e";
+      ctx.fillStyle="#9a5fd8";
       ctx.beginPath();
       ctx.moveTo(e.w*0.18+slither, -e.h*0.36);
       ctx.quadraticCurveTo(e.w*0.34+slither, -e.h*0.62, e.w*0.30+slither, -e.h*0.76);
@@ -4049,7 +4050,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       // head
       ctx.beginPath(); ctx.ellipse(e.w*0.36+slither, -e.h*0.80, 7.5, 5.5, 0.15, 0, 7); ctx.fill();
       // belly sheen
-      ctx.fillStyle="rgba(255,255,200,.35)";
+      ctx.fillStyle="rgba(255,230,255,.4)";
       ctx.beginPath(); ctx.ellipse(-e.w*0.16, -e.h*0.14, e.w*0.24, 3.5, 0, 0, 7); ctx.fill();
       // eyes
       ctx.fillStyle="#ffd23f";
