@@ -172,9 +172,9 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     {wx:70, wy:90},{wx:195,wy:90},{wx:320,wy:90},{wx:445,wy:90},
     {wx:570,wy:90},{wx:695,wy:90},
     {wx:695,wy:195},{wx:570,wy:195},{wx:445,wy:195},
-    {wx:320,wy:195},{wx:195,wy:195}
+    {wx:320,wy:195},{wx:195,wy:195},{wx:70,wy:195}
   ];
-  const MAP_EMOJIS = ["🍭","🏰","🐠","🚀","🎃","❄️","🧸","🦕","⛵","💎","☁️"];
+  const MAP_EMOJIS = ["🍭","🏰","🐠","🚀","🎃","❄️","🧸","🦕","⛵","💎","☁️","🏝️"];
 
   function drawMap(pulse){
     const mc = document.getElementById("mapCanvas");
@@ -514,6 +514,11 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
           burst(c.x, c.y, "#fff2a8", 12);
           popup(c.x, c.y-16, "+200");
         }
+        else if(c.t==="coconut"){
+          miceCount++; score+=200; sfx.coin();
+          burst(c.x, c.y, "#c9944a", 12);
+          popup(c.x, c.y-16, "+200");
+        }
         else if(c.t==="pair"){
           miceCount++; score+=200; sfx.coin();
           const animalColor = c.kind==="giraffe" ? "#f4c84a"
@@ -699,6 +704,110 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
   }
 
   function drawBackground(){
+    if(theme==="island"){
+      // tropical sky, warm toward the horizon
+      const g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,"#3fa8e8"); g.addColorStop(0.5,"#8fd4f2"); g.addColorStop(0.72,"#ffe9c4"); g.addColorStop(1,"#ffdba8");
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      const tI = Date.now()/600;
+      // sun upper-right with halo + slowly turning rays
+      const sX = W*0.78, sY = 96;
+      const halo = ctx.createRadialGradient(sX, sY, 10, sX, sY, 130);
+      halo.addColorStop(0,"rgba(255,236,160,.6)"); halo.addColorStop(1,"rgba(255,236,160,0)");
+      ctx.fillStyle=halo; ctx.fillRect(sX-140, sY-140, 280, 280);
+      ctx.fillStyle="#fff4a8"; ctx.beginPath(); ctx.arc(sX, sY, 36, 0, 7); ctx.fill();
+      ctx.fillStyle="#ffe680"; ctx.beginPath(); ctx.arc(sX, sY, 28, 0, 7); ctx.fill();
+      ctx.strokeStyle="rgba(255,236,160,.5)"; ctx.lineWidth=4; ctx.lineCap="round";
+      for(let i=0;i<10;i++){
+        const a = i*Math.PI/5 + tI*0.15;
+        ctx.beginPath();
+        ctx.moveTo(sX + Math.cos(a)*44, sY + Math.sin(a)*44);
+        ctx.lineTo(sX + Math.cos(a)*62, sY + Math.sin(a)*62);
+        ctx.stroke();
+      }
+      // the sea, horizon to the bottom of the frame
+      const horizon = H*0.56;
+      const og = ctx.createLinearGradient(0, horizon, 0, H);
+      og.addColorStop(0,"#39b8d8"); og.addColorStop(0.4,"#2596c2"); og.addColorStop(1,"#1a6f9e");
+      ctx.fillStyle=og; ctx.fillRect(0, horizon, W, H-horizon);
+      // sun glitter path on the water
+      ctx.fillStyle="rgba(255,240,180,.35)";
+      for(let i=0;i<14;i++){
+        const gy = horizon + 8 + i*9;
+        const gw = 60 - i*3.5 + Math.sin(tI*2 + i)*8;
+        ctx.beginPath(); ctx.ellipse(sX - 40, gy, Math.max(6, gw), 2, 0, 0, 7); ctx.fill();
+      }
+      // slow rolling wave lines
+      ctx.strokeStyle="rgba(255,255,255,.3)"; ctx.lineWidth=1.6;
+      for(let r=0;r<5;r++){
+        const wy = horizon + 22 + r*32;
+        ctx.beginPath();
+        for(let px=0;px<=W;px+=16){
+          const yy = wy + Math.sin(px*0.02 + tI*1.6 + r)*3;
+          if(px===0) ctx.moveTo(px, yy); else ctx.lineTo(px, yy);
+        }
+        ctx.stroke();
+      }
+      // far islands with palm silhouettes
+      const fp = cam.x*0.25;
+      for(let i=0;i<4;i++){
+        const ix = i*640 - (fp % 640) - 120;
+        ctx.fillStyle="rgba(46,110,140,.55)";
+        ctx.beginPath(); ctx.ellipse(ix+70, horizon+2, 90, 16, 0, Math.PI, 0); ctx.fill();
+        ctx.strokeStyle="rgba(46,110,140,.55)"; ctx.lineWidth=3; ctx.lineCap="round";
+        ctx.beginPath(); ctx.moveTo(ix+70, horizon-2); ctx.quadraticCurveTo(ix+76, horizon-22, ix+88, horizon-30); ctx.stroke();
+        for(let f=0; f<5; f++){
+          const fa = -0.3 - f*0.55;
+          ctx.beginPath(); ctx.moveTo(ix+88, horizon-30);
+          ctx.quadraticCurveTo(ix+88 + Math.cos(fa)*16, horizon-30 + Math.sin(fa)*12,
+                               ix+88 + Math.cos(fa)*28, horizon-30 + Math.sin(fa)*16 + 6);
+          ctx.stroke();
+        }
+      }
+      // puffy fair-weather clouds
+      const mp = cam.x*0.45;
+      ctx.fillStyle="rgba(255,255,255,.8)";
+      for(let i=0;i<6;i++){
+        const cx = i*560 - (mp % 560) - 80;
+        const cy = 80 + (i%3)*36;
+        ctx.beginPath(); ctx.arc(cx,    cy,   22, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx+26, cy-6, 28, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx+56, cy,   20, 0, 7); ctx.fill();
+      }
+      // little sailboat tacking across the horizon
+      const boatX = ((Date.now()/140) % (W+260) + W+260) % (W+260) - 130 - cam.x*0.2;
+      const boatY = horizon - 4 + Math.sin(tI*1.3)*2;
+      if(boatX > -60 && boatX < W+60){
+        ctx.fillStyle="#b8562e";
+        ctx.beginPath();
+        ctx.moveTo(boatX-20, boatY); ctx.lineTo(boatX+20, boatY);
+        ctx.lineTo(boatX+13, boatY+10); ctx.lineTo(boatX-13, boatY+10);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle="#6a4a2a"; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(boatX, boatY); ctx.lineTo(boatX, boatY-26); ctx.stroke();
+        ctx.fillStyle="#fff";
+        ctx.beginPath();
+        ctx.moveTo(boatX+2, boatY-26); ctx.quadraticCurveTo(boatX+18, boatY-18, boatX+2, boatY-6);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle="rgba(255,255,255,.9)";
+        ctx.beginPath();
+        ctx.moveTo(boatX-2, boatY-24); ctx.quadraticCurveTo(boatX-13, boatY-16, boatX-2, boatY-8);
+        ctx.closePath(); ctx.fill();
+      }
+      // a pair of seagulls
+      const gullT = Date.now()/50;
+      ctx.strokeStyle="rgba(40,60,80,.6)"; ctx.lineWidth=1.4; ctx.lineCap="round";
+      for(let gp=0; gp<2; gp++){
+        const gx = ((gp*700 - gullT) % (W+200) + W+200) % (W+200) - 100;
+        const gy = 120 + gp*54;
+        for(let i=-1;i<=1;i++){
+          const bx = gx + i*18, by = gy + Math.abs(i)*7;
+          const flap = Math.sin(Date.now()/180 + i)*2.5 + 4;
+          ctx.beginPath(); ctx.moveTo(bx-5, by); ctx.lineTo(bx, by-flap); ctx.lineTo(bx+5, by); ctx.stroke();
+        }
+      }
+      return;
+    }
     if(theme==="sky"){
       // bright blue sky — lighter on the horizon
       const g = ctx.createLinearGradient(0,0,0,H);
@@ -2196,6 +2305,82 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
         ctx.fillRect(x+pl.w-10, y+pl.h-5, 2, 2);
         break;
       }
+      case "sand": {  // golden beach sand with shells, starfish, and grass tufts
+        ctx.fillStyle="#eccf8e"; rr(x,y,pl.w,pl.h,10); ctx.fill();
+        ctx.fillStyle="#cfa963"; rr(x, y+pl.h*0.55, pl.w, pl.h*0.45, 10); ctx.fill();
+        ctx.fillStyle="#f7e3ac"; rr(x,y,pl.w,14,10); ctx.fill();
+        // scalloped bright top edge
+        ctx.fillStyle="#fff3d0";
+        ctx.beginPath(); ctx.moveTo(x, y+5);
+        for(let i=0;i<=pl.w;i+=26){ ctx.quadraticCurveTo(x+i+13, y+13, x+i+26, y+5); }
+        ctx.lineTo(x+pl.w, y); ctx.lineTo(x,y); ctx.closePath(); ctx.fill();
+        // sand speckles
+        ctx.fillStyle="rgba(160,120,60,.45)";
+        ctx.save(); ctx.translate(x,y);
+        for(let i=0;i<pl.w;i+=17){
+          ctx.fillRect((i*7)%pl.w, 20+((i*13)%Math.max(20,pl.h-40)), 2, 2);
+        }
+        ctx.restore();
+        // seashells along the top
+        for(let i=30;i<pl.w-20;i+=120){
+          const sx = x+i, sy = y+9;
+          ctx.fillStyle="#ffd9e8";
+          ctx.beginPath(); ctx.arc(sx, sy, 5, Math.PI, 0); ctx.fill();
+          ctx.strokeStyle="#e89ab8"; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(sx-3, sy-1); ctx.lineTo(sx-1, sy-4); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(sx+1, sy-4); ctx.lineTo(sx+3, sy-1); ctx.stroke();
+        }
+        // starfish
+        for(let i=90;i<pl.w-20;i+=120){
+          const sx = x+i, sy = y+8;
+          ctx.fillStyle="#ff9a5e";
+          for(let k=0;k<5;k++){
+            const a = -Math.PI/2 + k*Math.PI*2/5;
+            ctx.beginPath();
+            ctx.ellipse(sx+Math.cos(a)*3.4, sy+Math.sin(a)*3.4, 2.6, 1.4, a, 0, 7);
+            ctx.fill();
+          }
+          ctx.beginPath(); ctx.arc(sx, sy, 2.2, 0, 7); ctx.fill();
+        }
+        // beach grass tufts
+        ctx.strokeStyle="#74c95e"; ctx.lineWidth=1.6; ctx.lineCap="round";
+        for(let i=60;i<pl.w-10;i+=140){
+          const gx = x+i;
+          ctx.beginPath(); ctx.moveTo(gx, y+2); ctx.quadraticCurveTo(gx-3, y-6, gx-5, y-9); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(gx, y+2); ctx.quadraticCurveTo(gx, y-8, gx+1, y-11); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(gx, y+2); ctx.quadraticCurveTo(gx+4, y-5, gx+6, y-8); ctx.stroke();
+        }
+        break;
+      }
+      case "palm": {  // palm-frond canopy platform with a coconut cluster underneath
+        const tP = Date.now()/800;
+        const cxP = x + pl.w/2;
+        for(let pass=0; pass<2; pass++){
+          for(let i=0;i<7;i++){
+            const dir = (i - 3)/3;
+            const sway = Math.sin(tP + i)*1.5;
+            const ex = cxP + dir*(pl.w/2 - 4);
+            const ey = y + 7 + Math.abs(dir)*10 + sway;
+            if(pass===0){ ctx.strokeStyle = i%2 ? "#3fa14e" : "#57bd63"; ctx.lineWidth = 8; }
+            else { ctx.strokeStyle = "rgba(30,90,40,.45)"; ctx.lineWidth = 1.2; }
+            ctx.lineCap="round";
+            ctx.beginPath();
+            ctx.moveTo(cxP, y+11);
+            ctx.quadraticCurveTo(cxP + dir*pl.w*0.22, y - 6 + sway, ex, ey);
+            ctx.stroke();
+          }
+        }
+        // light frond ridge marking the walking surface
+        ctx.fillStyle="rgba(190,240,170,.85)";
+        rr(x+10, y+1, pl.w-20, 3, 2); ctx.fill();
+        // coconut cluster
+        ctx.fillStyle="#7a4a26";
+        ctx.beginPath(); ctx.arc(cxP-6, y+16, 5.5, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(cxP+5, y+17, 5, 0, 7); ctx.fill();
+        ctx.fillStyle="rgba(255,255,255,.25)";
+        ctx.beginPath(); ctx.arc(cxP-8, y+14, 1.8, 0, 7); ctx.fill();
+        break;
+      }
       case "bigcloud": {  // large cumulus "island" the cat walks on
         // soft shadow underside (the wispy bottom of the cloud as it tapers into sky)
         const tC = Date.now()/700;
@@ -2590,6 +2775,33 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
   function drawLava(hz){
     const x = hz.x - cam.x;
     if(x+hz.w<-20 || x>W+20) return;
+    if(theme==="island"){
+      // sparkling turquoise channel between the islets
+      const tW = Date.now()/500;
+      const gW = ctx.createLinearGradient(0, hz.y, 0, hz.y+80);
+      gW.addColorStop(0,"#4ecbe0"); gW.addColorStop(1,"#1f86b4");
+      ctx.fillStyle=gW; ctx.fillRect(x, hz.y, hz.w, hz.h);
+      // rolling surface
+      ctx.fillStyle="#7fe0ee";
+      ctx.beginPath();
+      ctx.moveTo(x, hz.y+6);
+      for(let i=0;i<=hz.w;i+=14){
+        ctx.lineTo(x+i, hz.y+4 + Math.sin(tW*2 + i*0.25)*2.5);
+      }
+      ctx.lineTo(x+hz.w, hz.y+12); ctx.lineTo(x, hz.y+12);
+      ctx.closePath(); ctx.fill();
+      // foam where the water meets the sand
+      ctx.fillStyle="rgba(255,255,255,.85)";
+      ctx.beginPath(); ctx.arc(x+3, hz.y+6, 4, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(x+hz.w-3, hz.y+6, 4, 0, 7); ctx.fill();
+      // drifting glints
+      ctx.fillStyle="rgba(255,255,255,.5)";
+      for(let i=0;i<3;i++){
+        const gx = x + ((tW*30 + i*hz.w/3) % hz.w);
+        ctx.beginPath(); ctx.ellipse(gx, hz.y+16+i*10, 5, 1.4, 0, 0, 7); ctx.fill();
+      }
+      return;
+    }
     if(theme==="space"){
       // black hole void with swirling event horizon
       const gV = ctx.createRadialGradient(x+hz.w/2, hz.y+24, 2, x+hz.w/2, hz.y+24, hz.w);
@@ -2940,6 +3152,30 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       ctx.closePath(); ctx.fill();
       ctx.restore(); return;
     }
+    if(c.t==="coconut"){
+      // fuzzy coconut gently rocking in a warm halo
+      ctx.rotate(Math.sin(c.phase*0.8)*0.18);
+      const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, 18);
+      glow.addColorStop(0, "rgba(255,214,150,.5)");
+      glow.addColorStop(1, "rgba(255,214,150,0)");
+      ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(0, 0, 18, 0, 7); ctx.fill();
+      // husk
+      ctx.fillStyle = "#8a5a30";
+      ctx.beginPath(); ctx.arc(0, 0, 9, 0, 7); ctx.fill();
+      // fibrous streaks
+      ctx.strokeStyle = "rgba(60,36,16,.55)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(0, 0, 6.5, -0.6, 0.9); ctx.stroke();
+      ctx.beginPath(); ctx.arc(1, 1, 7.5, 2.2, 3.4); ctx.stroke();
+      // three germination dots
+      ctx.fillStyle = "#4a2c12";
+      ctx.beginPath(); ctx.arc(-2.5, -3.2, 1.5, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( 2.5, -3.2, 1.5, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( 0,   -5.6, 1.5, 0, 7); ctx.fill();
+      // glossy highlight
+      ctx.fillStyle = "rgba(255,255,255,.35)";
+      ctx.beginPath(); ctx.ellipse(-3.5, 2, 2.6, 1.6, 0.6, 0, 7); ctx.fill();
+      ctx.restore(); return;
+    }
     if(c.t==="ring"){
       // a single precious gold ring with engraved elvish glow
       const tR = Date.now()/220;
@@ -3075,6 +3311,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
                     : theme==="dino" ? "#a8d4a0"
                     : theme==="monsoon" ? "#a8c098"
                     : theme==="moria" ? "#9aaa82"
+                    : theme==="island" ? "#ffb09a"
                     : theme==="sky" ? "#ffd680"
                     : "#ff8fc8";
       ctx.beginPath(); ctx.ellipse(0,-4,e.w/2+4,6,0,0,7); ctx.fill();
@@ -3139,6 +3376,65 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       // helmet highlight
       ctx.fillStyle = "rgba(255,255,255,.7)";
       ctx.beginPath(); ctx.ellipse(-e.w*0.18, -e.h*1.10+wob, 4, 1.8, -0.4, 0, 7); ctx.fill();
+      ctx.restore(); return;
+    }
+    if(theme==="island"){
+      // scuttling beach crab — round red shell, snipping claws, eye stalks
+      ctx.scale(e.vx >= 0 ? 1 : -1, 1);
+      const tC = Date.now()/160;
+      const scut = Math.sin(tC + e.x*0.05)*1.6;
+      // legs — three per side, scissoring
+      ctx.strokeStyle="#c43e2e"; ctx.lineWidth=2.4; ctx.lineCap="round";
+      for(let i=0;i<3;i++){
+        const la = Math.sin(tC*1.4 + i)*3;
+        ctx.beginPath();
+        ctx.moveTo(-e.w*0.18, -e.h*0.28);
+        ctx.lineTo(-e.w*0.42 - i*3, -e.h*0.05 + la);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(e.w*0.18, -e.h*0.28);
+        ctx.lineTo(e.w*0.42 + i*3, -e.h*0.05 - la);
+        ctx.stroke();
+      }
+      // shell
+      ctx.fillStyle="#e8543e";
+      ctx.beginPath(); ctx.ellipse(0, -e.h*0.42+scut, e.w*0.36, e.h*0.30, 0, 0, 7); ctx.fill();
+      ctx.fillStyle="#ff8a6a";
+      ctx.beginPath(); ctx.ellipse(0, -e.h*0.34+scut, e.w*0.28, e.h*0.16, 0, 0, 7); ctx.fill();
+      ctx.fillStyle="rgba(255,255,255,.5)";
+      ctx.beginPath(); ctx.arc(-e.w*0.12, -e.h*0.50+scut, 2, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.08, -e.h*0.54+scut, 1.6, 0, 7); ctx.fill();
+      // claws held up, snipping
+      const snip = Math.abs(Math.sin(tC*0.9))*0.5;
+      for(const side of [-1,1]){
+        const cx = side*e.w*0.42, cy = -e.h*0.62+scut;
+        ctx.strokeStyle="#c43e2e"; ctx.lineWidth=2.4;
+        ctx.beginPath(); ctx.moveTo(side*e.w*0.2, -e.h*0.45+scut); ctx.lineTo(cx, cy); ctx.stroke();
+        ctx.fillStyle="#e8543e";
+        ctx.beginPath(); ctx.arc(cx, cy, 5.5, 0, 7); ctx.fill();
+        ctx.fillStyle="#ffdcb8";
+        ctx.beginPath();
+        ctx.moveTo(cx + side*2, cy - 3);
+        ctx.lineTo(cx + side*(6 + snip*3), cy - 5 - snip*2);
+        ctx.lineTo(cx + side*4, cy);
+        ctx.closePath(); ctx.fill();
+      }
+      // eye stalks
+      ctx.strokeStyle="#a83226"; ctx.lineWidth=1.6;
+      ctx.beginPath(); ctx.moveTo(-4, -e.h*0.66+scut); ctx.lineTo(-5, -e.h*0.84+scut); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo( 4, -e.h*0.66+scut); ctx.lineTo( 5, -e.h*0.84+scut); ctx.stroke();
+      ctx.fillStyle="#fff";
+      ctx.beginPath(); ctx.arc(-5, -e.h*0.88+scut, 3, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( 5, -e.h*0.88+scut, 3, 0, 7); ctx.fill();
+      ctx.fillStyle="#1a1a24";
+      ctx.beginPath(); ctx.arc(-4, -e.h*0.88+scut, 1.4, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( 6, -e.h*0.88+scut, 1.4, 0, 7); ctx.fill();
+      // happy little mouth
+      ctx.strokeStyle="#7a1e14"; ctx.lineWidth=1.2;
+      ctx.beginPath();
+      ctx.moveTo(-3, -e.h*0.38+scut);
+      ctx.quadraticCurveTo(0, -e.h*0.33+scut, 3, -e.h*0.38+scut);
+      ctx.stroke();
       ctx.restore(); return;
     }
     if(theme==="sky"){
@@ -4813,6 +5109,112 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
         ctx.moveTo(x-2, pcy-52); ctx.quadraticCurveTo(x, pcy-52-fl*0.65, x+2, pcy-52);
         ctx.closePath(); ctx.fill();
       }
+    } else if(theme==="island"){
+      const tG = Date.now()/500;
+      // warm glow around the sandcastle
+      const glow = ctx.createRadialGradient(x, baseY-80, 5, x, baseY-80, 160);
+      const gAlpha = goalActive ? 0.5 : 0.18;
+      glow.addColorStop(0,"rgba(255,220,140,"+gAlpha+")");
+      glow.addColorStop(1,"rgba(255,220,140,0)");
+      ctx.fillStyle=glow; ctx.fillRect(x-150, baseY-230, 300, 250);
+      // sand mound base
+      ctx.fillStyle = "#f0d494";
+      ctx.beginPath(); ctx.ellipse(x, baseY, 78, 12, 0, Math.PI, 0); ctx.fill();
+      // central keep — packed sand
+      ctx.fillStyle = "#eccf8e";
+      rr(x-30, baseY-92, 60, 88, 3); ctx.fill();
+      ctx.fillStyle = "#d4af6e";
+      rr(x-30, baseY-92, 12, 88, 3); ctx.fill();
+      // bucket-shaped crenellations
+      ctx.fillStyle = "#eccf8e";
+      for(let i=-2;i<=2;i++){
+        ctx.beginPath();
+        ctx.moveTo(x + i*12 - 5, baseY-92);
+        ctx.lineTo(x + i*12 - 3, baseY-102);
+        ctx.lineTo(x + i*12 + 3, baseY-102);
+        ctx.lineTo(x + i*12 + 5, baseY-92);
+        ctx.closePath(); ctx.fill();
+      }
+      // arched door
+      ctx.fillStyle = goalActive ? "#ffd23f" : "#8a6a3a";
+      ctx.beginPath();
+      ctx.moveTo(x-10, baseY-4);
+      ctx.lineTo(x-10, baseY-30);
+      ctx.quadraticCurveTo(x, baseY-44, x+10, baseY-30);
+      ctx.lineTo(x+10, baseY-4);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = goalActive ? "#fff2a8" : "#5a4426";
+      ctx.beginPath();
+      ctx.moveTo(x-6, baseY-6);
+      ctx.lineTo(x-6, baseY-28);
+      ctx.quadraticCurveTo(x, baseY-38, x+6, baseY-28);
+      ctx.lineTo(x+6, baseY-6);
+      ctx.closePath(); ctx.fill();
+      // scallop shell above the door
+      ctx.fillStyle = "#ffd9e8";
+      ctx.beginPath(); ctx.arc(x, baseY-56, 7, Math.PI, 0); ctx.fill();
+      ctx.strokeStyle = "#e89ab8"; ctx.lineWidth = 1;
+      for(let i=-1;i<=1;i++){
+        ctx.beginPath(); ctx.moveTo(x, baseY-56); ctx.lineTo(x+i*4, baseY-62); ctx.stroke();
+      }
+      // side towers — upturned-bucket shapes
+      for(const side of [-1,1]){
+        const tx = x + side*46;
+        ctx.fillStyle = "#eccf8e";
+        ctx.beginPath();
+        ctx.moveTo(tx-13, baseY-2);
+        ctx.lineTo(tx-10, baseY-66);
+        ctx.lineTo(tx+10, baseY-66);
+        ctx.lineTo(tx+13, baseY-2);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#d4af6e";
+        ctx.beginPath();
+        ctx.moveTo(tx-13, baseY-2);
+        ctx.lineTo(tx-10, baseY-66);
+        ctx.lineTo(tx-5, baseY-66);
+        ctx.lineTo(tx-7, baseY-2);
+        ctx.closePath(); ctx.fill();
+        // tower crenellations
+        ctx.fillStyle = "#eccf8e";
+        for(let i=-1;i<=1;i++){
+          ctx.fillRect(tx + i*7 - 2.5, baseY-73, 5, 7);
+        }
+        // starfish badge
+        const sy = baseY-40;
+        ctx.fillStyle = "#ff9a5e";
+        for(let k=0;k<5;k++){
+          const a = -Math.PI/2 + k*Math.PI*2/5;
+          ctx.beginPath();
+          ctx.ellipse(tx+Math.cos(a)*4, sy+Math.sin(a)*4, 3, 1.6, a, 0, 7);
+          ctx.fill();
+        }
+        ctx.beginPath(); ctx.arc(tx, sy, 2.6, 0, 7); ctx.fill();
+      }
+      // pennant flag on the keep
+      ctx.strokeStyle = "#8a6a3a"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(x, baseY-102); ctx.lineTo(x, baseY-124); ctx.stroke();
+      ctx.fillStyle = goalActive ? "#ff6fb5" : "#a87a8a";
+      const fw = 14 + Math.sin(tG*1.4)*2;
+      ctx.beginPath();
+      ctx.moveTo(x+1, baseY-124);
+      ctx.lineTo(x+1+fw, baseY-119);
+      ctx.lineTo(x+1, baseY-114);
+      ctx.closePath(); ctx.fill();
+      if(goalActive){
+        // celebratory sparkles circling the castle
+        for(let i=0;i<6;i++){
+          const a = tG*1.5 + i*1.0;
+          const sx = x + Math.cos(a)*58;
+          const sy = baseY-64 + Math.sin(a)*24;
+          ctx.fillStyle = "rgba(255,255,255,"+(0.55 + Math.sin(tG*2+i)*0.3)+")";
+          ctx.beginPath(); ctx.arc(sx, sy, 1.8, 0, 7); ctx.fill();
+        }
+      } else {
+        // crossed chains over the door until the goal opens
+        ctx.strokeStyle = "rgba(160,150,120,.7)"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x-10, baseY-14); ctx.lineTo(x+10, baseY-30); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x-10, baseY-30); ctx.lineTo(x+10, baseY-14); ctx.stroke();
+      }
     } else if(theme==="sky"){
       const tG = Date.now()/500;
       // soft warm glow around the castle
@@ -5209,6 +5611,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
                     : theme==="dino" ? "🥚 HATCH"
                     : theme==="monsoon" ? "⛵ BOARD"
                     : theme==="moria" ? "🗝️ MELLON"
+                    : theme==="island" ? "🏝️ PARADISE"
                     : theme==="sky" ? "🏰 CASTLE"
                     : "🍭 GOAL";
     const lockText = boss && boss.name ? "🔒 Defeat the " + boss.name + "!" : "🔒 Locked";
@@ -5397,6 +5800,46 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       // tiny highlight on the glass
       ctx.fillStyle="rgba(255,255,255,.7)";
       ctx.beginPath(); ctx.ellipse(bw*0.18, hy-7, 3, 1.6, -0.4, 0, 7); ctx.fill();
+    }
+    if(theme==="island"){
+      // flower lei draped across the chest
+      const ly = -bh*0.72;
+      const leiCols = ["#ff6fb5","#ffd23f","#ff8a4d","#fff"];
+      for(let i=0;i<7;i++){
+        const fx = -bw*0.30 + i*(bw*0.60/6);
+        const fy = ly + Math.sin(i/6*Math.PI)*5;
+        ctx.fillStyle = leiCols[i%4];
+        for(let k=0;k<5;k++){
+          const a = k*Math.PI*2/5 + i;
+          ctx.beginPath();
+          ctx.ellipse(fx+Math.cos(a)*2.6, fy+Math.sin(a)*2.6, 2, 1.2, a, 0, 7);
+          ctx.fill();
+        }
+        ctx.fillStyle = "#ffd23f";
+        ctx.beginPath(); ctx.arc(fx, fy, 1.3, 0, 7); ctx.fill();
+      }
+      // straw sun hat: dome, band, then wide brim on top of both
+      const hx = bw*0.05, hatY = hy - bw*0.26;
+      ctx.fillStyle = "rgba(0,0,0,.18)";
+      ctx.beginPath(); ctx.ellipse(hx, hatY+3, bw*0.44, 3, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "#f4dfa0";
+      ctx.beginPath(); ctx.ellipse(hx, hatY-6, bw*0.24, 10, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "#ff6fb5";
+      ctx.beginPath(); ctx.ellipse(hx, hatY-2, bw*0.25, 4, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "#e8c97a";
+      ctx.beginPath(); ctx.ellipse(hx, hatY, bw*0.46, 5.5, -0.06, 0, 7); ctx.fill();
+      ctx.fillStyle = "#f4dfa0";
+      ctx.beginPath(); ctx.ellipse(hx, hatY-1.5, bw*0.44, 4.5, -0.06, 0, 7); ctx.fill();
+      // hibiscus pinned where the band meets the brim
+      ctx.fillStyle = "#e84855";
+      for(let k=0;k<5;k++){
+        const a = k*Math.PI*2/5;
+        ctx.beginPath();
+        ctx.ellipse(hx+bw*0.20+Math.cos(a)*2.6, hatY-2+Math.sin(a)*2.6, 2.2, 1.3, a, 0, 7);
+        ctx.fill();
+      }
+      ctx.fillStyle = "#ffd23f";
+      ctx.beginPath(); ctx.arc(hx+bw*0.20, hatY-2, 1.3, 0, 7); ctx.fill();
     }
     if(theme==="christmas"){
       // elf hat — green cone with white fur brim, drooping tip + gold bell
@@ -5705,6 +6148,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     monsoon:   { cap:90, rate:1.6,  kind:"rain" },
     moria:     { cap:24, rate:0.06, kind:"ember" },
     sky:       { cap:24, rate:0.08, kind:"puff" },
+    island:    { cap:24, rate:0.05, kind:"petal" },
   };
   const CONFETTI_COLORS = ["#ff6fb5","#ffd23f","#74e0c2","#b28dff","#ff9a4d"];
 
@@ -5720,6 +6164,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       case "wisp":     return {x, y:H*0.35+Math.random()*H*0.6, vx:(Math.random()-.5)*0.2, vy:-(0.15+Math.random()*0.25), r:1.6+Math.random()*2, c:"#b8ffd9", a:0.4, sway:1.4, phase:ph, kind};
       case "sparkle":  return {x, y:Math.random()*H*0.8, vx:0, vy:0.15, r:1.4+Math.random()*1.6, c:Math.random()<0.5?"#fff":"#ffd23f", a:0.9, sway:0, phase:ph, kind};
       case "leaf":     return {x, y:-10, vx:-(0.2+Math.random()*0.3), vy:0.5+Math.random()*0.5, r:2.2+Math.random()*1.8, c:Math.random()<0.5?"#7cc95e":"#4da65a", a:0.8, sway:1.8, phase:ph, kind};
+      case "petal":    return {x, y:-10, vx:-(0.15+Math.random()*0.25), vy:0.45+Math.random()*0.45, r:2+Math.random()*1.6, c:["#ff8fc8","#ffb3d9","#ffd23f","#ff8a6a"][(Math.random()*4)|0], a:0.85, sway:1.6, phase:ph, kind};
       case "rain":     return {x, y:-12, vx:-2.2, vy:9+Math.random()*3, r:0, c:"rgba(190,220,255,.55)", a:1, sway:0, phase:0, kind};
       case "puff":     return {x, y:Math.random()*H*0.7, vx:0.5+Math.random()*0.7, vy:(Math.random()-.5)*0.05, r:1.5+Math.random()*2, c:"rgba(255,255,255,.8)", a:0.5, sway:0.3, phase:ph, kind};
     }
@@ -5760,7 +6205,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
         ctx.beginPath(); ctx.arc(x, a.y, a.r, 0, 7); ctx.stroke();
         ctx.fillStyle = "rgba(255,255,255,.5)";
         ctx.beginPath(); ctx.arc(x - a.r*0.35, a.y - a.r*0.35, a.r*0.25, 0, 7); ctx.fill();
-      } else if(a.kind === "leaf" || a.kind === "confetti"){
+      } else if(a.kind === "leaf" || a.kind === "confetti" || a.kind === "petal"){
         ctx.fillStyle = a.c;
         ctx.beginPath(); ctx.ellipse(x, a.y, a.r, a.r*0.55, Math.sin(a.phase*2)*1.2, 0, 7); ctx.fill();
       } else if(a.kind === "ember"){
