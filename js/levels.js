@@ -16,7 +16,8 @@ import { GROUND_Y } from "./physics.js";
     island:    { name:"Sandy Paws Cove" },
     kittyland: { name:"Kitty Cat Island" },
     city:      { name:"Meowtropolis Downtown" },
-    jungle:    { name:"Wildcat Jungle" }
+    jungle:    { name:"Wildcat Jungle" },
+    mushroom:  { name:"Super Meow World" }
   };
 
   // ======================================================================
@@ -852,5 +853,76 @@ import { GROUND_Y } from "./physics.js";
         {x:3000, y:GROUND_Y+22, w:140, h:220},
       ],
       boss: null
+    },
+    // -------- WORLD 16: Super Meow World — bricks, pipes, mystery boxes, Koopa King --------
+    {
+      name: "Super Meow World", theme: "mushroom",
+      goalX: 4260, worldW: 4400,
+      platforms: [
+        // classic block ground with open pits between the segments
+        {x:0,    y:430, w:1080, h:170, t:"marioground"},
+        {x:1170, y:430, w:1030, h:170, t:"marioground"},
+        {x:2300, y:430, w:860,  h:170, t:"marioground"},
+        {x:3270, y:430, w:1130, h:170, t:"marioground"},
+        // warp pipes (grounded — never lifted)
+        {x:520,  y:380, w:56, h:50, t:"pipe"},
+        {x:860,  y:366, w:56, h:64, t:"pipe"},
+        {x:1560, y:380, w:56, h:50, t:"pipe"},
+        {x:2700, y:366, w:56, h:64, t:"pipe"},
+        // brick + mystery box rows
+        {x:300,  y:330, w:26, h:26, t:"brick"},
+        {x:326,  y:330, w:26, h:26, t:"qbox"},
+        {x:352,  y:330, w:26, h:26, t:"brick"},
+        {x:378,  y:330, w:26, h:26, t:"qbox"},
+        {x:404,  y:330, w:26, h:26, t:"brick"},
+        {x:1300, y:330, w:26, h:26, t:"qbox"},
+        {x:1326, y:330, w:26, h:26, t:"brick"},
+        {x:1352, y:330, w:26, h:26, t:"qbox"},
+        {x:1650, y:330, w:78, h:26, t:"brick"},
+        {x:1676, y:250, w:26, h:26, t:"qbox"},   // high box above the brick shelf
+        {x:2450, y:330, w:26, h:26, t:"brick"},
+        {x:2476, y:330, w:26, h:26, t:"qbox"},
+        {x:2502, y:330, w:26, h:26, t:"brick"},
+        {x:3350, y:330, w:26, h:26, t:"qbox"},
+        // staircase up to the flagpole
+        {x:3900, y:404, w:26, h:26, t:"brick"},
+        {x:3926, y:378, w:26, h:52, t:"brick"},
+        {x:3952, y:352, w:26, h:78, t:"brick"},
+      ],
+      collectibles: [
+        // coins — over the box rows, in pit arcs, and in ground runs
+        {x:313,  y:296, t:"coin"},
+        {x:391,  y:296, t:"coin"},
+        {x:1313, y:296, t:"coin"},
+        {x:1365, y:296, t:"coin"},
+        {x:1689, y:216, t:"coin"},
+        {x:2463, y:296, t:"coin"},
+        {x:2515, y:296, t:"coin"},
+        {x:650,  y:398, t:"coin"},
+        {x:700,  y:398, t:"coin"},
+        {x:750,  y:398, t:"coin"},
+        {x:1900, y:398, t:"coin"},
+        {x:1950, y:398, t:"coin"},
+        {x:2900, y:398, t:"coin"},
+        {x:2950, y:398, t:"coin"},
+        {x:3500, y:398, t:"coin"},
+        {x:1120, y:340, t:"coin"},
+        {x:2250, y:340, t:"coin"},
+        {x:3215, y:340, t:"coin"},
+        // fish grow-ups (no mice here: power-ups come from the mystery boxes)
+        {x:180,  y:398, t:"fish"},
+        {x:2000, y:398, t:"fish"},
+        {x:3050, y:398, t:"fish"},
+      ],
+      enemies: [
+        {x:640,  min:600,  max:820,  vx:1.5},
+        {x:1450, min:1250, max:1520, vx:1.6},
+        {x:1800, min:1700, max:2150, vx:1.7},
+        {x:2500, min:2380, max:2650, vx:1.6},
+        {x:2950, min:2790, max:3100, vx:1.8},
+        {x:3450, min:3330, max:3700, vx:1.6},
+      ],
+      hazards: [],
+      boss: { x:3600, w:110, h:92, hp:3, vx:1.8, min:3300, max:3840, name:"Koopa King" }
     }
   ];
