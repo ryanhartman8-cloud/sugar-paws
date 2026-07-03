@@ -8,12 +8,27 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
   const physFx = {
     jump(p){ sfx.jump(); burst(p.x+p.w/2, p.y+p.h, "#fff", 6); },
     flyPuff(pt){ particles.push(pt); },
+    bonk(pl){ bonkBox(pl); },
   };
 
   // ---------- Visual juice state ----------
   let shake = 0, popups = [], ambient = [], wipeT = 0, scoreShown = 0;
   function addShake(n){ shake = Math.max(shake, n); }
   function popup(x, y, text, color="#fff"){ popups.push({x, y, text, color, life:1}); }
+
+  // Mystery boxes: bonked from below they pop out one of the classic power-ups.
+  function bonkBox(pl){
+    if(pl.t !== "qbox" && pl.t !== "brick") return;
+    pl.bumpAt = Date.now();
+    if(pl.t !== "qbox" || pl.used){ beep(150, .07, "square", .05); return; }
+    pl.used = true;
+    beep(392, .06, "triangle", .06);
+    setTimeout(()=>beep(523, .09, "triangle", .06), 70);
+    collectibles.push({ x: pl.x + pl.w/2, y: pl.y - 18, t: "candy", got: false, phase: Math.random()*Math.PI*2 });
+    burst(pl.x + pl.w/2, pl.y - 6, "#ffd23f", 12);
+    addShake(2);
+  }
+
 
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
@@ -165,7 +180,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
   }
 
   // ---------- World map ----------
-  const MAP_EMOJIS = ["🍭","🏰","🐠","🚀","🎃","❄️","🧸","🦕","⛵","💎","☁️","🏝️","🐱","🏙️","🦜"];
+  const MAP_EMOJIS = ["🍭","🏰","🐠","🚀","🎃","❄️","🧸","🦕","⛵","💎","☁️","🏝️","🐱","🏙️","🦜","🍄"];
 
   function openMap(returnTo){
     mapReturnTo = returnTo || "start";
@@ -240,7 +255,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     // head-bonk them on a normal jump. Ground platforms (y>=420) are untouched.
     const FLOAT_LIFT = 22;
     platforms = L.platforms.map(pl => {
-      const p2 = pl.y < 420 ? {...pl, y: pl.y - FLOAT_LIFT} : {...pl};
+      const p2 = (pl.y < 420 && pl.y + pl.h < 430) ? {...pl, y: pl.y - FLOAT_LIFT} : {...pl};
       if(p2.moveX !== undefined){ p2.baseX = p2.x; p2.phase = Math.random()*Math.PI*2; p2.dx = 0; }
       return p2;
     });
@@ -407,6 +422,11 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
           miceCount++; score+=200; sfx.coin();
           burst(c.x, c.y, "#ffb04d", 12);
           popup(c.x, c.y-16, "+200");
+        }
+        else if(c.t==="coin"){
+          miceCount++; score+=100; sfx.coin();
+          burst(c.x, c.y, "#ffd23f", 10);
+          popup(c.x, c.y-16, "+100");
         }
         else if(c.t==="pair"){
           miceCount++; score+=200; sfx.coin();
@@ -593,6 +613,46 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
   }
 
   function drawBackground(){
+    if(theme==="mushroom"){
+      // that classic bright videogame-blue sky
+      ctx.fillStyle="#5c94fc"; ctx.fillRect(0,0,W,H);
+      // scalloped puff shape shared by clouds and bushes — the classic gag
+      const puffRow = (cx, cy, col) => {
+        ctx.fillStyle=col;
+        ctx.beginPath(); ctx.arc(cx-22, cy, 14, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx, cy-7, 17, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx+22, cy, 14, 0, 7); ctx.fill();
+        rr(cx-30, cy, 60, 12, 6); ctx.fill();
+      };
+      // big rounded hills, two depths
+      const fpM = cam.x*0.3;
+      ctx.fillStyle="#3ab04a";
+      for(let i=0;i<4;i++){
+        const hx = i*560 - (fpM % 560) - 100;
+        ctx.beginPath(); ctx.ellipse(hx, H*0.99, 180, 150, 0, Math.PI, 0); ctx.fill();
+      }
+      const mpM = cam.x*0.55;
+      for(let i=0;i<5;i++){
+        const hx = i*430 - (mpM % 430) - 60;
+        ctx.fillStyle="#2a9a3a";
+        ctx.beginPath(); ctx.ellipse(hx, H*1.02, 120, 100, 0, Math.PI, 0); ctx.fill();
+        // classic hill speckles
+        ctx.fillStyle="rgba(255,255,255,.45)";
+        ctx.beginPath(); ctx.arc(hx-26, H*0.88, 3, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(hx+22, H*0.90, 3, 0, 7); ctx.fill();
+      }
+      // clouds up top...
+      const cpM = cam.x*0.4;
+      for(let i=0;i<4;i++){
+        puffRow(i*480 - (cpM % 480) - 60, 90 + (i%2)*46, "#ffffff");
+      }
+      // ...and identical bushes along the horizon
+      const bpM = cam.x*0.85;
+      for(let i=0;i<5;i++){
+        puffRow(i*390 - (bpM % 390) - 40, H*0.865, "#57d060");
+      }
+      return;
+    }
     if(theme==="city"){
       // dusk over the city — deep blue up top melting into sunset orange
       const g = ctx.createLinearGradient(0,0,0,H);
@@ -2481,6 +2541,88 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
         ctx.fillRect(x+pl.w-10, y+pl.h-5, 2, 2);
         break;
       }
+      case "marioground": {  // chunky classic ground blocks
+        ctx.fillStyle="#e8945a"; rr(x,y,pl.w,pl.h,4); ctx.fill();
+        ctx.strokeStyle="rgba(120,50,20,.55)"; ctx.lineWidth=2;
+        for(let r=0;r<pl.h;r+=26){
+          ctx.beginPath(); ctx.moveTo(x,y+r); ctx.lineTo(x+pl.w,y+r); ctx.stroke();
+        }
+        for(let r=0;r<pl.h;r+=26){
+          const off=(r/26)%2?26:13;
+          for(let i=off;i<pl.w;i+=26){
+            ctx.beginPath(); ctx.moveTo(x+i,y+r); ctx.lineTo(x+i,y+Math.min(r+26,pl.h)); ctx.stroke();
+          }
+        }
+        ctx.fillStyle="#ffc088"; rr(x,y,pl.w,6,3); ctx.fill();
+        break;
+      }
+      case "pipe": {  // green warp pipe with a lip
+        ctx.fillStyle="#2a9a3a";
+        rr(x+4, y+10, pl.w-8, pl.h-10, 2); ctx.fill();
+        ctx.fillStyle="#1a7a2a";
+        rr(x+4+(pl.w-8)*0.62, y+10, (pl.w-8)*0.38, pl.h-10, 2); ctx.fill();
+        ctx.fillStyle="rgba(255,255,255,.35)";
+        rr(x+9, y+12, 5, pl.h-14, 2); ctx.fill();
+        ctx.fillStyle="#33ac44";
+        rr(x, y, pl.w, 12, 4); ctx.fill();
+        ctx.fillStyle="#1a7a2a";
+        rr(x+pl.w*0.62, y, pl.w*0.38, 12, 4); ctx.fill();
+        ctx.fillStyle="rgba(255,255,255,.4)";
+        rr(x+4, y+2, 6, 4, 2); ctx.fill();
+        break;
+      }
+      case "brick": {  // bounceable brick block (also used for the stairs)
+        let dyB = 0;
+        if(pl.bumpAt){
+          const dt = Date.now() - pl.bumpAt;
+          if(dt < 180) dyB = -Math.sin(dt/180*Math.PI)*6;
+        }
+        const by = y + dyB;
+        ctx.fillStyle="#c05a2a"; rr(x, by, pl.w, pl.h, 3); ctx.fill();
+        ctx.strokeStyle="rgba(60,20,10,.55)"; ctx.lineWidth=1.4;
+        for(let r=13;r<pl.h;r+=13){
+          ctx.beginPath(); ctx.moveTo(x,by+r); ctx.lineTo(x+pl.w,by+r); ctx.stroke();
+        }
+        for(let r=0;r<pl.h;r+=13){
+          const off=(r/13)%2?13:6;
+          for(let i=off;i<pl.w;i+=13){
+            ctx.beginPath(); ctx.moveTo(x+i,by+r); ctx.lineTo(x+i,by+Math.min(r+13,pl.h)); ctx.stroke();
+          }
+        }
+        ctx.fillStyle="rgba(255,255,255,.25)";
+        rr(x+1, by+1, pl.w-2, 3, 2); ctx.fill();
+        break;
+      }
+      case "qbox": {  // mystery box — bonk from below for a power-up
+        let dyQ = 0;
+        if(pl.bumpAt){
+          const dt = Date.now() - pl.bumpAt;
+          if(dt < 180) dyQ = -Math.sin(dt/180*Math.PI)*6;
+        }
+        const by = y + dyQ;
+        const used = pl.used;
+        ctx.fillStyle = used ? "#8a6a4a" : "#e8a020";
+        rr(x+1, by+1, pl.w-2, pl.h-2, 4); ctx.fill();
+        ctx.fillStyle = used ? "#6a4e34" : "#c97f10";
+        rr(x+1, by+pl.h*0.55, pl.w-2, pl.h*0.45-1, 4); ctx.fill();
+        ctx.fillStyle = used ? "rgba(255,255,255,.15)" : "#ffd23f";
+        rr(x+3, by+3, pl.w-6, 4, 2); ctx.fill();
+        ctx.fillStyle = used ? "#54402a" : "#8a5a10";
+        for(const [rxQ,ryQ] of [[x+4,by+4],[x+pl.w-6,by+4],[x+4,by+pl.h-6],[x+pl.w-6,by+pl.h-6]]){
+          ctx.fillRect(rxQ, ryQ, 2.5, 2.5);
+        }
+        if(!used){
+          const pulse = 0.75 + Math.sin(Date.now()/300 + pl.x)*0.25;
+          ctx.save();
+          ctx.globalAlpha = pulse;
+          ctx.fillStyle = "#fff";
+          ctx.font = "800 16px 'Baloo 2', sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("?", x+pl.w/2, by+pl.h*0.75);
+          ctx.restore();
+        }
+        break;
+      }
       case "sidewalk": {  // concrete sidewalk with curb, joints, manhole covers, and a hydrant
         ctx.fillStyle="#9a9aac"; rr(x,y,pl.w,pl.h,8); ctx.fill();
         ctx.fillStyle="#7a7a8e"; rr(x, y+pl.h*0.5, pl.w, pl.h*0.5, 8); ctx.fill();
@@ -3661,6 +3803,21 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       ctx.closePath(); ctx.fill();
       ctx.restore(); return;
     }
+    if(c.t==="coin"){
+      // spinning gold coin
+      const spin = Math.abs(Math.sin(c.phase*1.4));
+      const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, 16);
+      glow.addColorStop(0, "rgba(255,220,100,.55)");
+      glow.addColorStop(1, "rgba(255,220,100,0)");
+      ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(0, 0, 16, 0, 7); ctx.fill();
+      ctx.fillStyle = "#ffd23f";
+      ctx.beginPath(); ctx.ellipse(0, 0, Math.max(1.6, 8*spin), 9, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "#e8a020";
+      ctx.beginPath(); ctx.ellipse(0, 0, Math.max(1.0, 5.5*spin), 6.5, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "#ffe88a";
+      ctx.beginPath(); ctx.ellipse(0, 0, Math.max(0.6, 3*spin), 4, 0, 0, 7); ctx.fill();
+      ctx.restore(); return;
+    }
     if(c.t==="donut"){
       // pink-frosted donut with sprinkles
       ctx.rotate(Math.sin(c.phase*0.8)*0.15);
@@ -3907,6 +4064,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
                     : theme==="dino" ? "#a8d4a0"
                     : theme==="monsoon" ? "#a8c098"
                     : theme==="moria" ? "#9aaa82"
+                    : theme==="mushroom" ? "#a8e89a"
                     : theme==="city" ? "#c0c4d0"
                     : theme==="jungle" ? "#c9a8ee"
                     : theme==="kittyland" ? "#c8c8d8"
@@ -3975,6 +4133,39 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       // helmet highlight
       ctx.fillStyle = "rgba(255,255,255,.7)";
       ctx.beginPath(); ctx.ellipse(-e.w*0.18, -e.h*1.10+wob, 4, 1.8, -0.4, 0, 7); ctx.fill();
+      ctx.restore(); return;
+    }
+    if(theme==="mushroom"){
+      // waddling turtle — round green shell, determined little face
+      ctx.scale(e.vx >= 0 ? 1 : -1, 1);
+      const tT = Date.now()/150;
+      const wad = Math.sin(tT + e.x*0.06);
+      const bob = Math.abs(wad)*1.5;
+      // legs
+      ctx.fillStyle="#e8b84a";
+      ctx.beginPath(); ctx.ellipse(-e.w*0.18 - wad*3, -3, 5, 4.5, 0, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse( e.w*0.10 + wad*3, -3, 5, 4.5, 0, 0, 7); ctx.fill();
+      // shell
+      ctx.fillStyle="#2a9a3a";
+      ctx.beginPath(); ctx.ellipse(-e.w*0.05, -e.h*0.45+bob, e.w*0.34, e.h*0.30, 0, 0, 7); ctx.fill();
+      // scute lines
+      ctx.strokeStyle="rgba(20,80,30,.6)"; ctx.lineWidth=1.6;
+      ctx.beginPath(); ctx.moveTo(-e.w*0.05, -e.h*0.73+bob); ctx.lineTo(-e.w*0.05, -e.h*0.20+bob); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(-e.w*0.05, -e.h*0.45+bob, e.w*0.20, e.h*0.16, 0, 0, 7); ctx.stroke();
+      // cream shell rim
+      ctx.fillStyle="#f4e0b0";
+      rr(-e.w*0.39, -e.h*0.28+bob, e.w*0.68, 6, 3); ctx.fill();
+      // head
+      ctx.fillStyle="#e8b84a";
+      ctx.beginPath(); ctx.ellipse(e.w*0.36, -e.h*0.52+bob, 7.5, 6.5, 0, 0, 7); ctx.fill();
+      // eye + determined brow
+      ctx.fillStyle="#fff";
+      ctx.beginPath(); ctx.arc(e.w*0.40, -e.h*0.56+bob, 2.6, 0, 7); ctx.fill();
+      ctx.fillStyle="#1a1a24";
+      ctx.beginPath(); ctx.arc(e.w*0.41, -e.h*0.56+bob, 1.3, 0, 7); ctx.fill();
+      ctx.strokeStyle="#1a1a24"; ctx.lineWidth=1.6; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(e.w*0.33, -e.h*0.65+bob); ctx.lineTo(e.w*0.45, -e.h*0.61+bob); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(e.w*0.44, -e.h*0.47+bob); ctx.lineTo(e.w*0.48, -e.h*0.47+bob); ctx.stroke();
       ctx.restore(); return;
     }
     if(theme==="city"){
@@ -4959,6 +5150,123 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     const b = boss; const x = b.x - cam.x, y = b.y;
     if(x<-150||x>W+150) return;
     const flash = b.alive && b.hitCd>0 && Math.floor(b.hitCd/4)%2===0;
+    if(theme==="mushroom"){
+      // --- Koopa King ---
+      const skin  = flash ? "#ffe9a8" : "#e8c05a";
+      const skin2 = flash ? "#e8c988" : "#c99a3a";
+      const shell = flash ? "#a8e888" : "#2a9a3a";
+      ctx.save(); ctx.translate(x+b.w/2, y+b.h); ctx.scale(b.face,1);
+      const bob = Math.sin(b.animT*0.14)*3;
+      // spiked shell on the back
+      ctx.fillStyle = shell;
+      ctx.beginPath(); ctx.ellipse(-b.w*0.22, -b.h*0.52+bob, b.w*0.34, b.h*0.34, -0.15, 0, 7); ctx.fill();
+      ctx.fillStyle = "#fff6ea";
+      for(let i=0;i<4;i++){
+        const a = Math.PI*0.65 + i*0.42;
+        const sxK = -b.w*0.22 + Math.cos(a)*b.w*0.34;
+        const syK = -b.h*0.52 + Math.sin(a)*b.h*0.34 + bob;
+        ctx.beginPath();
+        ctx.moveTo(sxK-5, syK+3);
+        ctx.lineTo(sxK + Math.cos(a)*11, syK + Math.sin(a)*11);
+        ctx.lineTo(sxK+5, syK+3);
+        ctx.closePath(); ctx.fill();
+      }
+      // tail
+      ctx.fillStyle = skin;
+      ctx.beginPath();
+      ctx.moveTo(-b.w*0.42, -b.h*0.24+bob);
+      ctx.quadraticCurveTo(-b.w*0.68, -b.h*0.20+bob, -b.w*0.60, -b.h*0.04+bob);
+      ctx.quadraticCurveTo(-b.w*0.46, -b.h*0.10+bob, -b.w*0.34, -b.h*0.08+bob);
+      ctx.closePath(); ctx.fill();
+      // legs with claws
+      ctx.fillStyle = skin2;
+      rr(-b.w*0.26, -30, 22, 30, 7); ctx.fill();
+      rr( b.w*0.06, -30, 22, 30, 7); ctx.fill();
+      ctx.fillStyle = "#fff6ea";
+      for(const lx of [-b.w*0.26, b.w*0.06]){
+        for(let i=0;i<3;i++){
+          ctx.beginPath();
+          ctx.moveTo(lx+3+i*7, -3); ctx.lineTo(lx+6+i*7, 3); ctx.lineTo(lx+9+i*7, -3);
+          ctx.closePath(); ctx.fill();
+        }
+      }
+      // belly — tan with plate lines
+      ctx.fillStyle = skin;
+      ctx.beginPath(); ctx.ellipse(b.w*0.02, -b.h*0.48+bob, b.w*0.30, b.h*0.36, 0, 0, 7); ctx.fill();
+      ctx.strokeStyle = "rgba(140,100,40,.5)"; ctx.lineWidth = 2;
+      for(let i=0;i<3;i++){
+        ctx.beginPath();
+        ctx.moveTo(-b.w*0.18, -b.h*(0.30+i*0.14)+bob);
+        ctx.lineTo( b.w*0.22, -b.h*(0.30+i*0.14)+bob);
+        ctx.stroke();
+      }
+      // arm raised with claws
+      ctx.fillStyle = skin2;
+      ctx.save();
+      ctx.translate(b.w*0.26, -b.h*0.62+bob);
+      ctx.rotate(Math.sin(b.animT*0.1)*0.25 - 0.5);
+      rr(-6, -26, 13, 30, 6); ctx.fill();
+      // spiked cuff
+      ctx.fillStyle = "#3a3a48";
+      rr(-7, -14, 15, 6, 2); ctx.fill();
+      ctx.fillStyle = "#fff6ea";
+      ctx.beginPath(); ctx.moveTo(-6,-14); ctx.lineTo(-2,-20); ctx.lineTo(2,-14); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(2,-14); ctx.lineTo(6,-20); ctx.lineTo(8,-14); ctx.closePath(); ctx.fill();
+      // claws
+      for(let i=0;i<3;i++){
+        ctx.beginPath();
+        ctx.moveTo(-5+i*5, -26); ctx.lineTo(-3+i*5, -33); ctx.lineTo(-1+i*5, -26);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+      // head — green with tan snout, red mane, little horns
+      const hy2 = -b.h*0.92+bob;
+      // mane
+      ctx.fillStyle = flash ? "#ff9a8a" : "#e84855";
+      for(let i=0;i<5;i++){
+        const ma = -0.9 + i*0.42;
+        ctx.beginPath();
+        ctx.ellipse(-b.w*0.06 + Math.cos(ma)*16, hy2 - 6 + Math.sin(ma)*14, 7, 11, ma, 0, 7);
+        ctx.fill();
+      }
+      ctx.fillStyle = shell;
+      ctx.beginPath(); ctx.arc(b.w*0.06, hy2, b.w*0.19, 0, 7); ctx.fill();
+      // horns
+      ctx.fillStyle = "#fff6ea";
+      ctx.beginPath(); ctx.moveTo(-b.w*0.06, hy2-12); ctx.lineTo(-b.w*0.10, hy2-26); ctx.lineTo(b.w*0.00, hy2-16); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(b.w*0.16, hy2-14); ctx.lineTo(b.w*0.22, hy2-27); ctx.lineTo(b.w*0.24, hy2-12); ctx.closePath(); ctx.fill();
+      // snout
+      ctx.fillStyle = skin;
+      ctx.beginPath(); ctx.ellipse(b.w*0.20, hy2+6, 14, 10, 0.1, 0, 7); ctx.fill();
+      // nostrils
+      ctx.fillStyle = "#7a5a20";
+      ctx.beginPath(); ctx.arc(b.w*0.26, hy2+3, 1.8, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(b.w*0.29, hy2+7, 1.8, 0, 7); ctx.fill();
+      // fangs
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.moveTo(b.w*0.12, hy2+13); ctx.lineTo(b.w*0.15, hy2+19); ctx.lineTo(b.w*0.18, hy2+13); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(b.w*0.22, hy2+14); ctx.lineTo(b.w*0.25, hy2+20); ctx.lineTo(b.w*0.28, hy2+14); ctx.closePath(); ctx.fill();
+      // angry eyes + brows
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(b.w*0.05, hy2-4, 4.5, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(b.w*0.16, hy2-5, 4, 0, 7); ctx.fill();
+      ctx.fillStyle = "#e8542a";
+      ctx.beginPath(); ctx.arc(b.w*0.06, hy2-4, 2.2, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(b.w*0.17, hy2-5, 2, 0, 7); ctx.fill();
+      ctx.strokeStyle = "#1a1a24"; ctx.lineWidth = 2.6; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(-b.w*0.01, hy2-11); ctx.lineTo(b.w*0.10, hy2-8); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(b.w*0.12, hy2-9); ctx.lineTo(b.w*0.21, hy2-11); ctx.stroke();
+      ctx.restore();
+      // HP pips — little green shells
+      const cxK = x + b.w/2;
+      for(let i=0;i<3;i++){
+        ctx.fillStyle = i<b.hp ? "#2a9a3a" : "rgba(255,255,255,.35)";
+        ctx.beginPath(); ctx.ellipse(cxK-22+i*18, y-16, 7, 5.5, 0, Math.PI, 0); ctx.fill();
+        ctx.fillStyle = i<b.hp ? "#f4e0b0" : "rgba(255,255,255,.25)";
+        rr(cxK-29+i*18, y-16, 14, 3, 1.5); ctx.fill();
+      }
+      return;
+    }
     if(theme==="moria"){
       // --- The Balrog of Morgoth ---
       // hulking shadow demon, smouldering body, wreathed in flame, horns, fiery whip
@@ -5851,6 +6159,60 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
         ctx.moveTo(x-2, pcy-52); ctx.quadraticCurveTo(x, pcy-52-fl*0.65, x+2, pcy-52);
         ctx.closePath(); ctx.fill();
       }
+    } else if(theme==="mushroom"){
+      const tG = Date.now()/500;
+      // brick castle
+      ctx.fillStyle="#c05a2a";
+      rr(x+18, baseY-74, 96, 72, 3); ctx.fill();
+      ctx.fillStyle="#9a4420";
+      rr(x+18, baseY-74, 18, 72, 3); ctx.fill();
+      ctx.fillStyle="#c05a2a";
+      for(let i=0;i<5;i++){ ctx.fillRect(x+20+i*19, baseY-84, 12, 10); }
+      rr(x+40, baseY-108, 52, 36, 3); ctx.fill();
+      for(let i=0;i<3;i++){ ctx.fillRect(x+42+i*18, baseY-118, 11, 10); }
+      ctx.strokeStyle="rgba(60,20,10,.45)"; ctx.lineWidth=1.2;
+      for(let r=baseY-64; r<baseY-6; r+=13){
+        ctx.beginPath(); ctx.moveTo(x+20,r); ctx.lineTo(x+112,r); ctx.stroke();
+      }
+      // arched castle door
+      ctx.fillStyle = goalActive ? "#ffd23f" : "#3a1a0e";
+      ctx.beginPath();
+      ctx.moveTo(x+54, baseY-2); ctx.lineTo(x+54, baseY-26);
+      ctx.quadraticCurveTo(x+66, baseY-38, x+78, baseY-26);
+      ctx.lineTo(x+78, baseY-2); ctx.closePath(); ctx.fill();
+      // keep window
+      ctx.fillStyle = goalActive ? "#fff2a8" : "#2a120a";
+      rr(x+60, baseY-100, 12, 16, 6); ctx.fill();
+      // flagpole in front
+      ctx.strokeStyle="#3aa858"; ctx.lineWidth=4; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(x-14, baseY); ctx.lineTo(x-14, baseY-132); ctx.stroke();
+      ctx.fillStyle="#ffd23f";
+      ctx.beginPath(); ctx.arc(x-14, baseY-134, 5, 0, 7); ctx.fill();
+      // flag rides to the top when the goal opens
+      const fy = goalActive ? baseY-124 + Math.sin(tG)*2 : baseY-58;
+      ctx.fillStyle = goalActive ? "#e84855" : "#8a5a5a";
+      ctx.beginPath();
+      ctx.moveTo(x-16, fy);
+      ctx.lineTo(x-52, fy+12);
+      ctx.lineTo(x-16, fy+24);
+      ctx.closePath(); ctx.fill();
+      // paw emblem
+      ctx.fillStyle="rgba(255,255,255,.9)";
+      ctx.beginPath(); ctx.ellipse(x-32, fy+14, 4, 3.4, 0, 0, 7); ctx.fill();
+      for(let t2=0;t2<3;t2++){
+        ctx.beginPath(); ctx.arc(x-36.5+t2*4.4, fy+8, 1.6, 0, 7); ctx.fill();
+      }
+      if(goalActive){
+        for(let i=0;i<5;i++){
+          const a = tG*1.4 + i*1.25;
+          ctx.fillStyle = "rgba(255,255,255,"+(0.5+Math.sin(tG*2+i)*0.3)+")";
+          ctx.beginPath(); ctx.arc(x-14+Math.cos(a)*40, baseY-80+Math.sin(a*1.2)*30, 1.8, 0, 7); ctx.fill();
+        }
+      } else {
+        ctx.strokeStyle="rgba(200,200,210,.7)"; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(x+54, baseY-12); ctx.lineTo(x+78, baseY-26); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x+54, baseY-26); ctx.lineTo(x+78, baseY-12); ctx.stroke();
+      }
     } else if(theme==="city"){
       const tG = Date.now()/500;
       // glow behind the tower
@@ -6582,6 +6944,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
                     : theme==="dino" ? "🥚 HATCH"
                     : theme==="monsoon" ? "⛵ BOARD"
                     : theme==="moria" ? "🗝️ MELLON"
+                    : theme==="mushroom" ? "🏁 FLAGPOLE"
                     : theme==="city" ? "🏙️ PENTHOUSE"
                     : theme==="jungle" ? "🛕 TEMPLE"
                     : theme==="kittyland" ? "🐱 MEOW MANOR"
@@ -6774,6 +7137,23 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       // tiny highlight on the glass
       ctx.fillStyle="rgba(255,255,255,.7)";
       ctx.beginPath(); ctx.ellipse(bw*0.18, hy-7, 3, 1.6, -0.4, 0, 7); ctx.fill();
+    }
+    if(theme==="mushroom"){
+      // bright red hero cap, brim forward, paw badge
+      const hx = bw*0.05, capY = hy - bw*0.28;
+      ctx.fillStyle="rgba(0,0,0,.18)";
+      ctx.beginPath(); ctx.ellipse(hx, capY+3, bw*0.38, 3, 0, 0, 7); ctx.fill();
+      ctx.fillStyle="#e84855";
+      ctx.beginPath(); ctx.ellipse(hx, capY-4, bw*0.30, 9, 0, 0, 7); ctx.fill();
+      ctx.fillStyle="#c02838";
+      ctx.beginPath(); ctx.ellipse(hx+bw*0.30, capY, bw*0.20, 4, 0.1, 0, 7); ctx.fill();
+      ctx.fillStyle="#fff";
+      ctx.beginPath(); ctx.arc(hx+bw*0.02, capY-6, 5.5, 0, 7); ctx.fill();
+      ctx.fillStyle="#e84855";
+      ctx.beginPath(); ctx.ellipse(hx+bw*0.02, capY-4.5, 2.4, 2, 0, 0, 7); ctx.fill();
+      for(let t2=0;t2<3;t2++){
+        ctx.beginPath(); ctx.arc(hx+bw*0.02-2.2+t2*2.2, capY-8, 1.1, 0, 7); ctx.fill();
+      }
     }
     if(theme==="city"){
       // sideways baseball cap

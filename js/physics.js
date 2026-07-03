@@ -11,7 +11,7 @@
   // (coyote time + buffer), gravity, fly thrust, axis-separated collision,
   // and moving-platform carry. Pure of DOM/canvas/audio so a Node-based
   // level validator can drive it; side effects go through the fx callbacks.
-  export function stepPlayer(p, platforms, keys, fx = { jump(){}, flyPuff(){} }){
+  export function stepPlayer(p, platforms, keys, fx = { jump(){}, flyPuff(){}, bonk(){} }){
     // moving platforms
     for(const pl of platforms){
       if(pl.baseX === undefined) continue;
@@ -77,7 +77,7 @@
     for(const pl of platforms){
       if(aabb(p,pl)){
         if(p.vy>0){ p.y = pl.y - p.h; p.vy=0; p.onGround=true; }
-        else if(p.vy<0){ p.y = pl.y + pl.h; p.vy=0; }
+        else if(p.vy<0){ p.y = pl.y + pl.h; p.vy=0; fx.bonk(pl); }
       }
     }
 
