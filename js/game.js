@@ -267,7 +267,13 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     collectibles = L.collectibles.map(c => {
       let ny = c.y;
       if(c.y < 380)         ny = c.y - FLOAT_LIFT;      // above floating platforms
-      else if(!overGround(c.x)) ny = 332;               // chasm pickup → onto arc
+      else if(!overGround(c.x)){
+        // chasm pickup → onto the jump arc; but if a stepping-stone float
+        // hangs over the pit there, sit it on the stone instead of under it
+        const roof = platforms.filter(pl => pl.y < 400 && c.x >= pl.x - 4 && c.x <= pl.x + pl.w + 4)
+                              .sort((a,b) => b.y - a.y)[0];
+        ny = roof ? roof.y - 26 : 332;
+      }
       return {...c, y: ny, got:false, phase:Math.random()*Math.PI*2};
     });
     randomizeCandyDrops(collectibles);
