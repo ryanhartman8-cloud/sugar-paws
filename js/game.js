@@ -2586,13 +2586,14 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
         const by = y + dyB;
         ctx.fillStyle="#c05a2a"; rr(x, by, pl.w, pl.h, 3); ctx.fill();
         ctx.strokeStyle="rgba(60,20,10,.55)"; ctx.lineWidth=1.4;
-        for(let r=13;r<pl.h;r+=13){
+        const cellB = Math.max(13, Math.ceil(pl.h/2/Math.max(1, Math.round(pl.h/34))));
+        for(let r=cellB;r<pl.h;r+=cellB){
           ctx.beginPath(); ctx.moveTo(x,by+r); ctx.lineTo(x+pl.w,by+r); ctx.stroke();
         }
-        for(let r=0;r<pl.h;r+=13){
-          const off=(r/13)%2?13:6;
-          for(let i=off;i<pl.w;i+=13){
-            ctx.beginPath(); ctx.moveTo(x+i,by+r); ctx.lineTo(x+i,by+Math.min(r+13,pl.h)); ctx.stroke();
+        for(let r=0;r<pl.h;r+=cellB){
+          const off=(r/cellB)%2?cellB:cellB/2;
+          for(let i=off;i<pl.w;i+=cellB){
+            ctx.beginPath(); ctx.moveTo(x+i,by+r); ctx.lineTo(x+i,by+Math.min(r+cellB,pl.h)); ctx.stroke();
           }
         }
         ctx.fillStyle="rgba(255,255,255,.25)";
@@ -2622,7 +2623,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
           ctx.save();
           ctx.globalAlpha = pulse;
           ctx.fillStyle = "#fff";
-          ctx.font = "800 16px 'Baloo 2', sans-serif";
+          ctx.font = "800 " + Math.round(pl.h*0.62) + "px 'Baloo 2', sans-serif";
           ctx.textAlign = "center";
           ctx.fillText("?", x+pl.w/2, by+pl.h*0.75);
           ctx.restore();
