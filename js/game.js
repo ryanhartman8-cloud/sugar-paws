@@ -4063,7 +4063,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
                     : theme==="toy" ? "#c8c8d6"
                     : theme==="dino" ? "#a8d4a0"
                     : theme==="monsoon" ? "#a8c098"
-                    : theme==="moria" ? "#9aaa82"
+                    : theme==="moria" ? "#aac084"
                     : theme==="mushroom" ? "#a8e89a"
                     : theme==="city" ? "#c0c4d0"
                     : theme==="jungle" ? "#c9a8ee"
@@ -4486,7 +4486,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       ctx.scale(e.vx >= 0 ? 1 : -1, 1);
       const wob = Math.sin(e.x*0.18)*1.2;
       const stride = Math.sin(e.x*0.4)*2.5;
-      const skin = "#6a8050", skinD = "#46583a", scar = "#3a4a2a";
+      const skin = "#84a659", skinD = "#59723e", scar = "#475c30";
       // legs — straight, sturdy, planted
       ctx.fillStyle = skinD;
       rr(-e.w*0.22, -22+stride*0.5, 12, 22, 3); ctx.fill();
@@ -4553,6 +4553,28 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       rr(-e.w*0.46, -e.h*1.85+wob, 10, e.h*1.10, 3); ctx.fill();
       // back hand (closed fist)
       ctx.beginPath(); ctx.arc(-e.w*0.41, -e.h*0.80+wob, 6, 0, 7); ctx.fill();
+      // burning torch in the back fist — lights the goblin in the cave dark
+      const flkG = 0.75 + Math.sin(Date.now()/110 + e.x)*0.25;
+      ctx.fillStyle = "#4a2e14";
+      rr(-e.w*0.445, -e.h*1.46+wob, 5, e.h*0.70, 2); ctx.fill();
+      ctx.fillStyle = "#2a1a0e";
+      rr(-e.w*0.47, -e.h*1.52+wob, 9, 6, 2); ctx.fill();
+      const tgx = -e.w*0.415, tgy = -e.h*1.60+wob;
+      const tg = ctx.createRadialGradient(tgx, tgy, 2, tgx, tgy, 36);
+      tg.addColorStop(0, "rgba(255,170,60,.5)");
+      tg.addColorStop(1, "rgba(255,120,30,0)");
+      ctx.fillStyle = tg;
+      ctx.fillRect(tgx-36, tgy-36, 72, 72);
+      ctx.fillStyle = "rgba(255,120,30,"+(0.9*flkG)+")";
+      ctx.beginPath();
+      ctx.moveTo(tgx-5, tgy+6);
+      ctx.quadraticCurveTo(tgx + Math.sin(Date.now()/130)*2, tgy - 12 - flkG*6, tgx+5, tgy+6);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "rgba(255,220,120,"+(0.95*flkG)+")";
+      ctx.beginPath();
+      ctx.moveTo(tgx-2.6, tgy+5);
+      ctx.quadraticCurveTo(tgx, tgy - 5 - flkG*3, tgx+2.6, tgy+5);
+      ctx.closePath(); ctx.fill();
       // front arm hanging straight down at the side, gripping a club
       ctx.fillStyle = skin;
       rr(e.w*0.32, -e.h*1.85+wob, 11, e.h*1.20, 3); ctx.fill();
@@ -4596,15 +4618,15 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       // pointy ear poking up on the visible side
       ctx.fillStyle = skin;
       ctx.beginPath();
-      ctx.moveTo(-e.w*0.26, hY - e.h*0.05);
-      ctx.lineTo(-e.w*0.34, hY - e.h*0.45);
-      ctx.lineTo(-e.w*0.12, hY - e.h*0.22);
+      ctx.moveTo(-e.w*0.28, hY - e.h*0.02);
+      ctx.lineTo(-e.w*0.48, hY - e.h*0.62);
+      ctx.lineTo(-e.w*0.10, hY - e.h*0.24);
       ctx.closePath(); ctx.fill();
       ctx.fillStyle = skinD;
       ctx.beginPath();
-      ctx.moveTo(-e.w*0.22, hY - e.h*0.10);
-      ctx.lineTo(-e.w*0.28, hY - e.h*0.34);
-      ctx.lineTo(-e.w*0.16, hY - e.h*0.20);
+      ctx.moveTo(-e.w*0.24, hY - e.h*0.08);
+      ctx.lineTo(-e.w*0.38, hY - e.h*0.46);
+      ctx.lineTo(-e.w*0.14, hY - e.h*0.22);
       ctx.closePath(); ctx.fill();
       // earring
       ctx.fillStyle = "#aab0bc";
@@ -4631,10 +4653,13 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       ctx.moveTo( e.w*0.10, hY - e.h*0.02);
       ctx.lineTo( e.w*0.24, hY - e.h*0.08);
       ctx.stroke();
-      // glowing yellow eyes
-      ctx.fillStyle = "#ffe09a";
-      ctx.beginPath(); ctx.arc(-e.w*0.06, hY + e.h*0.02, 2.8, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.arc( e.w*0.14, hY + e.h*0.02, 2.8, 0, 7); ctx.fill();
+      // glowing yellow eyes — lantern-bright in the dark
+      ctx.fillStyle = "rgba(255,220,110,.30)";
+      ctx.beginPath(); ctx.arc(-e.w*0.06, hY + e.h*0.02, 5.5, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.14, hY + e.h*0.02, 5.5, 0, 7); ctx.fill();
+      ctx.fillStyle = "#ffe86a";
+      ctx.beginPath(); ctx.arc(-e.w*0.06, hY + e.h*0.02, 3.1, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( e.w*0.14, hY + e.h*0.02, 3.1, 0, 7); ctx.fill();
       ctx.fillStyle = "#1a1a24";
       ctx.beginPath(); ctx.arc(-e.w*0.05, hY + e.h*0.02, 1.2, 0, 7); ctx.fill();
       ctx.beginPath(); ctx.arc( e.w*0.15, hY + e.h*0.02, 1.2, 0, 7); ctx.fill();
@@ -5268,57 +5293,86 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       return;
     }
     if(theme==="moria"){
-      // --- The Balrog of Morgoth ---
-      // hulking shadow demon, smouldering body, wreathed in flame, horns, fiery whip
+      // --- The Balrog of Morgoth — shadow and flame ---
       const tB = Date.now()/180;
-      const body  = flash ? "#a85a3a" : "#1a0a08";
-      const body2 = flash ? "#7a3520" : "#080406";
-      const ember = flash ? "#ffd23f" : "#ff7a1a";
-      // huge fiery aura behind the boss
-      const auraR = b.w*1.3 + Math.sin(tB)*4;
-      const aura = ctx.createRadialGradient(x+b.w/2, y+b.h*0.4, b.w*0.2, x+b.w/2, y+b.h*0.4, auraR);
-      aura.addColorStop(0, "rgba(255,150,40,.55)");
-      aura.addColorStop(0.5, "rgba(255,70,20,.25)");
+      const body  = flash ? "#b06040" : "#2c1310";
+      const body2 = flash ? "#7a3520" : "#170b0a";
+      const ember = flash ? "#ffd23f" : "#ff8a2a";
+      // huge fiery aura behind the boss (rect covers the full gradient radius
+      // so the glow fades out inside it — no hard rectangle seam)
+      const auraR = b.w*1.5 + Math.sin(tB)*5;
+      const acx = x + b.w/2, acy = y + b.h*0.35;
+      const aura = ctx.createRadialGradient(acx, acy, b.w*0.15, acx, acy, auraR);
+      aura.addColorStop(0, "rgba(255,150,40,.6)");
+      aura.addColorStop(0.5, "rgba(255,80,25,.28)");
       aura.addColorStop(1, "rgba(255,70,20,0)");
       ctx.fillStyle = aura;
-      ctx.fillRect(x - b.w*0.5, y - b.h*0.6, b.w*2, b.h*2);
-      ctx.save(); ctx.translate(x+b.w/2, y+b.h); ctx.scale(b.face,1);
+      ctx.fillRect(acx - auraR, acy - auraR, auraR*2, auraR*2);
+      ctx.save(); ctx.translate(x+b.w/2, y+b.h); ctx.scale(b.face*1.22, 1.22);
       const bob = Math.sin(b.animT*0.13)*3;
-      // tail dragging behind, glowing tip
-      ctx.strokeStyle = body; ctx.lineWidth = 12; ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(-b.w*0.30, -b.h*0.30+bob);
-      ctx.quadraticCurveTo(-b.w*0.70, -b.h*0.05+bob, -b.w*0.90, -b.h*0.30+bob + Math.sin(tB*0.7)*4);
-      ctx.stroke();
-      ctx.fillStyle = ember;
-      ctx.beginPath();
-      ctx.arc(-b.w*0.90, -b.h*0.30+bob + Math.sin(tB*0.7)*4, 5, 0, 7); ctx.fill();
-      // huge bat-like wings folded behind, partially extended
+      // --- whip of flame lashing behind from the back hand ---
+      const lash = Math.sin(tB*0.6);
+      const wx0 = -b.w*0.40, wy0 = -b.h*0.60+bob;
+      const wxc = -b.w*0.85, wyc = -b.h*(0.22 + lash*0.15)+bob;
+      const wx1 = -b.w*1.06, wy1 = -b.h*(0.92 + lash*0.28)+bob;
+      const whipStroke = (wdt, col) => {
+        ctx.strokeStyle = col; ctx.lineWidth = wdt; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(wx0, wy0);
+        ctx.quadraticCurveTo(wxc, wyc, wx1, wy1); ctx.stroke();
+      };
+      whipStroke(7, "rgba(200,40,10,.85)");
+      whipStroke(4, "rgba(255,120,30,.9)");
+      whipStroke(1.8, "rgba(255,220,110,.95)");
+      // crackling flame at the whip tip
+      ctx.fillStyle = "rgba(255,190,70,.95)";
+      ctx.beginPath(); ctx.arc(wx1, wy1, 4.5 + Math.sin(tB*2)*1.5, 0, 7); ctx.fill();
+      ctx.fillStyle = "rgba(255,240,170,.9)";
+      ctx.beginPath(); ctx.arc(wx1, wy1, 2, 0, 7); ctx.fill();
+      // sparks rising off the lash
+      ctx.fillStyle = "rgba(255,170,60,.8)";
+      for(let i=0;i<4;i++){
+        const wt = 0.35 + i*0.18;
+        const sx = (1-wt)*(1-wt)*wx0 + 2*(1-wt)*wt*wxc + wt*wt*wx1;
+        const sy = (1-wt)*(1-wt)*wy0 + 2*(1-wt)*wt*wyc + wt*wt*wy1 - 4 - ((tB*30 + i*17) % 14);
+        ctx.beginPath(); ctx.arc(sx, sy, 1.4, 0, 7); ctx.fill();
+      }
+      // huge bat-like wings, ember-lit membranes
       ctx.fillStyle = body2;
       ctx.beginPath();
       ctx.moveTo(-b.w*0.18, -b.h*0.85+bob);
       ctx.quadraticCurveTo(-b.w*0.70, -b.h*1.25+bob, -b.w*0.95, -b.h*0.55+bob);
       ctx.quadraticCurveTo(-b.w*0.50, -b.h*0.75+bob, -b.w*0.20, -b.h*0.55+bob);
       ctx.closePath(); ctx.fill();
-      // wing membrane veins (ember-lit)
-      ctx.strokeStyle = "rgba(255,120,40,.55)"; ctx.lineWidth = 1.4;
+      ctx.strokeStyle = "rgba(255,120,40,.6)"; ctx.lineWidth = 1.4;
       for(let i=0;i<3;i++){
         ctx.beginPath();
         ctx.moveTo(-b.w*0.20, -b.h*0.80+bob);
         ctx.lineTo(-b.w*0.55 - i*0.08*b.w, -b.h*(0.85 - i*0.12)+bob);
         ctx.stroke();
       }
-      // right wing mirrored
       ctx.fillStyle = body2;
       ctx.beginPath();
       ctx.moveTo(b.w*0.10, -b.h*0.85+bob);
       ctx.quadraticCurveTo(b.w*0.55, -b.h*1.15+bob, b.w*0.80, -b.h*0.50+bob);
       ctx.quadraticCurveTo(b.w*0.40, -b.h*0.72+bob, b.w*0.12, -b.h*0.55+bob);
       ctx.closePath(); ctx.fill();
-      // smoldering legs (massive, hooved)
+      // wing top edges catch the firelight
+      ctx.strokeStyle = "rgba(255,100,30,.5)"; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-b.w*0.18, -b.h*0.85+bob);
+      ctx.quadraticCurveTo(-b.w*0.70, -b.h*1.25+bob, -b.w*0.95, -b.h*0.55+bob);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(b.w*0.10, -b.h*0.85+bob);
+      ctx.quadraticCurveTo(b.w*0.55, -b.h*1.15+bob, b.w*0.80, -b.h*0.50+bob);
+      ctx.stroke();
+      // smoldering legs (massive, hooved), magma seams down the shins
       ctx.fillStyle = body;
       rr(-b.w*0.22, -b.h*0.30+bob, 22, b.h*0.30, 5); ctx.fill();
       rr( b.w*0.06, -b.h*0.30+bob, 22, b.h*0.30, 5); ctx.fill();
+      ctx.strokeStyle = "rgba(255,120,40,.7)"; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(-b.w*0.13, -b.h*0.28+bob); ctx.lineTo(-b.w*0.11, -b.h*0.06+bob); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo( b.w*0.15, -b.h*0.28+bob); ctx.lineTo( b.w*0.17, -b.h*0.06+bob); ctx.stroke();
       // cloven hooves
       ctx.fillStyle = body2;
       rr(-b.w*0.26, -16, 30, 16, 4); ctx.fill();
@@ -5326,11 +5380,17 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       ctx.fillStyle = ember;
       ctx.fillRect(-b.w*0.18, -3, 4, 3);
       ctx.fillRect( b.w*0.08, -3, 4, 3);
-      // hulking torso — wreathed in dark smoke + glowing magma cracks
+      // hulking torso
       ctx.fillStyle = body;
       rr(-b.w*0.42, -b.h*0.85+bob, b.w*0.84, b.h*0.65, 16); ctx.fill();
-      // chest magma cracks (the iconic glowing veins)
-      ctx.strokeStyle = "rgba(255,120,40,.85)"; ctx.lineWidth = 2.4;
+      // firelit rim along the leading edge of the body
+      ctx.strokeStyle = "rgba(255,130,40,.55)"; ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(b.w*0.38, -b.h*0.82+bob);
+      ctx.quadraticCurveTo(b.w*0.46, -b.h*0.52+bob, b.w*0.38, -b.h*0.24+bob);
+      ctx.stroke();
+      // magma cracks webbing across the chest
+      ctx.strokeStyle = "rgba(255,120,40,.9)"; ctx.lineWidth = 2.6;
       ctx.beginPath();
       ctx.moveTo(-b.w*0.30, -b.h*0.70+bob);
       ctx.lineTo(-b.w*0.10, -b.h*0.45+bob);
@@ -5341,12 +5401,28 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       ctx.lineTo( b.w*0.05, -b.h*0.30+bob);
       ctx.lineTo( b.w*0.28, -b.h*0.45+bob);
       ctx.stroke();
-      // hot orange highlights along the cracks
-      ctx.strokeStyle = "rgba(255,210,90,.7)"; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-b.w*0.36, -b.h*0.55+bob);
+      ctx.lineTo(-b.w*0.24, -b.h*0.50+bob);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo( b.w*0.10, -b.h*0.78+bob);
+      ctx.lineTo( b.w*0.20, -b.h*0.68+bob);
+      ctx.stroke();
+      // white-hot cores inside the cracks
+      ctx.strokeStyle = "rgba(255,220,110,.8)"; ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(-b.w*0.28, -b.h*0.70+bob);
       ctx.lineTo(-b.w*0.10, -b.h*0.46+bob); ctx.stroke();
-      // smoke rising from shoulders
+      ctx.beginPath();
+      ctx.moveTo(-b.w*0.18, -b.h*0.40+bob);
+      ctx.lineTo( b.w*0.05, -b.h*0.31+bob); ctx.stroke();
+      // soft glow bleeding out of the crack web
+      ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = "rgba(255,110,30,.16)";
+      ctx.beginPath(); ctx.ellipse(-b.w*0.02, -b.h*0.52+bob, b.w*0.34, b.h*0.24, 0, 0, 7); ctx.fill();
+      ctx.globalCompositeOperation = "source-over";
+      // smoke rising from the shoulders
       ctx.fillStyle = "rgba(30,20,18,.45)";
       for(let i=0;i<3;i++){
         const sx = -b.w*0.30 + i*b.w*0.30;
@@ -5354,32 +5430,19 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
         ctx.beginPath();
         ctx.arc(sx, sy - 14 - i*6, 9 + i*2, 0, 7); ctx.fill();
       }
-      // hulking arms — both hanging at the sides with massive clawed hands
+      // back arm gripping the whip
       ctx.fillStyle = body;
-      // back arm (behind the body)
       rr(-b.w*0.46, -b.h*0.80+bob, 14, b.h*0.55, 5); ctx.fill();
-      // back hand (closed fist)
-      ctx.beginPath(); ctx.arc(-b.w*0.39, -b.h*0.22+bob, 10, 0, 7); ctx.fill();
-      // back claws — dark hooks curving down
-      ctx.fillStyle = body2;
-      for(let i=0;i<3;i++){
-        ctx.beginPath();
-        ctx.moveTo(-b.w*0.42 + i*5, -b.h*0.14+bob);
-        ctx.quadraticCurveTo(-b.w*0.42 + i*5 + 2, -b.h*0.04+bob, -b.w*0.42 + i*5 + 4, -b.h*0.10+bob);
-        ctx.lineTo(-b.w*0.42 + i*5 + 2, -b.h*0.14+bob);
-        ctx.closePath(); ctx.fill();
-      }
-      // front arm (forward, slightly raised in a menacing reach)
+      ctx.beginPath(); ctx.arc(-b.w*0.40, -b.h*0.60+bob, 10, 0, 7); ctx.fill();
+      // front arm reaching forward with clawed grasp
       ctx.fillStyle = body;
       rr(b.w*0.30, -b.h*0.80+bob, 14, b.h*0.55, 5); ctx.fill();
-      // front hand — open clawed grasp
       ctx.beginPath(); ctx.arc(b.w*0.37, -b.h*0.22+bob, 11, 0, 7); ctx.fill();
-      // ember glow in the palm (cracks running through the skin)
       ctx.globalCompositeOperation = "lighter";
       ctx.fillStyle = "rgba(255,120,40,.45)";
       ctx.beginPath(); ctx.arc(b.w*0.37, -b.h*0.22+bob, 7, 0, 7); ctx.fill();
       ctx.globalCompositeOperation = "source-over";
-      // front claws — long hooked talons spread out
+      // long hooked talons, ember-tipped
       ctx.fillStyle = body2;
       const clawAng = Math.sin(b.animT*0.10) * 0.10;
       for(let i=0;i<4;i++){
@@ -5394,7 +5457,6 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
         ctx.lineTo(cx0 + Math.sin(a)*2, cy0 - Math.cos(a)*2);
         ctx.closePath(); ctx.fill();
       }
-      // glowing ember tips on the front claws
       ctx.globalCompositeOperation = "lighter";
       ctx.fillStyle = "rgba(255,170,60,.6)";
       for(let i=0;i<4;i++){
@@ -5404,12 +5466,26 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
         ctx.beginPath(); ctx.arc(cx1, cy1, 2.4, 0, 7); ctx.fill();
       }
       ctx.globalCompositeOperation = "source-over";
-      // huge horned head
       const hy = -b.h*1.02 + bob;
+      // --- mane of fire blazing up from the head and shoulders ---
+      for(let layer=0; layer<2; layer++){
+        ctx.fillStyle = layer===0 ? "rgba(255,90,20,.85)" : "rgba(255,190,60,.9)";
+        for(let i=0;i<8;i++){
+          const fa = -Math.PI*0.95 + i*(Math.PI*0.9/7);
+          const fbx = b.w*0.05 + Math.cos(fa)*b.w*(0.30 - layer*0.06);
+          const fby = hy + Math.sin(fa)*b.h*(0.20 - layer*0.04);
+          const fl = (11 + (i%3)*6 + Math.sin(tB*1.6 + i*1.7 + layer*2)*4) * (1 - layer*0.3);
+          ctx.beginPath();
+          ctx.moveTo(fbx - 4.5 + layer, fby);
+          ctx.quadraticCurveTo(fbx + Math.sin(tB + i)*3, fby - fl*1.7, fbx + 4.5 - layer, fby);
+          ctx.closePath(); ctx.fill();
+        }
+      }
+      // huge horned head
       ctx.fillStyle = body;
       ctx.beginPath();
       ctx.ellipse(b.w*0.05, hy, b.w*0.30, b.h*0.22, 0, 0, 7); ctx.fill();
-      // horns (curving back from the brow)
+      // horns curving back from the brow
       ctx.fillStyle = body2;
       ctx.beginPath();
       ctx.moveTo(-b.w*0.20, hy - b.h*0.08);
@@ -5423,32 +5499,40 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       ctx.lineTo(b.w*0.22, hy - b.h*0.26);
       ctx.quadraticCurveTo(b.w*0.15, hy - b.h*0.20, b.w*0.10, hy - b.h*0.10);
       ctx.closePath(); ctx.fill();
-      // horn ember tips
+      // horn edges lit by the mane
+      ctx.strokeStyle = "rgba(255,140,50,.6)"; ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(-b.w*0.20, hy - b.h*0.08);
+      ctx.quadraticCurveTo(-b.w*0.45, hy - b.h*0.30, -b.w*0.32, hy - b.h*0.46);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(b.w*0.20, hy - b.h*0.08);
+      ctx.quadraticCurveTo(b.w*0.45, hy - b.h*0.30, b.w*0.34, hy - b.h*0.46);
+      ctx.stroke();
       ctx.fillStyle = ember;
       ctx.beginPath(); ctx.arc(-b.w*0.34, hy - b.h*0.44, 2.6, 0, 7); ctx.fill();
       ctx.beginPath(); ctx.arc( b.w*0.36, hy - b.h*0.44, 2.6, 0, 7); ctx.fill();
-      // glowing eyes — two pits of fire
-      ctx.fillStyle = "rgba(255,180,40,.6)";
-      ctx.beginPath(); ctx.arc(-b.w*0.06, hy - b.h*0.02, 6, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.arc( b.w*0.14, hy - b.h*0.02, 6, 0, 7); ctx.fill();
+      // furnace eyes
+      ctx.fillStyle = "rgba(255,180,40,.7)";
+      ctx.beginPath(); ctx.arc(-b.w*0.06, hy - b.h*0.02, 7, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( b.w*0.14, hy - b.h*0.02, 7, 0, 7); ctx.fill();
       ctx.fillStyle = "#ffd23f";
-      ctx.beginPath(); ctx.arc(-b.w*0.06, hy - b.h*0.02, 2.6, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.arc( b.w*0.14, hy - b.h*0.02, 2.6, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(-b.w*0.06, hy - b.h*0.02, 3.2, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( b.w*0.14, hy - b.h*0.02, 3.2, 0, 7); ctx.fill();
       ctx.fillStyle = "#fff";
-      ctx.beginPath(); ctx.arc(-b.w*0.05, hy - b.h*0.03, 1.1, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.arc( b.w*0.15, hy - b.h*0.03, 1.1, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(-b.w*0.05, hy - b.h*0.03, 1.2, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc( b.w*0.15, hy - b.h*0.03, 1.2, 0, 7); ctx.fill();
       // furious brow lines
-      ctx.strokeStyle = "rgba(20,10,5,.8)"; ctx.lineWidth = 2.4; ctx.lineCap="round";
-      ctx.beginPath(); ctx.moveTo(-b.w*0.16, hy - b.h*0.10); ctx.lineTo(-b.w*0.02, hy - b.h*0.04); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo( b.w*0.20, hy - b.h*0.10); ctx.lineTo( b.w*0.06, hy - b.h*0.04); ctx.stroke();
-      // gaping fanged mouth — glows from inside
-      ctx.fillStyle = "rgba(255,90,20,.85)";
+      ctx.strokeStyle = "rgba(20,10,5,.85)"; ctx.lineWidth = 2.6; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(-b.w*0.17, hy - b.h*0.11); ctx.lineTo(-b.w*0.02, hy - b.h*0.04); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo( b.w*0.21, hy - b.h*0.11); ctx.lineTo( b.w*0.06, hy - b.h*0.04); ctx.stroke();
+      // gaping fanged mouth — a furnace inside
+      ctx.fillStyle = "rgba(255,90,20,.9)";
       ctx.beginPath();
       ctx.ellipse(b.w*0.04, hy + b.h*0.12, b.w*0.18, b.h*0.07, 0, 0, 7); ctx.fill();
       ctx.fillStyle = "#ffd23f";
       ctx.beginPath();
       ctx.ellipse(b.w*0.04, hy + b.h*0.12, b.w*0.12, b.h*0.04, 0, 0, 7); ctx.fill();
-      // fangs
       ctx.fillStyle = "#fff0d0";
       for(let i=0;i<5;i++){
         ctx.beginPath();
@@ -5457,20 +5541,19 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
         ctx.lineTo(-b.w*0.06 + i*5, hy + b.h*0.08);
         ctx.closePath(); ctx.fill();
       }
-      // tiny floating embers around the head
+      // embers swirling all around
       ctx.fillStyle = "rgba(255,180,60,.85)";
-      for(let i=0;i<6;i++){
-        const ea = tB*0.7 + i*1.2;
-        const ex = Math.cos(ea) * b.w*0.55;
-        const ey = -b.h*1.0 + Math.sin(ea*1.3)*8 - i*2;
-        ctx.beginPath(); ctx.arc(ex, ey, 1.6, 0, 7); ctx.fill();
+      for(let i=0;i<10;i++){
+        const ea = tB*0.7 + i*0.63;
+        const ex = Math.cos(ea) * b.w*(0.45 + (i%3)*0.12);
+        const ey = -b.h*(0.55 + (i%4)*0.18) + Math.sin(ea*1.3)*10;
+        ctx.beginPath(); ctx.arc(ex, ey, 1.2 + (i%3)*0.5, 0, 7); ctx.fill();
       }
       ctx.restore();
       // HP pips — red flame icons above the boss
       const cxB = x + b.w/2;
       for(let i=0;i<3;i++){
         ctx.fillStyle = i<b.hp ? "#ff5a1a" : "rgba(255,255,255,.35)";
-        // little flame pip
         ctx.beginPath();
         ctx.moveTo(cxB-24+i*17 + 6, y-24);
         ctx.quadraticCurveTo(cxB-24+i*17 + 12, y-18, cxB-24+i*17 + 6, y-10);
