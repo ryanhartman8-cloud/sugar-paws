@@ -7827,41 +7827,46 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       ctx.beginPath(); ctx.ellipse(bw*0.18, hy-7, 3, 1.6, -0.4, 0, 7); ctx.fill();
     }
     if(theme==="prairie"){
-      // Laura's cream sunbonnet, brim flaring forward, ties under the chin
-      const hx = bw*0.05, capY = hy - bw*0.26;
+      // Laura's cream sunbonnet — crown rides high on the head, brim flares
+      // forward over the brow, and the ribbon ties hang behind the ear so
+      // nothing crosses her face.
+      const hx = bw*0.05, capY = hy - bw*0.32;
       ctx.fillStyle="rgba(0,0,0,.16)";
-      ctx.beginPath(); ctx.ellipse(hx, capY+4, bw*0.36, 3, 0, 0, 7); ctx.fill();
-      // back curtain of the bonnet
+      ctx.beginPath(); ctx.ellipse(hx, capY+3, bw*0.34, 2.6, 0, 0, 7); ctx.fill();
+      // neck curtain, tucked behind the head
       ctx.fillStyle="#e8dcc2";
-      ctx.beginPath(); ctx.ellipse(hx-bw*0.22, capY+5, bw*0.16, 9, 0.25, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(hx-bw*0.26, capY+1, bw*0.13, 5.5, 0.3, 0, 7); ctx.fill();
       // crown
       ctx.fillStyle="#fdf4e0";
-      ctx.beginPath(); ctx.ellipse(hx-bw*0.03, capY-4, bw*0.29, 10, 0, 0, 7); ctx.fill();
-      // flaring brim over the face
+      ctx.beginPath(); ctx.ellipse(hx-bw*0.02, capY-4, bw*0.34, 8.2, 0, 0, 7); ctx.fill();
+      // brim flaring forward
       ctx.fillStyle="#fffaf0";
-      ctx.beginPath();
-      ctx.ellipse(hx+bw*0.24, capY-1, bw*0.19, 8.5, -0.22, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(hx+bw*0.26, capY-1.5, bw*0.21, 4.6, -0.25, 0, 7); ctx.fill();
       ctx.fillStyle="#e6d9bd";
-      ctx.beginPath();
-      ctx.ellipse(hx+bw*0.27, capY+1.5, bw*0.16, 4, -0.22, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(hx+bw*0.28, capY+0.4, bw*0.17, 2.4, -0.25, 0, 7); ctx.fill();
       // gathered seam across the crown
-      ctx.strokeStyle="#d8c9a8"; ctx.lineWidth=1.4;
-      ctx.beginPath(); ctx.ellipse(hx-bw*0.03, capY-4, bw*0.20, 6.5, 0, 0, 7); ctx.stroke();
-      // ribbon band + tie hanging down
-      ctx.strokeStyle="#e88ac0"; ctx.lineWidth=2.6; ctx.lineCap="round";
+      ctx.strokeStyle="#d8c9a8"; ctx.lineWidth=1.3;
+      ctx.beginPath(); ctx.ellipse(hx-bw*0.02, capY-5, bw*0.22, 5.2, 0, 0, 7); ctx.stroke();
+      // ribbon band around the base of the crown
+      ctx.strokeStyle="#e88ac0"; ctx.lineWidth=2.4; ctx.lineCap="round";
       ctx.beginPath();
-      ctx.moveTo(hx-bw*0.20, capY+3);
-      ctx.quadraticCurveTo(hx+bw*0.02, capY+7, hx+bw*0.20, capY+2);
+      ctx.moveTo(hx-bw*0.24, capY+1);
+      ctx.quadraticCurveTo(hx, capY+4, hx+bw*0.20, capY-1);
       ctx.stroke();
-      ctx.lineWidth=2;
+      // short ribbon ends trailing off the back — kept clear of her face
+      ctx.lineWidth=1.8;
       ctx.beginPath();
-      ctx.moveTo(hx-bw*0.14, capY+5);
-      ctx.quadraticCurveTo(hx-bw*0.20, capY+15, hx-bw*0.11, capY+21);
+      ctx.moveTo(hx-bw*0.28, capY+2);
+      ctx.quadraticCurveTo(hx-bw*0.40, capY+5, hx-bw*0.44, capY+2);
       ctx.stroke();
-      // tiny bow
+      ctx.beginPath();
+      ctx.moveTo(hx-bw*0.27, capY+3);
+      ctx.quadraticCurveTo(hx-bw*0.36, capY+8, hx-bw*0.33, capY+11);
+      ctx.stroke();
+      // little bow at the back
       ctx.fillStyle="#e88ac0";
-      ctx.beginPath(); ctx.ellipse(hx-bw*0.17, capY+4, 3.2, 2.2, -0.5, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(hx-bw*0.11, capY+6, 3.2, 2.2, 0.5, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(hx-bw*0.29, capY+0.5, 3, 2.1, -0.5, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(hx-bw*0.21, capY+2.5, 3, 2.1, 0.5, 0, 7); ctx.fill();
     }
     if(theme==="mushroom"){
       // bright red hero cap, brim forward, paw badge
