@@ -17,7 +17,8 @@ import { GROUND_Y } from "./physics.js";
     kittyland: { name:"Kitty Cat Island" },
     city:      { name:"Meowtropolis Downtown" },
     jungle:    { name:"Wildcat Jungle" },
-    mushroom:  { name:"Super Meow World" }
+    mushroom:  { name:"Super Meow World" },
+    prairie:   { name:"Little Paws on the Prairie" }
   };
 
   // ======================================================================
@@ -924,5 +925,69 @@ import { GROUND_Y } from "./physics.js";
       ],
       hazards: [],
       boss: { x:3600, w:110, h:92, hp:3, vx:1.8, min:3300, max:3840, name:"Koopa King" }
+    },
+    // -------- WORLD 17: Little Paws on the Prairie — homestead, wolves, grass fire --------
+    {
+      name: "Little Paws on the Prairie", theme: "prairie",
+      goalX: 4260, worldW: 4400,
+      platforms: [
+        // open grassland, broken by three grass fires
+        {x:0,    y:430, w:1000, h:170, t:"prairiedirt"},
+        {x:1100, y:430, w:980,  h:170, t:"prairiedirt"},
+        {x:2190, y:430, w:900,  h:170, t:"prairiedirt"},
+        {x:3210, y:430, w:1190, h:170, t:"prairiedirt"},
+        // hay bales, fence rails, wagons and a porch to climb (all over solid ground)
+        {x:300,  y:350, w:110, h:26, t:"haybale"},
+        {x:560,  y:320, w:100, h:26, t:"fencerail"},
+        {x:820,  y:350, w:110, h:26, t:"haybale"},
+        {x:1300, y:340, w:120, h:26, t:"wagon"},
+        {x:1560, y:312, w:100, h:26, t:"fencerail"},
+        {x:1820, y:346, w:110, h:26, t:"haybale"},
+        {x:2350, y:334, w:110, h:26, t:"porch"},
+        {x:2600, y:304, w:100, h:26, t:"fencerail"},
+        {x:2850, y:340, w:120, h:26, t:"wagon"},
+        {x:3350, y:344, w:110, h:26, t:"haybale"},
+        {x:3600, y:312, w:100, h:26, t:"fencerail"},
+      ],
+      collectibles: [
+        // wild berries picked along the trail
+        {x:355,  y:314, t:"berry"},
+        {x:610,  y:284, t:"berry"},
+        {x:875,  y:314, t:"berry"},
+        {x:1360, y:304, t:"berry"},
+        {x:1610, y:276, t:"berry"},
+        {x:1875, y:310, t:"berry"},
+        {x:2405, y:298, t:"berry"},
+        {x:2650, y:268, t:"berry"},
+        {x:2910, y:304, t:"berry"},
+        {x:3405, y:308, t:"berry"},
+        {x:3650, y:276, t:"berry"},
+        {x:180,  y:398, t:"berry"},
+        {x:1200, y:398, t:"berry"},
+        {x:2280, y:398, t:"berry"},
+        {x:3300, y:398, t:"berry"},
+        // supper and mice in the tall grass
+        {x:700,  y:398, t:"fish"},
+        {x:1950, y:398, t:"fish"},
+        {x:3050, y:398, t:"fish"},
+        {x:960,  y:398, t:"mouse"},
+        {x:2050, y:398, t:"mouse"},
+        {x:2750, y:398, t:"mouse"},
+        {x:3800, y:398, t:"mouse"},
+      ],
+      enemies: [
+        {x:600,  min:430,  max:930,  vx:1.6},
+        {x:1400, min:1180, max:1700, vx:1.7},
+        {x:1900, min:1760, max:2040, vx:1.6},
+        {x:2500, min:2260, max:2800, vx:1.8},
+        {x:2950, min:2840, max:3060, vx:1.7},
+        {x:3450, min:3270, max:3600, vx:1.6},
+      ],
+      hazards: [
+        {x:1000, y:GROUND_Y+22, w:100, h:220},
+        {x:2080, y:GROUND_Y+22, w:110, h:220},
+        {x:3090, y:GROUND_Y+22, w:120, h:220},
+      ],
+      boss: { x:3820, w:118, h:86, hp:3, vx:2.0, min:3480, max:4010, name:"Alpha Wolf" }
     }
   ];
