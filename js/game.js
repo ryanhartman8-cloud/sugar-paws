@@ -61,7 +61,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
   worldTot.textContent = LEVELS.length;
 
   // ---------- Game state ----------
-  let player, cam, platforms, collectibles, enemies, hazards, boss,
+  let player, cam, platforms, collectibles, enemies, hazards, boss, bossAtk = [],
       particles, projectiles, stars, theme, goalX, worldW, goalActive, currentLevel,
       state, score, lives, fishCount, miceCount;
   let easyMode = false;
@@ -223,7 +223,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       x: 60, y: GROUND_Y - SMALL.h, vx:0, vy:0,
       w: SMALL.w, h: SMALL.h,
       onGround:false, facing:1, big:false,
-      inv:0, coyote:0, jumpBuf:0, animT:0, blink:0, landT:0,
+      inv:0, coyote:0, jumpBuf:0, animT:0, blink:0, landT:0, idleT:0,
       activePower:null, powerTimer:0, shotCd:0
     };
   }
@@ -282,7 +282,9 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     hazards = L.hazards || [];
     boss = L.boss ? {x:L.boss.x, y:GROUND_Y-L.boss.h, w:L.boss.w, h:L.boss.h,
                      hp:L.boss.hp, vx:-Math.abs(L.boss.vx), min:L.boss.min, max:L.boss.max,
-                     name:L.boss.name, alive:true, hitCd:0, face:-1, animT:0} : null;
+                     name:L.boss.name, alive:true, hitCd:0, face:-1, animT:0,
+                     state:"patrol", stateT:0, cd:150, baseVx:Math.abs(L.boss.vx)} : null;
+    bossAtk = [];
     goalActive = !boss;                              // boss levels: goal opens after the boss falls
     stars = makeStars();
     projectiles = []; ambient = []; popups = [];
@@ -348,6 +350,10 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
 
     if(p.inv>0) p.inv--;
     p.blink = (p.blink+1) % 220;
+
+    // how long she has been standing still — drives the idle animations
+    if(p.onGround && !keys.left && !keys.right && Math.abs(p.vx) < 0.4) p.idleT++;
+    else p.idleT = 0;
 
     // power-up timer countdown + HUD second tick
     if(p.powerTimer > 0){
@@ -549,6 +555,7 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
 
     // boss
     if(boss && boss.alive) updateBoss();
+    if(bossAtk.length) updateBossAttacks();
 
     // hazards (lava) — instant death
     for(const hz of hazards){ if(aabb(p,hz)){ sfx.lava(); addShake(7); burst(p.x+p.w/2,p.y+p.h,"#ff7a1a",16); loseLife(); break; } }
@@ -585,7 +592,38 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     const b = boss, p = player;
     if(b.hitCd>0) b.hitCd--;
     b.animT++;
-    b.x += b.vx;
+
+    // Move-set: patrol -> windup -> attack -> recover. The windup is a long,
+    // loud telegraph on purpose: the fight should be readable by a small
+    // child, so the tell always lands well before the hit.
+    const kind = BOSS_MOVE[theme];
+    if(kind){
+      b.stateT++;
+      if(b.state === "patrol"){
+        const inRange = Math.abs((p.x + p.w/2) - (b.x + b.w/2)) < W*0.62;
+        if(b.stateT > b.cd && inRange){
+          b.state = "windup"; b.stateT = 0;
+          b.face = (p.x < b.x) ? -1 : 1;
+          beep(190, 0.16, "sawtooth", 0.05);
+        }
+      } else if(b.state === "windup"){
+        if(b.stateT >= BOSS_WINDUP){ fireBossMove(kind); b.state = "attack"; b.stateT = 0; }
+      } else if(b.state === "attack"){
+        if(b.stateT >= (kind === "lunge" ? 48 : 16)){
+          b.state = "recover"; b.stateT = 0;
+          if(kind === "lunge") b.vx = (b.vx < 0 ? -1 : 1) * b.baseVx;
+        }
+      } else {
+        if(b.stateT >= 42){
+          b.state = "patrol"; b.stateT = 0;
+          b.cd = 180 - (3 - b.hp) * 42;          // wounded bosses press harder
+        }
+      }
+    }
+
+    // it plants its feet to wind up and to recover
+    const rooted = b.state === "windup" || b.state === "recover";
+    if(!rooted) b.x += b.vx;
     if(b.x < b.min){ b.x=b.min; b.vx=Math.abs(b.vx); b.face=1; }
     if(b.x > b.max){ b.x=b.max; b.vx=-Math.abs(b.vx); b.face=-1; }
     b.y = GROUND_Y - b.h;
@@ -596,7 +634,8 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
         b.hp--; b.hitCd=55; if(stomping) p.vy=-11.5; score+=500; sfx.stomp();
         popup(b.x+b.w/2, b.y-10, "+500"); addShake(5);
         burst(b.x+b.w/2, b.y, "#ff5a5a", 18); syncHUD();
-        b.vx = (b.vx<0?-1:1)*(Math.abs(b.vx)+0.6);   // enrage: faster each hit
+        b.baseVx += 0.6;                             // enrage: faster each hit
+        b.vx = (b.vx<0?-1:1)*(Math.abs(b.vx)+0.6);
         if(b.hp<=0){
           b.alive=false; goalActive=true; sfx.win();
           popup(b.x+b.w/2, b.y, "+1000", "#ffd23f"); addShake(8);
@@ -606,6 +645,194 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       } else if(!stomping && !starHit && p.inv<=0 && b.hitCd<=0){
         hurt();
       }
+    }
+  }
+
+  // ---------- Boss move-sets ----------
+  // Every boss used to do the same thing: pace, and wait to be stomped. Each
+  // now has a signature move, built from five shared primitives so the
+  // behaviour lives in one place and only the art differs per boss.
+  const BOSS_WINDUP = 46;
+  const BOSS_MOVE = {
+    castle:    "shockwave",   // Gummy King  — jelly slam
+    mushroom:  "shockwave",   // Koopa King  — ground pound
+    dino:      "shockwave",   // T-Rex       — foot stomp
+    christmas: "lob",         // Grinch      — snowball
+    pirate:    "lob",         // Blackpaw    — cannon shot
+    moria:     "geyser",      // Balrog      — pillars of flame
+    egypt:     "geyser",      // Anubis      — sand geysers
+    china:     "roll",        // Jade Dragon — rolling fireball
+    prairie:   "lunge",       // Alpha Wolf  — howl and charge
+  };
+
+  function fireBossMove(kind){
+    const b = boss;
+    const dir = (player.x < b.x) ? -1 : 1;
+    const cx  = b.x + b.w/2;
+    if(kind === "shockwave"){
+      addShake(7); beep(70, 0.22, "square", 0.07);
+      for(const s of [-1, 1]){
+        bossAtk.push({kind, x:cx, y:GROUND_Y-26, w:26, h:26, vx:s*4.4, vy:0, life:150, phase:0});
+      }
+    } else if(kind === "lob"){
+      beep(150, 0.14, "square", 0.06); addShake(3);
+      bossAtk.push({kind, x:cx + dir*b.w*0.3, y:b.y + b.h*0.28,
+                    w:20, h:20, vx:dir*3.7, vy:-7.6, g:0.30, life:260, phase:0});
+    } else if(kind === "roll"){
+      beep(210, 0.18, "sawtooth", 0.06);
+      bossAtk.push({kind, x:cx + dir*b.w*0.4, y:GROUND_Y-20, w:22, h:20,
+                    vx:dir*5.0, vy:0, life:220, phase:0});
+    } else if(kind === "geyser"){
+      beep(120, 0.2, "triangle", 0.06);
+      for(let i=0;i<3;i++){
+        bossAtk.push({kind, x:cx + dir*(112 + i*120), y:GROUND_Y-58, w:28, h:58,
+                      vx:0, vy:0, life:132, warn:24 + i*20, phase:0});
+      }
+    } else if(kind === "lunge"){
+      addShake(4); beep(260, 0.26, "sawtooth", 0.06);
+      b.face = dir; b.vx = dir * (b.baseVx + 5.0);
+    }
+  }
+
+  function updateBossAttacks(){
+    const p = player;
+    for(const a of bossAtk){
+      a.life--; a.phase++;
+      if(a.kind === "lob"){
+        a.vy += a.g; a.x += a.vx; a.y += a.vy;
+        if(a.y + a.h/2 >= GROUND_Y){
+          burst(a.x, GROUND_Y, theme==="pirate" ? "#6b6470" : "#eaf4ff", 14);
+          addShake(3); a.life = 0;
+        }
+      } else if(a.kind === "shockwave" || a.kind === "roll"){
+        a.x += a.vx;
+      }
+      // a geyser is only dangerous once it has actually erupted
+      const live = a.kind !== "geyser" || a.phase > a.warn;
+      if(live && aabb(p, {x:a.x - a.w/2, y:a.y, w:a.w, h:a.h})) hurt();
+    }
+    bossAtk = bossAtk.filter(a => a.life > 0 && a.x > cam.x - 240 && a.x < cam.x + W + 240);
+  }
+
+  function drawBossTelegraph(){
+    const b = boss;
+    if(!b.alive || b.state !== "windup") return;
+    const x = b.x - cam.x;
+    if(x < -160 || x > W + 160) return;
+    const k  = b.stateT / BOSS_WINDUP;
+    const cx = x + b.w/2, cy = b.y - 30;
+    // ring racing inward: when it closes, the hit lands
+    ctx.strokeStyle = "rgba(255,90,60," + (0.9*(1-k*0.6)) + ")";
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(cx, cy, 10 + (1-k)*30, 0, 7); ctx.stroke();
+    // pulsing exclamation
+    const pulse = 1 + Math.sin(b.stateT*0.55)*0.14;
+    ctx.save(); ctx.translate(cx, cy); ctx.scale(pulse, pulse);
+    ctx.fillStyle = "#ff5a3c";
+    rr(-4.5, -14, 9, 17, 4); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 9, 4.2, 0, 7); ctx.fill();
+    ctx.fillStyle = "#fff6ea";
+    rr(-1.6, -11.5, 3.2, 11, 1.6); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 9, 1.5, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBossAttacks(){
+    const hot  = theme==="moria";
+    const sand = theme==="egypt";
+    for(const a of bossAtk){
+      const x = a.x - cam.x;
+      if(x < -60 || x > W + 60) continue;
+      const fade = Math.min(1, a.life / 40);
+      ctx.save();
+      ctx.globalAlpha = fade;
+      if(a.kind === "shockwave"){
+        // a ridge of ground travelling outward
+        const lift = Math.abs(Math.sin(a.phase*0.22))*5;
+        ctx.fillStyle = theme==="dino" ? "#8a6a42" : theme==="castle" ? "#e86fa8" : "#c87a3a";
+        ctx.beginPath();
+        ctx.moveTo(x - a.w/2, GROUND_Y);
+        ctx.quadraticCurveTo(x, GROUND_Y - a.h - lift, x + a.w/2, GROUND_Y);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,.4)";
+        ctx.beginPath();
+        ctx.moveTo(x - a.w*0.26, GROUND_Y - 3);
+        ctx.quadraticCurveTo(x, GROUND_Y - a.h*0.78 - lift, x + a.w*0.26, GROUND_Y - 3);
+        ctx.closePath(); ctx.fill();
+        // grit kicked up along the crest
+        ctx.fillStyle = "rgba(255,240,210,.75)";
+        for(let i=0;i<3;i++){
+          ctx.beginPath();
+          ctx.arc(x + Math.sin(a.phase*0.4 + i*2)*10, GROUND_Y - a.h - lift - i*5, 1.8, 0, 7); ctx.fill();
+        }
+      } else if(a.kind === "lob"){
+        // snowball or cannonball, trailing as it arcs
+        const dark = theme==="pirate";
+        ctx.fillStyle = dark ? "rgba(70,64,80,.35)" : "rgba(230,245,255,.35)";
+        for(let i=1;i<=3;i++){
+          ctx.beginPath();
+          ctx.arc(x - a.vx*i*2.2, a.y - a.vy*i*1.4, a.w*0.38 - i*1.4, 0, 7); ctx.fill();
+        }
+        ctx.fillStyle = dark ? "#2c2833" : "#eef7ff";
+        ctx.beginPath(); ctx.arc(x, a.y, a.w*0.5, 0, 7); ctx.fill();
+        ctx.fillStyle = dark ? "#4a4450" : "#ffffff";
+        ctx.beginPath(); ctx.arc(x - 3, a.y - 3, a.w*0.22, 0, 7); ctx.fill();
+        if(dark){   // lit fuse
+          ctx.fillStyle = "#ffd23f";
+          ctx.beginPath(); ctx.arc(x + 6, a.y - 8, 2.2 + Math.sin(a.phase*0.6), 0, 7); ctx.fill();
+        }
+      } else if(a.kind === "roll"){
+        // fireball hugging the ground, flame streaming behind
+        const r = a.w*0.5 + Math.sin(a.phase*0.4)*1.5;
+        ctx.fillStyle = "rgba(255,150,40,.35)";
+        ctx.beginPath(); ctx.arc(x, a.y + a.h/2, r + 7, 0, 7); ctx.fill();
+        ctx.fillStyle = "rgba(255,120,30,.75)";
+        for(let i=1;i<=3;i++){
+          ctx.beginPath();
+          ctx.ellipse(x - a.vx*i*2.6, a.y + a.h/2, r - i*1.6, r*0.7 - i, 0, 0, 7); ctx.fill();
+        }
+        ctx.fillStyle = "#ff7a1a";
+        ctx.beginPath(); ctx.arc(x, a.y + a.h/2, r, 0, 7); ctx.fill();
+        ctx.fillStyle = "#ffd76a";
+        ctx.beginPath(); ctx.arc(x, a.y + a.h/2, r*0.52, 0, 7); ctx.fill();
+      } else if(a.kind === "geyser"){
+        if(a.phase <= a.warn){
+          // tell: the ground cracks and spits before it blows
+          const k = a.phase / a.warn;
+          ctx.strokeStyle = "rgba(255,120,50," + (0.5 + 0.5*Math.sin(a.phase*0.7)) + ")";
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.ellipse(x, GROUND_Y - 2, 8 + k*9, 3.5 + k*2, 0, 0, 7); ctx.stroke();
+          ctx.fillStyle = sand ? "rgba(226,190,132,.8)" : "rgba(255,160,60,.8)";
+          for(let i=0;i<3;i++){
+            ctx.beginPath();
+            ctx.arc(x + Math.sin(a.phase*0.5 + i*2)*7, GROUND_Y - 6 - ((a.phase*1.6 + i*7) % 14), 1.6, 0, 7);
+            ctx.fill();
+          }
+        } else {
+          // the column itself
+          const up = Math.min(1, (a.phase - a.warn) / 9);
+          const h2 = a.h * up;
+          const g = ctx.createLinearGradient(0, GROUND_Y, 0, GROUND_Y - h2);
+          if(sand){ g.addColorStop(0,"#7a5330"); g.addColorStop(0.42,"#cf9f55"); g.addColorStop(1,"rgba(245,222,170,0)"); }
+          else    { g.addColorStop(0,"#9c2c04"); g.addColorStop(0.45,"#ff7a1a"); g.addColorStop(1,"rgba(255,214,110,0)"); }
+          // dust kicked out around the base so the column has a footing
+          ctx.fillStyle = sand ? "rgba(140,96,48,.45)" : "rgba(180,50,10,.45)";
+          ctx.beginPath(); ctx.ellipse(x, GROUND_Y - 3, a.w*0.95, 6, 0, 0, 7); ctx.fill();
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.moveTo(x - a.w/2, GROUND_Y);
+          ctx.quadraticCurveTo(x - a.w*0.34, GROUND_Y - h2*0.6, x - a.w*0.2, GROUND_Y - h2);
+          ctx.lineTo(x + a.w*0.2, GROUND_Y - h2);
+          ctx.quadraticCurveTo(x + a.w*0.34, GROUND_Y - h2*0.6, x + a.w/2, GROUND_Y);
+          ctx.closePath(); ctx.fill();
+          ctx.fillStyle = sand ? "rgba(255,244,214,.75)" : "rgba(255,228,140,.8)";
+          for(let i=0;i<4;i++){
+            const ey = GROUND_Y - h2 - ((a.phase*2.2 + i*11) % 22);
+            ctx.beginPath(); ctx.arc(x + Math.sin(a.phase*0.3 + i)*9, ey, 2, 0, 7); ctx.fill();
+          }
+        }
+      }
+      ctx.restore();
     }
   }
 
@@ -9776,7 +10003,14 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     const bw = p.w, bh = p.h;
     const walk = (keys.left||keys.right) && p.onGround;
     const legSwing = walk ? Math.sin(p.animT*0.3)*3 : 0;
-    const bodyBob = walk ? Math.abs(Math.sin(p.animT*0.3))*1.5 : 0;
+    // Idle: stand still a moment and she settles onto her haunches, flicks her
+    // tail, twitches an ear, and every so often stops to wash a paw.
+    const idle  = Math.min(1, Math.max(0, (p.idleT - 38) / 24));
+    const groom = p.idleT > 105 && (p.idleT % 195) < 74;
+    const groomK = groom ? Math.sin(((p.idleT % 195) / 74) * Math.PI) : 0;
+    const earTw = (p.idleT > 70 && (p.idleT % 128) < 15)
+                ? Math.sin(((p.idleT % 128) / 15) * Math.PI * 3) * 3.6 : 0;
+    const bodyBob = (walk ? Math.abs(Math.sin(p.animT*0.3))*1.5 : 0) + idle*4.2;
     const sk = SKINS[currentSkin] || SKINS[0];
     const orange = sk.primary, orangeD = sk.dark, cream = sk.cream;
     // Star-power soap bubble — translucent shell with iridescent rim
@@ -9844,22 +10078,22 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
       ctx.beginPath(); ctx.arc(-bw*0.06, -bh*0.92, 1.2, 0, 7); ctx.fill();
     }
     ctx.strokeStyle=orange; ctx.lineWidth=6; ctx.lineCap="round";
-    const tw = Math.sin(p.animT*0.12)*6;
+    const tw = Math.sin(p.animT*0.12)*6 + idle*Math.sin(p.animT*0.33)*5;
     ctx.beginPath(); ctx.moveTo(-bw*0.42, -bh*0.45);
     ctx.quadraticCurveTo(-bw*0.75, -bh*0.6 + tw, -bw*0.6, -bh*0.95 + tw); ctx.stroke();
-    ctx.fillStyle=orangeD; rr(-bw*0.30 - legSwing, -8, 8, 9, 3); ctx.fill();
-    ctx.fillStyle=orange;  rr(bw*0.18 + legSwing, -8, 8, 9, 3); ctx.fill();
+    ctx.fillStyle=orangeD; rr(-bw*0.30 - legSwing + idle*3, -8 + idle*1.4, 8, 9 - idle*2.2, 3); ctx.fill();
+    ctx.fillStyle=orange;  rr(bw*0.18 + legSwing - idle*3, -8 + idle*1.4, 8, 9 - idle*2.2, 3); ctx.fill();
     ctx.fillStyle=orange;  rr(-bw*0.42, -bh + bodyBob, bw*0.84, bh*0.78, 12); ctx.fill();
     ctx.fillStyle=cream;   rr(-bw*0.18, -bh*0.62 + bodyBob, bw*0.36, bh*0.55, 8); ctx.fill();
     ctx.strokeStyle=orangeD; ctx.lineWidth=3;
     for(let i=0;i<3;i++){ ctx.beginPath();
       ctx.moveTo(-bw*0.40, -bh*0.78 + bodyBob + i*7); ctx.lineTo(-bw*0.24, -bh*0.78 + bodyBob + i*7); ctx.stroke(); }
-    const hy = -bh + bodyBob - 2;
+    const hy = -bh + bodyBob - 2 + groomK*2.6;
     ctx.fillStyle=orange; ctx.beginPath(); ctx.arc(bw*0.05, hy, bw*0.42, 0, 7); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(-bw*0.22, hy-bw*0.28); ctx.lineTo(-bw*0.34, hy-bw*0.62); ctx.lineTo(-bw*0.04, hy-bw*0.42); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-bw*0.22, hy-bw*0.28); ctx.lineTo(-bw*0.34 + earTw, hy-bw*0.62 - earTw*0.5); ctx.lineTo(-bw*0.04, hy-bw*0.42); ctx.closePath(); ctx.fill();
     ctx.beginPath(); ctx.moveTo(bw*0.30, hy-bw*0.28); ctx.lineTo(bw*0.42, hy-bw*0.62); ctx.lineTo(bw*0.12, hy-bw*0.42); ctx.closePath(); ctx.fill();
     ctx.fillStyle="#ffb6c1";
-    ctx.beginPath(); ctx.moveTo(-bw*0.20,hy-bw*0.30); ctx.lineTo(-bw*0.28,hy-bw*0.5); ctx.lineTo(-bw*0.08,hy-bw*0.38); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-bw*0.20,hy-bw*0.30); ctx.lineTo(-bw*0.28 + earTw*0.8,hy-bw*0.5 - earTw*0.4); ctx.lineTo(-bw*0.08,hy-bw*0.38); ctx.closePath(); ctx.fill();
     ctx.beginPath(); ctx.moveTo(bw*0.28,hy-bw*0.30); ctx.lineTo(bw*0.36,hy-bw*0.5); ctx.lineTo(bw*0.16,hy-bw*0.38); ctx.closePath(); ctx.fill();
     const blinking = p.blink>210;
     if(blinking){
@@ -9881,6 +10115,23 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     ctx.strokeStyle="rgba(255,255,255,.85)";
     ctx.beginPath(); ctx.moveTo(bw*0.18,hy+5); ctx.lineTo(bw*0.42,hy+3); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(bw*0.18,hy+8); ctx.lineTo(bw*0.42,hy+9); ctx.stroke();
+    if(groomK > 0.05){
+      // washing a paw: held just clear of the muzzle so her face still reads
+      const gpx = bw*0.34, gpy = hy + 16 - groomK*9;
+      ctx.fillStyle = "#ff7a9c";                        // tongue reaching out
+      ctx.beginPath(); ctx.ellipse(bw*0.20, hy + 8 - groomK*1.5, 2.6, 1.8, 0.4, 0, 7); ctx.fill();
+      ctx.strokeStyle = orangeD; ctx.lineWidth = 5; ctx.lineCap = "round";
+      ctx.beginPath();                                  // slim foreleg
+      ctx.moveTo(bw*0.16, hy + 26);
+      ctx.quadraticCurveTo(bw*0.34, hy + 22, gpx, gpy + 3);
+      ctx.stroke();
+      ctx.fillStyle = orangeD;                          // paw
+      ctx.beginPath(); ctx.ellipse(gpx, gpy, 4.4, 3.6, -0.3, 0, 7); ctx.fill();
+      ctx.strokeStyle = "rgba(70,36,12,.35)"; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.ellipse(gpx, gpy, 4.4, 3.6, -0.3, 0, 7); ctx.stroke();
+      ctx.fillStyle = cream;                            // toe beans
+      ctx.beginPath(); ctx.ellipse(gpx + 1.2, gpy + 1, 2.4, 1.8, -0.3, 0, 7); ctx.fill();
+    }
     if(p.big){
       ctx.fillStyle="#ffd23f";
       const cx=bw*0.05, cyy=hy-bw*0.42;
@@ -10700,6 +10951,8 @@ import { GROUND_Y, WORLD_H, SMALL, BIG, aabb, stepPlayer } from "./physics.js";
     for(const c of collectibles) drawCollectible(c);
     for(const e of enemies) drawEnemy(e);
     if(boss) drawBoss();
+    if(boss) drawBossTelegraph();
+    if(bossAtk.length) drawBossAttacks();
     drawProjectiles();
     drawParticles();
     drawCat();
